@@ -10,6 +10,9 @@ from . import models, serializers
 import logging
 logger = logging.getLogger(__name__)
 
+def home_page(request):
+    return render(request, 'candidate_app/home_page.html')
+
 @api_view(['POST'])
 @transaction.atomic
 def observation_create(request):
