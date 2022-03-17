@@ -21,3 +21,20 @@ def observation_create(request):
         return Response(obs.data, status=status.HTTP_201_CREATED)
     logger.debug(request.data)
     return Response(obs.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@transaction.atomic
+def candidate_create(request):
+    cand = serializers.CandidateSerializer(data=request.data)
+    png_file = request.data.get("png")
+    if cand.is_valid():
+        # Find obsid
+        #obs = models.Observation.objects.filter(observation_id=obsid).first()
+        if png_file is None:
+            return Response(
+                "Missing png file", status=status.HTTP_400_BAD_REQUEST
+            )
+        cand.save(png_path=png_file)
+        return Response(cand.data, status=status.HTTP_201_CREATED)
+    logger.debug(request.data)
+    return Response(cand.errors, status=status.HTTP_400_BAD_REQUEST)

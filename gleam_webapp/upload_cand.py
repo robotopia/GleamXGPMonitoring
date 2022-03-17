@@ -78,6 +78,31 @@ def upload_obsid(obsid):
     }
     r = session.post(url, data=data)
 
+def upload_candidate(image_path, obsid, filter_id):
+    """ Upload an MWA observation to the database.
+
+    Parameters
+    ----------
+    image : `str`
+        The location of the candidate image to upload.
+    obsid : `int`
+        MWA observation ID.
+    filter_id : `int`
+        The ID of the filter used to detect this candidate.
+    """
+    # Upload
+    session = requests.session()
+    session.auth = (os.environ['GLEAM_USER'], os.environ['GLEAM_PASSWORD'])
+    url = 'http://127.0.0.1:8000/candidate_create/'
+    data = {
+        "observation_id": obsid,
+        "filter_id": filter_id,
+    }
+    with open(image_path, 'rb') as image:
+        r = session.post(url, data=data, files={"png":image})
+    print(r.text)
+    r.raise_for_status()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Upload a GLEAM transient candidate to the database.')
@@ -85,6 +110,9 @@ if __name__ == '__main__':
                         help='The MWA observation ID')
     parser.add_argument('--image', type=str,
                         help='The location of the image')
+    parser.add_argument('--filter', type=str,
+                        help='The ID of the filter used for this candidate.')
     args = parser.parse_args()
 
     upload_obsid(args.obsid)
+    upload_candidate(args.image, args.obsid, args.filter)

@@ -23,13 +23,13 @@ class Filter(models.Model):
     description = models.CharField(verbose_name="Description", max_length=256, blank=True, null=True)
 
 class Candidate(models.Model):
-    id = models.BigIntegerField(primary_key=True)
-    candidate = models.ForeignKey(
+    id = models.AutoField(primary_key=True)
+    observation_id = models.ForeignKey(
         Observation,
         on_delete=models.CASCADE,
         related_name="candidate",
     )
-    candidate = models.ForeignKey(
+    filter_id = models.ForeignKey(
         Filter,
         on_delete=models.CASCADE,
         related_name="candidate",
