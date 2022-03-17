@@ -3,17 +3,17 @@ from django.conf import settings
 
 class Observation(models.Model):
     observation_id = models.BigIntegerField(primary_key=True)
-    obsname = models.TextField(blank=True, null=True, verbose_name="Obs name")
+    obsname = models.CharField(max_length=128, blank=True, null=True, verbose_name="Obs name")
     starttime = models.BigIntegerField(verbose_name="Start Time (GPS sec)")
     stoptime = models.BigIntegerField(verbose_name="Stop Time (GPS sec)")
     ra_tile_dec = models.FloatField(blank=True, null=True, verbose_name="RA (deg)")
     dec_tile_dec= models.FloatField(blank=True, null=True, verbose_name="Dec (deg)")
     ra_tile_hms = models.CharField(max_length=32, blank=True, null=True, verbose_name="RA (HH:MM:SS)")
     dec_tile_dms= models.CharField(max_length=32, blank=True, null=True, verbose_name="Dec (DD:MM:SS)")
-    projectid = models.TextField(blank=True, null=True)
+    projectid = models.CharField(max_length=16, blank=True, null=True)
     azimuth = models.FloatField(blank=True, null=True, verbose_name="Azimuth (deg)")
     elevation = models.FloatField(blank=True, null=True, verbose_name="Elevation (deg)")
-    frequency_channels = models.JSONField(blank=True, null=True, verbose_name="Freq (x1.28 MHz)")
+    frequency_channels = models.CharField(max_length=128, blank=True, null=True, verbose_name="Frequency Channels (x1.28 MHz)")
     freq_res = models.IntegerField(blank=True, null=True, verbose_name="Frequency Resolution (KHz)")
     int_time = models.FloatField(blank=True, null=True, verbose_name="Integration Time (s)")
 
