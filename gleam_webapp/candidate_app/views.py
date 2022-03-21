@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.db.models import Count, Q, Avg
 from django.core.paginator import Paginator
+from django.http import HttpResponse
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -84,7 +85,7 @@ def candidate_random(request):
         unrated_cand = models.Candidate.objects.exclude(rating__user=user)
     if not unrated_cand.exists():
         # No candidates left so return to home screen
-        return redirect(reverse('home_page'))
+        return HttpResponse('<h3>No unrated canidate left</h3><h3><a href="/">Home Page</a></h3>')
     # Get random cand
     candidate = random.choice(list(unrated_cand))
     return redirect(reverse('candidate_rating', args=(candidate.id,)))
