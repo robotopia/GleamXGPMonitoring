@@ -1,0 +1,83 @@
+{% extends 'candidate_app/header.html' %}
+
+{% block content %}
+
+<title>Candidate Rating ID:{{ candidate.id }} </title>
+<h2>Candidate Rating ID:{{ candidate.id }}</h2>
+{% if candidate %}
+<div class="row fluid">
+
+  <div class="col-md-8">
+    <h3>Current Candidate</h3>
+    <div class="card">
+        <header class="card-header">
+          <p class="card-header-title">
+            ID:{{ candidate.id }}
+          </p>
+        </header>
+        {% if candidate.png_path %}
+        <div class="card-image">
+          <figure class="image is-4by3">
+            <img src="{{candidate.png_path.url}}" alt="Diagnostic Plot for {{candidate.id}}" onClick="window.open(this.src)">
+          </figure>
+        </div>
+        {% endif %}
+        <div class="card-content">
+            <table>
+                <tr>
+                  <td>RA (deg)</td>
+                  <td>{{ candidate.ra_dec }}</td>
+                </tr>
+                <tr>
+                  <td>Declination (deg)</td>
+                  <td>{{ candidate.dec_dec}}</td>
+                </tr>
+                <tr>
+                  <td>RA (HH:MM:SS.SS)</td>
+                  <td>{{ candidate.ra_hms  }}</td>
+                </tr>
+                <tr>
+                  <td>Declination (DD:MM:SS.SS)</td>
+                  <td>{{ candidate.dec_dms }}</td>
+                </tr>
+                <tr>
+                  <td>Flux Density</td>
+                  <td>{{ candidate.flux }}</td>
+                </tr>
+              </table>
+        </div>
+      </div>
+  </div>
+
+  <div class="col-md-3">
+    <h3 class="subtitle is-3">Rate Current Candidate</h3>
+    <form action="{% url 'candidate_update_rating' id=candidate.id %}" method="post">
+      {% csrf_token %}
+      <div class="field">
+      <label for="rfi">Is RFI?</label>
+      <input type="checkbox"  id='rfi' value='True' name="rfi"><br>
+      </div>
+      <div class="field">
+      <label for="rating">Rating (1-5){% if rating %}(currently {{rating.rating}}){% endif %}</label>
+      <div>
+      <input type="submit" class="button is-medium" name="rating" value="5">
+      <input type="submit" class="button is-medium" name="rating" value="4">
+      <input type="submit" class="button is-medium" name="rating" value="3">
+      <input type="submit" class="button is-medium" name="rating" value="2">
+      <input type="submit" class="button is-medium" name="rating" value="1">
+      </div>
+      </div>
+      <div class="field">
+      <label for="rating">Notes (is it a known pulsar?)</label>
+      <input type="text" id="notes" name="notes" value="{{candidate.notes}}"><br>
+      </div>
+      <input type="hidden" name="id" value="">
+      <input type="hidden" name="username" value="{{user}}">
+    </form>
+    <button class="button is-link" onclick="window.history.go(-2)">Back to previous</button>
+  </div>
+</div>
+{% else %}
+<p>Candidate not Found!</p>
+{% endif %}
+{% endblock %}

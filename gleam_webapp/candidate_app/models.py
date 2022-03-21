@@ -43,8 +43,8 @@ class Candidate(models.Model):
     notes = models.TextField(blank=True, null=True, default="")
 
 
-class Ratings(models.Model):
-    id = models.BigIntegerField(primary_key=True)
+class Rating(models.Model):
+    id = models.AutoField(primary_key=True)
     candidate = models.ForeignKey(
         Candidate,
         on_delete=models.CASCADE,
