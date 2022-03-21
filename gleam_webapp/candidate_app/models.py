@@ -48,12 +48,12 @@ class Rating(models.Model):
     candidate = models.ForeignKey(
         Candidate,
         on_delete=models.CASCADE,
-        related_name="ratings",
+        related_name="rating",
     )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="ratings",
+        related_name="rating",
     )
     rating = models.IntegerField(blank=True, null=True)
     rfi = models.BooleanField(blank=True)

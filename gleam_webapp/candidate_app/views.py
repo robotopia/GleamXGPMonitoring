@@ -8,6 +8,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
+import random
+
 from . import models, serializers
 
 import logging
@@ -48,7 +50,7 @@ def candidate_update_rating(request, id):
             rfi=None,
             rating=None,
         )
-    logger.debug('ratings obj %s', rating)
+    logger.debug('rating obj %s', rating)
 
     rfi = request.data.get('rfi', False)
     score = request.data.get('rating', None)
@@ -69,9 +71,22 @@ def candidate_update_rating(request, id):
     candidate.save()
 
     # Redirects to a random next candidate
-    #return redirect(reverse('candidates_random'))
-    #return Response(request.data, status=status.HTTP_201_CREATED)
-    return HttpResponseRedirect(f'/candidate_rating/{id+1}/')
+    return redirect(reverse('candidate_random'))
+
+
+def candidate_random(request):
+    user = request.user
+    # Get unrated candidates
+    unrated_cand = models.Candidate.objects.filter(rating__isnull=True)
+    if not unrated_cand.exists():
+        # No unrated candiate so see if user hasn't rated one
+        unrated_cand = models.Candidate.objects.exclude(rating__user=user)
+    if not unrated_cand.exists():
+        # No candidates left so return to home screen
+        return redirect(reverse('home_page'))
+    # Get random cand
+    candidate = random.choice(list(unrated_cand))
+    return redirect(reverse('candidate_rating', args=(candidate.id,)))
 
 
 @api_view(['POST'])

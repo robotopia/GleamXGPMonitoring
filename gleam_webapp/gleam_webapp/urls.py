@@ -23,11 +23,11 @@ from candidate_app import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
-    path('', views.home_page),
+    path('', views.home_page, name='home_page'),
     path('observation_create/', views.observation_create),
     path('candidate_create/', views.candidate_create),
-    path('candidate_rating/<int:id>/', views.candidate_rating),
-    #path('candidate_rating/random/', views.candidates_random, name='candidates_random'),
+    path('candidate_rating/<int:id>/', views.candidate_rating, name='candidate_rating'),
+    path('candidate_rating/random/', views.candidate_random, name='candidate_random'),
     path('candidate_update_rating/<int:id>/', views.candidate_update_rating, name='candidate_update_rating'),
 ]
 
