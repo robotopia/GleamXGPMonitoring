@@ -2,7 +2,8 @@ from django.shortcuts import render
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Avg
+from django.core.paginator import Paginator
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -87,6 +88,31 @@ def candidate_random(request):
     # Get random cand
     candidate = random.choice(list(unrated_cand))
     return redirect(reverse('candidate_rating', args=(candidate.id,)))
+
+
+def candidate_table(request):
+    candidates = models.Candidate.objects.annotate(
+        num_ratings=Count('rating'),
+        avg_rating=Avg('rating__rating'),
+    )
+
+    # candidates = filter_claims(request, candidates)
+
+    # rating_cutoff = get_rating_cutoff(request)
+    # min_ratings = get_min_ratings(request)
+    # sigma_cutoff = get_sigma_cutoff(request)
+
+    # if rating_cutoff is not None:
+    #     candidates = candidates.filter(avg_rating__gte=rating_cutoff)
+    # if min_ratings is not None:
+    #     candidates = candidates.filter(num_ratings__gte=min_ratings)
+    # if sigma_cutoff is not None:
+    #     candidates = candidates.filter(sigma__gte=sigma_cutoff)
+
+    paginator = Paginator(candidates.order_by('-avg_rating'), 25)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'candidate_app/candidate_table.html', {'page_obj': page_obj})
 
 
 @api_view(['POST'])
