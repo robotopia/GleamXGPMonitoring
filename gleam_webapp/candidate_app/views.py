@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from django.http import HttpResponse, HttpResponseRedirect
+from django.db.models import Count, Q
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -117,3 +117,15 @@ def candidate_create(request):
         return Response(cand.data, status=status.HTTP_201_CREATED)
     logger.debug(request.data)
     return Response(cand.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+def survey_status(request):
+    obs_list = models.Observation.objects.all().annotate(
+        candidates=Count("candidate"),
+        rated_candidates=Count(
+            "candidate",
+            filter=Q(candidate__rating__isnull=False)
+        ),
+    )
+    context = {'obs': obs_list}
+    return render(request, 'candidate_app/survey_status.html', context)

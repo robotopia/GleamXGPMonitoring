@@ -29,6 +29,7 @@ urlpatterns = [
     path('candidate_rating/<int:id>/', views.candidate_rating, name='candidate_rating'),
     path('candidate_rating/random/', views.candidate_random, name='candidate_random'),
     path('candidate_update_rating/<int:id>/', views.candidate_update_rating, name='candidate_update_rating'),
+    path('survey_status/', views.survey_status)
 ]
 
 # allow media files to be linked and viewed directly

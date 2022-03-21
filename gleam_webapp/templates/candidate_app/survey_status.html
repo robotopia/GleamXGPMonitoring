@@ -1,0 +1,34 @@
+{% extends 'candidate_app/header.html' %}
+
+{% block content %}
+
+  <h2>Survey Status</h2>
+    <div>
+      {% if obs %}
+      <table  class="table">
+        <thead>
+          <th>Name</th>
+          <th>Obs_ID</th>
+          <th>Candidates Rated</th>
+          <th>RA (deg)</th>
+          <th>Dec (deg)</th>
+          <th>RA (HH:MM:SS.SS)</th>
+          <th>Dec (DD:MM:SS.SS)</th>
+        </thead>
+        {% for acc in obs %}
+        <tr>
+          <td>{{ acc.obsname }}</td>
+          <td><a href="http://ws.mwatelescope.org/observation/obs/?obs_id={{ acc.observation_id }}" target="_blank">{{ acc.observation_id }}</a></td>
+          <td>{{ acc.rated_candidates }}/{{ acc.candidates }}</td>
+          <td>{{ acc.ra_tile_dec }}</td>
+          <td>{{ acc.dec_tile_dec }}</td>
+          <td>{{ acc.ra_tile_hms }}</td>
+          <td>{{ acc.dec_tile_dms }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+        <p>No Access records Found!</p>
+      {% endif %}
+    </div>
+{% endblock %}
