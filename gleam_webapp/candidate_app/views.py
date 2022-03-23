@@ -49,20 +49,25 @@ def candidate_update_rating(request, id):
         rating = models.Rating(
             candidate=candidate,
             user=request.user,
-            rfi=None,
             rating=None,
         )
     logger.debug('rating obj %s', rating)
 
-    rfi = request.data.get('rfi', False)
-    score = request.data.get('rating', None)
+    # rfi = request.data.get('rfi', False)
+    # if rating.rfi != rfi:
+    #     logger.debug('setting rfi %s=>%s', rating.rfi, rfi)
+    #     rating.rfi = rfi
 
-    if rating.rfi != rfi:
-        logger.debug('setting rfi %s=>%s', rating.rfi, rfi)
-        rating.rfi = rfi
+    cand_type = request.data.get('cand_type', None)
+    if cand_type:
+        logger.debug('setting score %s=>%s', rating.cand_type, cand_type)
+        rating.cand_type = cand_type
+
+    score = request.data.get('rating', None)
     if score:
         logger.debug('setting score %s=>%s', rating.rating, score)
         rating.rating = score
+
     rating.save()
 
     # Update candidate notes
@@ -95,6 +100,10 @@ def candidate_table(request):
     candidates = models.Candidate.objects.annotate(
         num_ratings=Count('rating'),
         avg_rating=Avg('rating__rating'),
+        transient_count=Count('rating', filter=Q(rating__cand_type='T')),
+        rfi_count=Count('rating', filter=Q(rating__cand_type='RFI')),
+        airplane_count=Count('rating', filter=Q(rating__cand_type='A')),
+        sidelobe_count=Count('rating', filter=Q(rating__cand_type='SL')),
     )
 
     # candidates = filter_claims(request, candidates)

@@ -11,6 +11,7 @@ import json
 
 from astropy.coordinates import Angle
 import astropy.units as u
+from astropy.io import fits
 
 import logging
 logger = logging.getLogger(__name__)
@@ -78,7 +79,7 @@ def upload_obsid(obsid):
     }
     r = session.post(url, data=data)
 
-def upload_candidate(image_path, obsid, filter_id):
+def upload_candidate(image_path, fits_path, obsid, filter_id):
     """ Upload an MWA observation to the database.
 
     Parameters
@@ -90,18 +91,44 @@ def upload_candidate(image_path, obsid, filter_id):
     filter_id : `int`
         The ID of the filter used to detect this candidate.
     """
-    # Upload
+    # Set up session
     session = requests.session()
     session.auth = (os.environ['GLEAM_USER'], os.environ['GLEAM_PASSWORD'])
     url = 'http://127.0.0.1:8000/candidate_create/'
-    data = {
-        "observation_id": obsid,
-        "filter_id": filter_id,
-    }
-    with open(image_path, 'rb') as image:
-        r = session.post(url, data=data, files={"png":image})
-    print(r.text)
-    r.raise_for_status()
+
+    # Read fits file
+    hdul = fits.open(fits_path)
+    # loop over each candidate
+    for cand in hdul[1].data:
+        data = {
+            "observation_id": obsid,
+            "filter_id": filter_id,
+        }
+        # Loop over each header and append data to the upload dictionary
+        for hi, dat in enumerate(cand):
+            fits_header = f"TTYPE{hi+1}"
+            header = hdul[1].header[fits_header]
+            logger.debug(f"{header}: {dat}")
+            if header == "cube":
+                # Skip because already have obsid
+                pass
+            elif header == "ra":
+                # parse to hms
+                data["ra_dec"] = dat
+                data["ra_hms"] = Angle(dat, unit=u.deg).to_string(unit=u.hour, sep=':')[:11]
+            elif header == "dec":
+                # parse to dms
+                data["dec_dec"] = dat
+                data["dec_dms"] = Angle(dat, unit=u.deg).to_string(unit=u.deg, sep=':')[:12]
+            else:
+                data[header] = dat
+
+        # open the image file
+        with open(image_path, 'rb') as image:
+            # upload to database
+            r = session.post(url, data=data, files={"png":image})
+        print(r.text)
+        r.raise_for_status()
 
 
 if __name__ == '__main__':
@@ -110,9 +137,11 @@ if __name__ == '__main__':
                         help='The MWA observation ID')
     parser.add_argument('--image', type=str,
                         help='The location of the image')
+    parser.add_argument('--fits', type=str,
+                        help='The location of the fits files containing the candidate information.')
     parser.add_argument('--filter', type=str,
                         help='The ID of the filter used for this candidate.')
     args = parser.parse_args()
 
     upload_obsid(args.obsid)
-    upload_candidate(args.image, args.obsid, args.filter)
+    upload_candidate(args.image, args.fits, args.obsid, args.filter)

@@ -25,24 +25,52 @@
         <div class="card-content">
             <table>
                 <tr>
-                  <td>RA (deg)</td>
-                  <td>{{ candidate.ra_dec }}</td>
+                  <td>Observation ID</td>
+                  <td>{{ candidate.observation_id.observation_id }}</td>
                 </tr>
                 <tr>
-                  <td>Declination (deg)</td>
-                  <td>{{ candidate.dec_dec}}</td>
+                  <td>Time</td>
+                  <td>{{ candidate.observation_id.starttime }}</td>
                 </tr>
                 <tr>
-                  <td>RA (HH:MM:SS.SS)</td>
-                  <td>{{ candidate.ra_hms  }}</td>
+                  <td>Frequency (Hz)</td>
+                  <td>{{ candidate.FREQ }}</td>
                 </tr>
                 <tr>
-                  <td>Declination (DD:MM:SS.SS)</td>
-                  <td>{{ candidate.dec_dms }}</td>
+                  <td>Location (deg)</td>
+                  <td>{{ candidate.ra_dec }}, {{ candidate.dec_dec}}</td>
                 </tr>
                 <tr>
-                  <td>Flux Density</td>
-                  <td>{{ candidate.flux }}</td>
+                  <td>Location (HH:MM:SS.SS, DD:MM:SS.SS)</td>
+                  <td>{{ candidate.ra_hms }}, {{ candidate.dec_dms }}</td>
+                </tr>
+                <tr>
+                  <td>Central sep (arcmin)</td>
+                  <td>{{ candidate.cent_sep }}</td>
+                </tr>
+                <tr>
+                  <td>Peak Brightness (mJy)</td>
+                  <td>{{ candidate.ratio }}</td>
+                </tr>
+                <tr>
+                  <td>Match Source</td>
+                  <td>{{ candidate.match }}</td>
+                </tr>
+                <tr>
+                  <td>Match Sep (arcmin)</td>
+                  <td>{{ candidate.sep_deg }}</td>
+                </tr>
+                <tr>
+                  <td>Residual Diff</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>Match Flux Ratio</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>Primary Beam</td>
+                  <td>{{ candidate.beam }}</td>
                 </tr>
               </table>
         </div>
@@ -54,21 +82,29 @@
     <form action="{% url 'candidate_update_rating' id=candidate.id %}" method="post">
       {% csrf_token %}
       <div class="field">
-      <label for="rfi">Is RFI?</label>
-      <input type="checkbox"  id='rfi' value='True' name="rfi"><br>
+      <!-- <label for="rfi">Is RFI?</label>
+      <input type="checkbox"  id='rfi' value='True' name="rfi"><br> -->
+      <label for="cand_type">Choose candidate type:</label>
+
+      <select name="cand_type" id="cand_type">
+        <option value="T">Transient</option>
+        <option value="A">Airplane</option>
+        <option value="RFI">RFI</option>
+        <option value="SL">Sidelobe</option>
+      </select>
       </div>
       <div class="field">
-      <label for="rating">Rating (1-5){% if rating %}(currently {{rating.rating}}){% endif %}</label>
+      <label for="rating">Rating from 1(noise) to 5(clear candidate){% if rating %}(currently {{rating.rating}}){% endif %}</label>
       <div>
-      <input type="submit" class="button is-medium" name="rating" value="5">
-      <input type="submit" class="button is-medium" name="rating" value="4">
-      <input type="submit" class="button is-medium" name="rating" value="3">
-      <input type="submit" class="button is-medium" name="rating" value="2">
-      <input type="submit" class="button is-medium" name="rating" value="1">
+        <input type="submit" class="button is-medium" name="rating" value="1">
+        <input type="submit" class="button is-medium" name="rating" value="2">
+        <input type="submit" class="button is-medium" name="rating" value="3">
+        <input type="submit" class="button is-medium" name="rating" value="4">
+        <input type="submit" class="button is-medium" name="rating" value="5">
       </div>
       </div>
       <div class="field">
-      <label for="rating">Notes (is it a known pulsar?)</label>
+      <label for="rating">Notes (is it a known source?)</label>
       <input type="text" id="notes" name="notes" value="{{candidate.notes}}"><br>
       </div>
       <input type="hidden" name="id" value="">

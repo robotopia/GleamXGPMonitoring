@@ -7,11 +7,15 @@
 
 <div>
 {% if page_obj %}
-  <table class="table">
+  <table class="fl-table">
     <thead>
       <th>ID</th>
       <th>Rating (Count)</th>
       <th>Notes</th>
+      <th>N Tranisent</th>
+      <th>N RFI</th>
+      <th>N Airplane</th>
+      <th>N Sidelobe</th>
       <th>RA (HH:MM:SS.SS)</th>
       <th>Dec (DD:MM:SS.SS)</th>
       <th>Plot</th>
@@ -28,6 +32,10 @@
           {% endif %}
         </td>
         <td>{{cand.notes}}</td>
+        <td>{{cand.transient_count}}</td>
+        <td>{{cand.rfi_count}}</td>
+        <td>{{cand.airplane_count}}</td>
+        <td>{{cand.sidelobe_count}}</td>
         <td>{{cand.ra_hms}}</td>
         <td>{{cand.dec_dms}}</td>
         <td><img src="{{cand.png_path.url}}" alt="Diagnostic Plot for {{cand.id}}" style="width:100px;" onClick="window.open(this.src)" > </td>
