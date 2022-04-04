@@ -16,6 +16,7 @@ from astropy.io import fits
 import logging
 logger = logging.getLogger(__name__)
 
+BASE_URL = 'https://mwa-image-plane.duckdns.org'
 
 def getmeta(servicetype='metadata', service='obs', params=None):
     """
@@ -60,7 +61,7 @@ def upload_obsid(obsid):
     # Upload
     session = requests.session()
     session.auth = (os.environ['GLEAM_USER'], os.environ['GLEAM_PASSWORD'])
-    url = 'http://127.0.0.1:8000/observation_create/'
+    url = f'{BASE_URL}/observation_create/'
     data = {
         'observation_id': obsid,
         'obsname': data['obsname'],
@@ -95,7 +96,7 @@ def upload_candidate(image_path, fits_path, filter_id):
     # Set up session
     session = requests.session()
     session.auth = (os.environ['GLEAM_USER'], os.environ['GLEAM_PASSWORD'])
-    url = 'http://127.0.0.1:8000/candidate_create/'
+    url = f'{BASE_URL}/candidate_create/'
 
     # Read fits file
     hdul = fits.open(fits_path)
