@@ -14,6 +14,7 @@ class Observation(models.Model):
     azimuth = models.FloatField(blank=True, null=True, verbose_name="Azimuth (deg)")
     elevation = models.FloatField(blank=True, null=True, verbose_name="Elevation (deg)")
     frequency_channels = models.CharField(max_length=128, blank=True, null=True, verbose_name="Frequency Channels (x1.28 MHz)")
+    cent_freq = models.FloatField(blank=True, null=True, verbose_name="Centre Frequency (MHz)")
     freq_res = models.IntegerField(blank=True, null=True, verbose_name="Frequency Resolution (KHz)")
     int_time = models.FloatField(blank=True, null=True, verbose_name="Integration Time (s)")
 
@@ -24,7 +25,7 @@ class Filter(models.Model):
 
 class Candidate(models.Model):
     id = models.AutoField(primary_key=True)
-    observation_id = models.ForeignKey(
+    obs_id = models.ForeignKey(
         Observation,
         on_delete=models.CASCADE,
         related_name="candidate",
@@ -37,26 +38,38 @@ class Candidate(models.Model):
     png_path = models.FileField(upload_to="candidates/", max_length=1024, null=True)
     notes = models.TextField(blank=True, null=True, default="")
 
-    ra_dec = models.FloatField(blank=True, null=True, verbose_name="RA (deg)")
-    dec_dec= models.FloatField(blank=True, null=True, verbose_name="Dec (deg)")
-    ra_hms = models.CharField(max_length=32, blank=True, null=True, verbose_name="RA (HH:MM:SS)")
-    dec_dms= models.CharField(max_length=32, blank=True, null=True, verbose_name="Dec (DD:MM:SS)")
+    # Data in the fits file
+    can_x_pix = models.FloatField(blank=True, null=True)
+    can_y_pix = models.FloatField(blank=True, null=True)
+    can_ra_deg = models.FloatField(blank=True, null=True)
+    can_dec_deg = models.FloatField(blank=True, null=True)
+    can_cent_sep_deg = models.FloatField(blank=True, null=True)
+    can_rad_pix = models.FloatField(blank=True, null=True)
+    can_rad_deg = models.FloatField(blank=True, null=True)
+    can_peak_flux = models.FloatField(blank=True, null=True)
+    can_fluence = models.FloatField(blank=True, null=True)
+    can_beam = models.FloatField(blank=True, null=True)
+    can_det_stat = models.FloatField(blank=True, null=True)
+    can_mod_ind = models.IntegerField(blank=True, null=True)
+    nks_name = models.CharField(max_length=64, blank=True, null=True)
+    nks_x_pix = models.FloatField(blank=True, null=True)
+    nks_y_pix = models.FloatField(blank=True, null=True)
+    nks_ra_deg = models.FloatField(blank=True, null=True)
+    nks_dec_deg = models.FloatField(blank=True, null=True)
+    nks_flux = models.FloatField(blank=True, null=True)
+    nks_res = models.FloatField(blank=True, null=True)
+    nks_res_dif = models.FloatField(blank=True, null=True)
+    nks_det_stat = models.FloatField(blank=True, null=True)
+    can_nks_sep_pix = models.FloatField(blank=True, null=True)
+    can_nks_sep_deg = models.FloatField(blank=True, null=True)
+    can_nks_flux_rat = models.FloatField(blank=True, null=True)
+    can_nks_is_close = models.BooleanField(null=True)
 
-    x = models.FloatField(blank=True, null=True)
-    y = models.FloatField(blank=True, null=True)
-    rad_pix = models.FloatField(blank=True, null=True)
-    sep_pix = models.FloatField(blank=True, null=True)
-    sep_deg = models.FloatField(blank=True, null=True)
-    ratio = models.FloatField(blank=True, null=True)
-    match = models.CharField(max_length=64, blank=True, null=True, verbose_name="Match source name")
-    cutoff = models.FloatField(blank=True, null=True)
-    x_match = models.FloatField(blank=True, null=True)
-    y_match = models.FloatField(blank=True, null=True)
-    ra_match = models.FloatField(blank=True, null=True)
-    dec_match = models.FloatField(blank=True, null=True)
-    FREQ = models.FloatField(blank=True, null=True, verbose_name="Observing center frequency (Hz)")
-    cent_sep = models.FloatField(blank=True, null=True)
-    beam = models.FloatField(blank=True, null=True)
+    # Coordinates converted to hms/dms
+    can_ra_hms  = models.CharField(max_length=32, blank=True, null=True, verbose_name="Candidate Right Acension (HH:MM:SS)")
+    can_dec_dms = models.CharField(max_length=32, blank=True, null=True, verbose_name="Candidate Declination (DD:MM:SS)")
+    nks_ra_hms  = models.CharField(max_length=32, blank=True, null=True, verbose_name="nks Right Acension (HH:MM:SS)")
+    nks_dec_dms = models.CharField(max_length=32, blank=True, null=True, verbose_name="nks Declination (DD:MM:SS)")
 
 
 

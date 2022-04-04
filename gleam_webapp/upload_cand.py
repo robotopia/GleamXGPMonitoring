@@ -74,12 +74,13 @@ def upload_obsid(obsid):
         'azimuth': data['metadata']['azimuth_pointing'],
         'elevation': data['metadata']['elevation_pointing'],
         'frequency_channels': str(data['rfstreams']['0']['frequencies']),
+        'cent_freq': (data['rfstreams']['0']['frequencies'][0] + data['rfstreams']['0']['frequencies'][-1])*1.28/2,
         'freq_res': data['freq_res'],
         'int_time': data['int_time'],
     }
     r = session.post(url, data=data)
 
-def upload_candidate(image_path, fits_path, obsid, filter_id):
+def upload_candidate(image_path, fits_path, filter_id):
     """ Upload an MWA observation to the database.
 
     Parameters
@@ -98,10 +99,10 @@ def upload_candidate(image_path, fits_path, obsid, filter_id):
 
     # Read fits file
     hdul = fits.open(fits_path)
+
     # loop over each candidate
     for cand in hdul[1].data:
         data = {
-            "observation_id": obsid,
             "filter_id": filter_id,
         }
         # Loop over each header and append data to the upload dictionary
@@ -109,17 +110,23 @@ def upload_candidate(image_path, fits_path, obsid, filter_id):
             fits_header = f"TTYPE{hi+1}"
             header = hdul[1].header[fits_header]
             logger.debug(f"{header}: {dat}")
-            if header == "cube":
-                # Skip because already have obsid
+            if header == "obs_cent_freq":
+                # Skip because already have that data in obsid
                 pass
-            elif header == "ra":
+            elif header == "obs_id":
+                # upload obsid
+                upload_obsid(dat)
+                data[header] = dat
+            elif header.endswith("ra_deg"):
                 # parse to hms
-                data["ra_dec"] = dat
-                data["ra_hms"] = Angle(dat, unit=u.deg).to_string(unit=u.hour, sep=':')[:11]
-            elif header == "dec":
+                data[header] = dat
+                hms_header = header[:-3]+"hms"
+                data[hms_header] = Angle(dat, unit=u.deg).to_string(unit=u.hour, sep=':')[:11]
+            elif header.endswith("dec_deg"):
                 # parse to dms
-                data["dec_dec"] = dat
-                data["dec_dms"] = Angle(dat, unit=u.deg).to_string(unit=u.deg, sep=':')[:12]
+                data[header] = dat
+                dms_header = header[:-3]+"dms"
+                data[dms_header] = Angle(dat, unit=u.deg).to_string(unit=u.deg, sep=':')[:12]
             else:
                 data[header] = dat
 
@@ -133,8 +140,6 @@ def upload_candidate(image_path, fits_path, obsid, filter_id):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Upload a GLEAM transient candidate to the database.')
-    parser.add_argument('--obsid', type=int,
-                        help='The MWA observation ID')
     parser.add_argument('--image', type=str,
                         help='The location of the image')
     parser.add_argument('--fits', type=str,
@@ -143,5 +148,4 @@ if __name__ == '__main__':
                         help='The ID of the filter used for this candidate.')
     args = parser.parse_args()
 
-    upload_obsid(args.obsid)
-    upload_candidate(args.image, args.fits, args.obsid, args.filter)
+    upload_candidate(args.image, args.fits, args.filter)

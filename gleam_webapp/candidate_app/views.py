@@ -152,6 +152,7 @@ def candidate_create(request):
         cand.save(png_path=png_file)
         return Response(cand.data, status=status.HTTP_201_CREATED)
     logger.debug(request.data)
+    logger.error(cand.errors)
     return Response(cand.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

@@ -23,56 +23,39 @@
         </div>
         {% endif %}
         <div class="card-content">
+            <h3>Observation:</h3>
             <table>
-                <tr>
-                  <td>Observation ID</td>
-                  <td>{{ candidate.observation_id.observation_id }}</td>
-                </tr>
-                <tr>
-                  <td>Time</td>
-                  <td>{{ candidate.observation_id.starttime }}</td>
-                </tr>
-                <tr>
-                  <td>Frequency (Hz)</td>
-                  <td>{{ candidate.FREQ }}</td>
-                </tr>
-                <tr>
-                  <td>Location (deg)</td>
-                  <td>{{ candidate.ra_dec }}, {{ candidate.dec_dec}}</td>
-                </tr>
-                <tr>
-                  <td>Location (HH:MM:SS.SS, DD:MM:SS.SS)</td>
-                  <td>{{ candidate.ra_hms }}, {{ candidate.dec_dms }}</td>
-                </tr>
-                <tr>
-                  <td>Central sep (arcmin)</td>
-                  <td>{{ candidate.cent_sep }}</td>
-                </tr>
-                <tr>
-                  <td>Peak Brightness (mJy)</td>
-                  <td>{{ candidate.ratio }}</td>
-                </tr>
-                <tr>
-                  <td>Match Source</td>
-                  <td>{{ candidate.match }}</td>
-                </tr>
-                <tr>
-                  <td>Match Sep (arcmin)</td>
-                  <td>{{ candidate.sep_deg }}</td>
-                </tr>
-                <tr>
-                  <td>Residual Diff</td>
-                  <td></td>
-                </tr>
-                <tr>
-                  <td>Match Flux Ratio</td>
-                  <td></td>
-                </tr>
-                <tr>
-                  <td>Primary Beam</td>
-                  <td>{{ candidate.beam }}</td>
-                </tr>
-              </table>
+              <tr><td>Observation ID</td>  <td>{{ candidate.obs_id.observation_id }}</td></tr>
+              <tr><td>Time</td>            <td>{{ candidate.obs_id.starttime }}</td></tr>
+              <tr><td>Frequency (MHz)</td> <td>{{ candidate.obs_id.cent_freq }}</td></tr>
+            </table>
+            <h3>Candidate:</h3>
+            <table>
+              <!-- <tr><td>Location (deg)</td>                      <td>{{ candidate.ra_dec }}, {{ candidate.dec_dec}}</td></tr> -->
+              <tr><td>Location (HH:MM:SS.SS, DD:MM:SS.SS)</td> <td>{{ candidate.can_ra_hms }}, {{ candidate.can_dec_dms }}</td></tr>
+              <tr><td>Central sep (deg)</td>                   <td>{{ candidate.can_cent_sep_deg }}</td></tr>
+              <tr><td>Radius (deg)</td>                        <td>{{ candidate.can_rad_deg}}</td></tr>
+              <tr><td>Peak Flux (mJy)</td>                     <td>{{ candidate.can_peak_flux }}</td></tr>
+              <tr><td>Fluence (mJy)</td>                       <td>{{ candidate.can_fluence }}</td></tr>
+              <tr><td>Primary Beam</td>                        <td>{{ candidate.can_beam }}</td></tr>
+              <tr><td>Detection statistic</td>                 <td>{{ candidate.can_det_stat }}</td></tr>
+              <tr><td>Modulation Index</td>                    <td>{{ candidate.can_mod_ind }}</td></tr>
+            </table>
+            <h3>Match:</h3>
+            <table>
+              <tr><td>Source name</td>                         <td>{{ candidate.nks_name }}</td></tr>
+              <tr><td>Location (HH:MM:SS.SS, DD:MM:SS.SS)</td> <td>{{ candidate.nks_ra_hms }}, {{ candidate.nks_dec_dms }}</td></tr>
+              <tr><td>Flux (mJy)</td>                          <td>{{ candidate.nks_flux }}</td></tr>
+              <tr><td>Resolution</td>                          <td>{{ candidate.nks_res }}</td></tr>
+              <tr><td>Resolution Difference</td>               <td>{{ candidate.nks_res_dif  }}</td></tr>
+              <tr><td>Flux (mJy)</td>                          <td>{{ candidate.nks_det_stat }}</td></tr>
+            </table>
+            <h3>Comparison:</h3>
+            <table>
+              <tr><td>Seperation (deg)</td> <td>{{ candidate.can_nks_sep_deg }}</td></tr>
+              <tr><td>Flux ratio</td>       <td>{{ candidate.can_nks_flux_rat }}</td></tr>
+              <tr><td>Is close?</td>        <td>{{ candidate.can_nks_is_close }}</td></tr>
+            </table>
         </div>
       </div>
   </div>
