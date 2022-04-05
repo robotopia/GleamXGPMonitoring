@@ -61,20 +61,22 @@
   </div>
 
   <div class="col-md-3">
-    <h3 class="subtitle is-3">Rate Current Candidate</h3>
+    <h2 class="subtitle is-3">Rate Current Candidate</h2>
     <form action="{% url 'candidate_update_rating' id=candidate.id %}" method="post">
       {% csrf_token %}
       <div class="field">
       <!-- <label for="rfi">Is RFI?</label>
       <input type="checkbox"  id='rfi' value='True' name="rfi"><br> -->
-      <label for="cand_type">Choose candidate type:</label>
+      <h3>Choose candidate type:</h3>
 
-      <select name="cand_type" id="cand_type">
-        <option value="T">Transient</option>
-        <option value="A">Airplane</option>
-        <option value="RFI">RFI</option>
-        <option value="SL">Sidelobe</option>
-      </select>
+      <input type="radio" id="T" name="cand_type" value="T" checked="checked" >
+      <label for="T">Transient</label><br>
+      <input type="radio" id="A" name="cand_type" value="A">
+      <label for="A">Airplane</label><br>
+      <input type="radio" id="RFI" name="cand_type" value="RFI">
+      <label for="RFI">RFI</label><br>
+      <input type="radio" id="SL" name="cand_type" value="SL">
+      <label for="SL">Sidelobe</label><br>
       </div>
       <div class="field">
       <label for="rating">Rating from 1(noise) to 5(clear candidate){% if rating %}(currently {{rating.rating}}){% endif %}</label>
