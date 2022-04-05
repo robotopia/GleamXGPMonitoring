@@ -1,5 +1,7 @@
 {% extends 'candidate_app/header.html' %}
 
+{% load utils %}
+
 {% block content %}
 
   <h2>Survey Status</h2>
@@ -7,12 +9,12 @@
       {% if obs %}
       <table  class="fl-table">
         <thead>
-          <th><a href="?order_by=obsname">Name</a></th>
-          <th><a href="?order_by=observation_id">Obs_ID</a></th>
-          <th><a href="?order_by=rated_candidates">Candidates Rated</a> / <a href="?order_by=candidates">Candidates Uploaded</a></th>
-          <th><a href="?order_by=ra_tile_hms">RA (HH:MM:SS.SS)</a></th>
-          <th><a href="?order_by=dec_tile_dms">Dec (DD:MM:SS.SS)</a></th>
-          <th><a href="?order_by=cent_freq">Centre Frequency (MHz)</a></th>
+          <th><a href="?{% url_replace request 'order_by' 'obsname' '-' %}">Name</a></th>
+          <th><a href="?{% url_replace request 'order_by' 'observation_id' '-' %}">Obs_ID</a></th>
+          <th><a href="?{% url_replace request 'order_by' 'rated_candidates' '-' %}">Candidates Rated</a> / <a href="?{% url_replace request 'order_by' 'candidates' '-' %}">Candidates Uploaded</a></th>
+          <th><a href="?{% url_replace request 'order_by' 'ra_tile_hms' '-' %}">RA (HH:MM:SS.SS)</a></th>
+          <th><a href="?{% url_replace request 'order_by' 'dec_tile_dms' '-' %}">Dec (DD:MM:SS.SS)</a></th>
+          <th><a href="?{% url_replace request 'order_by' 'cent_freq' '-' %}">Centre Frequency (MHz)</a></th>
         </thead>
         {% for acc in obs %}
         <tr>
