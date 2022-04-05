@@ -43,8 +43,7 @@
               {% else %}
                 <tr class="NegativeTransaction">
               {% endif %}
-              <td>Seperation (deg)</td>    <td>{{ candidate.can_nks_sep_deg|floatformat:2 }}</td></tr>
-              <tr></tr><td>cand close</td> <td>{{ candidate.can_nks_is_close }}</td></tr>
+              <td>Seperation (arcmin)</td>  <td>{{ sep_arcmin|floatformat:2 }}</td></tr>
               <tr><td>Flux (Jy)</td>        <td>{{ candidate.nks_flux|floatformat:2 }}</td></tr>
               <tr><td>Flux ratio</td>       <td>{{ candidate.can_nks_flux_rat|floatformat:2 }}</td></tr>
             </table>
