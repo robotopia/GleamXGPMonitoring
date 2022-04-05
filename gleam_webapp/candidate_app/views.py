@@ -162,12 +162,14 @@ def candidate_create(request):
 
 
 def survey_status(request):
+    # Order by the column the user clicked or by observation_id by default
+    order_by = request.GET.get('order_by', 'observation_id')
     obs_list = models.Observation.objects.all().annotate(
         candidates=Count("candidate"),
         rated_candidates=Count(
             "candidate",
             filter=Q(candidate__rating__isnull=False)
         ),
-    )
+    ).order_by(order_by)
     context = {'obs': obs_list}
     return render(request, 'candidate_app/survey_status.html', context)

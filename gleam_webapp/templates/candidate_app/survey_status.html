@@ -7,23 +7,21 @@
       {% if obs %}
       <table  class="table">
         <thead>
-          <th>Name</th>
-          <th>Obs_ID</th>
-          <th>Candidates Rated</th>
-          <th>RA (deg)</th>
-          <th>Dec (deg)</th>
-          <th>RA (HH:MM:SS.SS)</th>
-          <th>Dec (DD:MM:SS.SS)</th>
+          <th><a href="?order_by=obsname">Name</a></th>
+          <th><a href="?order_by=observation_id">Obs_ID</a></th>
+          <th><a href="?order_by=rated_candidates">Candidates Rated</a> / <a href="?order_by=candidates">Candidates Uploaded</a></th>
+          <th><a href="?order_by=ra_tile_hms">RA (HH:MM:SS.SS)</a></th>
+          <th><a href="?order_by=dec_tile_dms">Dec (DD:MM:SS.SS)</a></th>
+          <th><a href="?order_by=cent_freq">Centre Frequency (MHz)</a></th>
         </thead>
         {% for acc in obs %}
         <tr>
           <td>{{ acc.obsname }}</td>
           <td><a href="http://ws.mwatelescope.org/observation/obs/?obs_id={{ acc.observation_id }}" target="_blank">{{ acc.observation_id }}</a></td>
           <td>{{ acc.rated_candidates }}/{{ acc.candidates }}</td>
-          <td>{{ acc.ra_tile_dec }}</td>
-          <td>{{ acc.dec_tile_dec }}</td>
           <td>{{ acc.ra_tile_hms }}</td>
           <td>{{ acc.dec_tile_dms }}</td>
+          <td>{{ acc.cent_freq }}</td>
         </tr>
         {% endfor %}
       </table>
