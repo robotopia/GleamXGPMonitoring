@@ -35,8 +35,8 @@
               <tr><td>Location (HH:MM:SS.SS, DD:MM:SS.SS)</td> <td>{{ candidate.can_ra_hms }}, {{ candidate.can_dec_dms }}</td></tr>
               <tr><td>Central sep (deg)</td>                   <td>{{ candidate.can_cent_sep_deg }}</td></tr>
               <tr><td>Radius (deg)</td>                        <td>{{ candidate.can_rad_deg}}</td></tr>
-              <tr><td>Peak Flux (mJy)</td>                     <td>{{ candidate.can_peak_flux }}</td></tr>
-              <tr><td>Fluence (mJy)</td>                       <td>{{ candidate.can_fluence }}</td></tr>
+              <tr><td>Peak Flux (Jy)</td>                     <td>{{ candidate.can_peak_flux }}</td></tr>
+              <tr><td>Fluence (Jy s)</td>                       <td>{{ candidate.can_fluence }}</td></tr>
               <tr><td>Primary Beam</td>                        <td>{{ candidate.can_beam }}</td></tr>
               <tr><td>Detection statistic</td>                 <td>{{ candidate.can_det_stat }}</td></tr>
               <tr><td>Modulation Index</td>                    <td>{{ candidate.can_mod_ind }}</td></tr>
@@ -45,10 +45,10 @@
             <table>
               <tr><td>Source name</td>                         <td>{{ candidate.nks_name }}</td></tr>
               <tr><td>Location (HH:MM:SS.SS, DD:MM:SS.SS)</td> <td>{{ candidate.nks_ra_hms }}, {{ candidate.nks_dec_dms }}</td></tr>
-              <tr><td>Flux (mJy)</td>                          <td>{{ candidate.nks_flux }}</td></tr>
+              <tr><td>Flux (Jy)</td>                          <td>{{ candidate.nks_flux }}</td></tr>
               <tr><td>Resolution</td>                          <td>{{ candidate.nks_res }}</td></tr>
               <tr><td>Resolution Difference</td>               <td>{{ candidate.nks_res_dif  }}</td></tr>
-              <tr><td>Flux (mJy)</td>                          <td>{{ candidate.nks_det_stat }}</td></tr>
+              <tr><td>Detection statistic</td>                 <td>{{ candidate.nks_det_stat }}</td></tr>
             </table>
             <h3>Comparison:</h3>
             <table>
