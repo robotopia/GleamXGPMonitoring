@@ -26,14 +26,22 @@ def home_page(request):
 @login_required
 def candidate_rating(request, id):
     candidate = get_object_or_404(models.Candidate, id=id)
+
+    # Convert time to readable format
     time = Time(Time(candidate.obs_id.starttime, format='gps'), format='iso', scale='utc')
+
+    # Grab any previous ratings
     u = request.user
     rating = models.Rating.objects.filter(candidate=candidate, user=u).first()
+
+    # Convert seperation to arcminutes
+    sep_arcmin = candidate.can_nks_sep_deg * 60
 
     context = {
         'candidate': candidate,
         'rating': rating,
         'time': time,
+        'sep_arcmin': sep_arcmin,
     }
     return render(request, 'candidate_app/candidate_rating_form.html', context)
 
