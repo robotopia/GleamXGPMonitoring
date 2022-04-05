@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
 import random
+from astropy.time import Time
 
 from . import models, serializers
 
@@ -25,13 +26,14 @@ def home_page(request):
 @login_required
 def candidate_rating(request, id):
     candidate = get_object_or_404(models.Candidate, id=id)
-
+    time = Time(Time(candidate.obs_id.starttime, format='gps'), format='iso', scale='utc')
     u = request.user
     rating = models.Rating.objects.filter(candidate=candidate, user=u).first()
 
     context = {
         'candidate': candidate,
-        #'rating': rating,
+        'rating': rating,
+        'time': time,
     }
     return render(request, 'candidate_app/candidate_rating_form.html', context)
 

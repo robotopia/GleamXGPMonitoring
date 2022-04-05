@@ -7,14 +7,8 @@
 {% if candidate %}
 <div class="row fluid">
 
-  <div class="col-md-8">
-    <h3>Current Candidate</h3>
+  <div class="col-md-4">
     <div class="card">
-        <header class="card-header">
-          <p class="card-header-title">
-            ID:{{ candidate.id }}
-          </p>
-        </header>
         {% if candidate.png_path %}
         <div class="card-image">
           <figure class="image is-4by3">
@@ -22,80 +16,88 @@
           </figure>
         </div>
         {% endif %}
+      </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card">
         <div class="card-content">
-            <h3>Observation:</h3>
-            <table>
-              <tr><td>Observation ID</td>  <td>{{ candidate.obs_id.observation_id }}</td></tr>
-              <tr><td>Time</td>            <td>{{ candidate.obs_id.starttime }}</td></tr>
-              <tr><td>Frequency (MHz)</td> <td>{{ candidate.obs_id.cent_freq }}</td></tr>
-            </table>
-            <h3>Candidate:</h3>
+            <h2>Candidate:</h2>
             <table>
               <!-- <tr><td>Location (deg)</td>                      <td>{{ candidate.ra_dec }}, {{ candidate.dec_dec}}</td></tr> -->
-              <tr><td>Location (HH:MM:SS.SS, DD:MM:SS.SS)</td> <td>{{ candidate.can_ra_hms }}, {{ candidate.can_dec_dms }}</td></tr>
-              <tr><td>Central sep (deg)</td>                   <td>{{ candidate.can_cent_sep_deg }}</td></tr>
-              <tr><td>Radius (deg)</td>                        <td>{{ candidate.can_rad_deg}}</td></tr>
-              <tr><td>Peak Flux (Jy)</td>                     <td>{{ candidate.can_peak_flux }}</td></tr>
-              <tr><td>Fluence (Jy s)</td>                       <td>{{ candidate.can_fluence }}</td></tr>
-              <tr><td>Primary Beam</td>                        <td>{{ candidate.can_beam }}</td></tr>
-              <tr><td>Detection statistic</td>                 <td>{{ candidate.can_det_stat }}</td></tr>
-              <tr><td>Modulation Index</td>                    <td>{{ candidate.can_mod_ind }}</td></tr>
+              <tr><td>Detection statistic</td> <td>{{ candidate.can_det_stat|floatformat:2 }}</td></tr>
+              <tr><td>Peak Flux (Jy)</td>      <td>{{ candidate.can_peak_flux|floatformat:2 }}</td></tr>
+              <tr><td>Fluence (Jy s)</td>      <td>{{ candidate.can_fluence|floatformat:2 }}</td></tr>
+              <tr><td>Primary Beam</td>        <td>{{ candidate.can_beam|floatformat:2 }}</td></tr>
+              <tr><td>Seperation from obs center (deg)</td> <td>{{ candidate.can_cent_sep_deg|floatformat:2 }}</td></tr>
+              <tr><td>Location</td>            <td>{{ candidate.can_ra_hms }}, {{ candidate.can_dec_dms }}</td></tr>
+              <tr><td>Radius (deg)</td>        <td>{{ candidate.can_rad_deg|floatformat:2}}</td></tr>
+              <tr><td>Modulation Index</td>    <td>{{ candidate.can_mod_ind }}</td></tr>
             </table>
-            <h3>Match:</h3>
+            <h2>Nearest Known Source:</h2>
             <table>
-              <tr><td>Source name</td>                         <td>{{ candidate.nks_name }}</td></tr>
-              <tr><td>Location (HH:MM:SS.SS, DD:MM:SS.SS)</td> <td>{{ candidate.nks_ra_hms }}, {{ candidate.nks_dec_dms }}</td></tr>
-              <tr><td>Flux (Jy)</td>                          <td>{{ candidate.nks_flux }}</td></tr>
-              <tr><td>Resolution</td>                          <td>{{ candidate.nks_res }}</td></tr>
-              <tr><td>Resolution Difference</td>               <td>{{ candidate.nks_res_dif  }}</td></tr>
-              <tr><td>Detection statistic</td>                 <td>{{ candidate.nks_det_stat }}</td></tr>
-            </table>
-            <h3>Comparison:</h3>
-            <table>
-              <tr><td>Seperation (deg)</td> <td>{{ candidate.can_nks_sep_deg }}</td></tr>
-              <tr><td>Flux ratio</td>       <td>{{ candidate.can_nks_flux_rat }}</td></tr>
-              <tr><td>Is close?</td>        <td>{{ candidate.can_nks_is_close }}</td></tr>
+              <tr><td>Source name</td>      <td>{{ candidate.nks_name }}</td></tr>
+              <tr><td>Location</td>         <td>{{ candidate.nks_ra_hms }}, {{ candidate.nks_dec_dms }}</td></tr>
+              {% if candidate.can_nks_is_close %}
+                <tr>
+              {% else %}
+                <tr class="NegativeTransaction">
+              {% endif %}
+              <td>Seperation (deg)</td>    <td>{{ candidate.can_nks_sep_deg|floatformat:2 }}</td></tr>
+              <tr></tr><td>cand close</td> <td>{{ candidate.can_nks_is_close }}</td></tr>
+              <tr><td>Flux (Jy)</td>        <td>{{ candidate.nks_flux|floatformat:2 }}</td></tr>
+              <tr><td>Flux ratio</td>       <td>{{ candidate.can_nks_flux_rat|floatformat:2 }}</td></tr>
             </table>
         </div>
       </div>
   </div>
 
   <div class="col-md-3">
-    <h2 class="subtitle is-3">Rate Current Candidate</h2>
-    <form action="{% url 'candidate_update_rating' id=candidate.id %}" method="post">
-      {% csrf_token %}
-      <div class="field">
-      <!-- <label for="rfi">Is RFI?</label>
-      <input type="checkbox"  id='rfi' value='True' name="rfi"><br> -->
-      <h3>Choose candidate type:</h3>
+    <div class="card">
+      <div class="card-content">
+        <h2>Observation:</h2>
+        <table>
+          <tr><td>Observation ID</td>  <td><a href="http://ws.mwatelescope.org/observation/obs/?obs_id={{ candidate.obs_id.observation_id }}" target="_blank">{{ candidate.obs_id.observation_id }}</a></td></tr>
+          <tr><td>Time (UTC)</td>      <td>{{ time }}</td></tr>
+          <tr><td>Frequency (MHz)</td> <td>{{ candidate.obs_id.cent_freq }}</td></tr>
+        </table>
+        <h2>Rate Current Candidate:</h2>
+        <form action="{% url 'candidate_update_rating' id=candidate.id %}" method="post">
+          {% csrf_token %}
+          <div class="field">
+          <!-- <label for="rfi">Is RFI?</label>
+          <input type="checkbox"  id='rfi' value='True' name="rfi"><br> -->
+          <h3>Choose candidate type:</h3>
 
-      <input type="radio" id="T" name="cand_type" value="T" checked="checked" >
-      <label for="T">Transient</label><br>
-      <input type="radio" id="A" name="cand_type" value="A">
-      <label for="A">Airplane</label><br>
-      <input type="radio" id="RFI" name="cand_type" value="RFI">
-      <label for="RFI">RFI</label><br>
-      <input type="radio" id="SL" name="cand_type" value="SL">
-      <label for="SL">Sidelobe</label><br>
+          <input type="radio" id="T" name="cand_type" value="T" checked="checked" >
+          <label for="T">Transient</label><br>
+          <input type="radio" id="A" name="cand_type" value="A">
+          <label for="A">Airplane</label><br>
+          <input type="radio" id="RFI" name="cand_type" value="RFI">
+          <label for="RFI">RFI</label><br>
+          <input type="radio" id="SL" name="cand_type" value="SL">
+          <label for="SL">Sidelobe</label><br>
+          </div>
+          <div class="field">
+          <h3>Rating from 1(noise) to 5(clear candidate){% if rating %}(currently {{rating.rating}}){% endif %}</h3>
+          <div>
+            <input type="submit" class="btn btn-primary btn-lg" name="rating" value="1">
+            <input type="submit" class="btn btn-primary btn-lg" name="rating" value="2">
+            <input type="submit" class="btn btn-primary btn-lg" name="rating" value="3">
+            <input type="submit" class="btn btn-primary btn-lg" name="rating" value="4">
+            <input type="submit" class="btn btn-primary btn-lg" name="rating" value="5">
+          </div>
+          </div>
+          <div class="field">
+          <h3>Notes</h3>
+          <textarea rows="5" id="notes" name="notes" placeholder="is it a known source?">{{candidate.notes}}</textarea>
+          </div>
+          <input type="hidden" name="id" value="">
+          <input type="hidden" name="username" value="{{user}}">
+        </form>
+        <button class="btn btn-info" onclick="window.history.go(-1)">Back to previous</button>
       </div>
-      <div class="field">
-      <label for="rating">Rating from 1(noise) to 5(clear candidate){% if rating %}(currently {{rating.rating}}){% endif %}</label>
-      <div>
-        <input type="submit" class="button is-medium" name="rating" value="1">
-        <input type="submit" class="button is-medium" name="rating" value="2">
-        <input type="submit" class="button is-medium" name="rating" value="3">
-        <input type="submit" class="button is-medium" name="rating" value="4">
-        <input type="submit" class="button is-medium" name="rating" value="5">
-      </div>
-      </div>
-      <div class="field">
-      <label for="notes">Notes</label>
-      <textarea rows="5" cols="60" id="notes" name="notes" placeholder="is it a known source?">{{candidate.notes}}</textarea>
-      </div>
-      <input type="hidden" name="id" value="">
-      <input type="hidden" name="username" value="{{user}}">
-    </form>
-    <button class="button is-link" onclick="window.history.go(-1)">Back to previous</button>
+    </div>
   </div>
 </div>
 {% else %}
