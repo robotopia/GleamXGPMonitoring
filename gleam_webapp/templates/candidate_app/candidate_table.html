@@ -9,15 +9,15 @@
 {% if page_obj %}
   <table class="fl-table">
     <thead>
-      <th>ID</th>
-      <th>Rating (Count)</th>
-      <th>Notes</th>
-      <th>N Tranisent</th>
-      <th>N RFI</th>
-      <th>N Airplane</th>
-      <th>N Sidelobe</th>
-      <th>RA (HH:MM:SS.SS)</th>
-      <th>Dec (DD:MM:SS.SS)</th>
+      <th><a href="?order_by=id">ID</a></th>
+      <th><a href="?order_by=avg_rating">Rating</a> <a href="?order_by=num_ratings">(Count)</a></th>
+      <th><a href="?order_by=notes">>Notes</a></th>
+      <th><a href="?order_by=transient_count">N Tranisent</a></th>
+      <th><a href="?order_by=rfi_count">N RFI</a></th>
+      <th><a href="?order_by=airplane_count">N Airplane</a></th>
+      <th><a href="?order_by=sidelobe_count">N Sidelobe</a></th>
+      <th><a href="?order_by=can_ra_hms">RA (HH:MM:SS.SS)</a></th>
+      <th><a href="?order_by=can_dec_dms">Dec (DD:MM:SS.SS)</a></th>
       <th>Plot</th>
     </thead>
 

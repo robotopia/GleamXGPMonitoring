@@ -101,6 +101,8 @@ def candidate_random(request):
 
 
 def candidate_table(request):
+    # Order by the column the user clicked or by observation_id by default
+    order_by = request.GET.get('order_by', '-avg_rating')
     candidates = models.Candidate.objects.annotate(
         num_ratings=Count('rating'),
         avg_rating=Avg('rating__rating'),
@@ -108,7 +110,7 @@ def candidate_table(request):
         rfi_count=Count('rating', filter=Q(rating__cand_type='RFI')),
         airplane_count=Count('rating', filter=Q(rating__cand_type='A')),
         sidelobe_count=Count('rating', filter=Q(rating__cand_type='SL')),
-    )
+    ).order_by(order_by)
 
     # candidates = filter_claims(request, candidates)
 
@@ -123,7 +125,7 @@ def candidate_table(request):
     # if sigma_cutoff is not None:
     #     candidates = candidates.filter(sigma__gte=sigma_cutoff)
 
-    paginator = Paginator(candidates.order_by('-avg_rating'), 25)
+    paginator = Paginator(candidates, 25)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     return render(request, 'candidate_app/candidate_table.html', {'page_obj': page_obj})
