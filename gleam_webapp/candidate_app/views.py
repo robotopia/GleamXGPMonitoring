@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.db.models import Count, Q, Avg
 from django.core.paginator import Paginator
 from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -21,6 +22,7 @@ def home_page(request):
     return render(request, 'candidate_app/home_page.html')
 
 
+@login_required
 def candidate_rating(request, id):
     candidate = get_object_or_404(models.Candidate, id=id)
 
@@ -34,6 +36,7 @@ def candidate_rating(request, id):
     return render(request, 'candidate_app/candidate_rating_form.html', context)
 
 
+@login_required
 @api_view(['POST'])
 @transaction.atomic
 def candidate_update_rating(request, id):
@@ -81,6 +84,7 @@ def candidate_update_rating(request, id):
     return redirect(reverse('candidate_random'))
 
 
+@login_required
 def candidate_random(request):
     user = request.user
     # Get unrated candidates
@@ -136,6 +140,7 @@ def observation_create(request):
         return Response(obs.data, status=status.HTTP_201_CREATED)
     logger.debug(request.data)
     return Response(obs.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['POST'])
 @transaction.atomic
