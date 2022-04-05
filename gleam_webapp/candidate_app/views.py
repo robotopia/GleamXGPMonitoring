@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
 import random
+from astropy.time import Time
 
 from . import models, serializers
 
@@ -25,13 +26,14 @@ def home_page(request):
 @login_required
 def candidate_rating(request, id):
     candidate = get_object_or_404(models.Candidate, id=id)
-
+    time = Time(Time(candidate.obs_id.starttime, format='gps'), format='iso', scale='utc')
     u = request.user
     rating = models.Rating.objects.filter(candidate=candidate, user=u).first()
 
     context = {
         'candidate': candidate,
-        #'rating': rating,
+        'rating': rating,
+        'time': time,
     }
     return render(request, 'candidate_app/candidate_rating_form.html', context)
 
@@ -101,6 +103,8 @@ def candidate_random(request):
 
 
 def candidate_table(request):
+    # Order by the column the user clicked or by observation_id by default
+    order_by = request.GET.get('order_by', '-avg_rating')
     candidates = models.Candidate.objects.annotate(
         num_ratings=Count('rating'),
         avg_rating=Avg('rating__rating'),
@@ -108,7 +112,7 @@ def candidate_table(request):
         rfi_count=Count('rating', filter=Q(rating__cand_type='RFI')),
         airplane_count=Count('rating', filter=Q(rating__cand_type='A')),
         sidelobe_count=Count('rating', filter=Q(rating__cand_type='SL')),
-    )
+    ).order_by(order_by)
 
     # candidates = filter_claims(request, candidates)
 
@@ -123,7 +127,7 @@ def candidate_table(request):
     # if sigma_cutoff is not None:
     #     candidates = candidates.filter(sigma__gte=sigma_cutoff)
 
-    paginator = Paginator(candidates.order_by('-avg_rating'), 25)
+    paginator = Paginator(candidates, 25)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     return render(request, 'candidate_app/candidate_table.html', {'page_obj': page_obj})
@@ -162,12 +166,14 @@ def candidate_create(request):
 
 
 def survey_status(request):
+    # Order by the column the user clicked or by observation_id by default
+    order_by = request.GET.get('order_by', 'observation_id')
     obs_list = models.Observation.objects.all().annotate(
         candidates=Count("candidate"),
         rated_candidates=Count(
             "candidate",
             filter=Q(candidate__rating__isnull=False)
         ),
-    )
+    ).order_by(order_by)
     context = {'obs': obs_list}
     return render(request, 'candidate_app/survey_status.html', context)

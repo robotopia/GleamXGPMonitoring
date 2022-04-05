@@ -102,7 +102,7 @@ def upload_candidate(image_path, fits_path, filter_id):
     hdul = fits.open(fits_path)
 
     # loop over each candidate
-    for cand in hdul[1].data:
+    for cand in hdul[1].data[0]:
         data = {
             "filter_id": filter_id,
         }
@@ -110,7 +110,10 @@ def upload_candidate(image_path, fits_path, filter_id):
         for hi, dat in enumerate(cand):
             fits_header = f"TTYPE{hi+1}"
             header = hdul[1].header[fits_header]
+            logger.debug("")
             logger.debug(f"{header}: {dat}")
+            if f"TCOMM{hi+1}" in hdul[1].header.keys():
+                logger.debug(hdul[1].header[f"TCOMM{hi+1}"])
             if header == "obs_cent_freq":
                 # Skip because already have that data in obsid
                 pass
@@ -140,6 +143,9 @@ def upload_candidate(image_path, fits_path, filter_id):
 
 
 if __name__ == '__main__':
+    loglevels = dict(DEBUG=logging.DEBUG,
+                     INFO=logging.INFO,
+                     WARNING=logging.WARNING)
     parser = argparse.ArgumentParser(description='Upload a GLEAM transient candidate to the database.')
     parser.add_argument('--image', type=str,
                         help='The location of the image')
@@ -147,6 +153,17 @@ if __name__ == '__main__':
                         help='The location of the fits files containing the candidate information.')
     parser.add_argument('--filter', type=str,
                         help='The ID of the filter used for this candidate.')
+    parser.add_argument("-L", "--loglvl", type=str, help="Logger verbosity level. Default: INFO",
+                                    choices=loglevels.keys(), default="INFO")
     args = parser.parse_args()
+
+    # set up the logger for stand-alone execution
+    formatter = logging.Formatter('%(asctime)s  %(name)s  %(lineno)-4d  %(levelname)-9s :: %(message)s')
+    ch = logging.StreamHandler()
+    ch.setFormatter(formatter)
+    # Set up local logger
+    logger.setLevel(args.loglvl)
+    logger.addHandler(ch)
+    logger.propagate = False
 
     upload_candidate(args.image, args.fits, args.filter)

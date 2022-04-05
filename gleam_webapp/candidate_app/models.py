@@ -29,6 +29,7 @@ class Candidate(models.Model):
         Observation,
         on_delete=models.CASCADE,
         related_name="candidate",
+        verbose_name="Observation ID in GPS time",
     )
     filter_id = models.ForeignKey(
         Filter,
@@ -39,37 +40,37 @@ class Candidate(models.Model):
     notes = models.TextField(blank=True, null=True, default="")
 
     # Data in the fits file
-    can_x_pix = models.FloatField(blank=True, null=True)
-    can_y_pix = models.FloatField(blank=True, null=True)
-    can_ra_deg = models.FloatField(blank=True, null=True)
-    can_dec_deg = models.FloatField(blank=True, null=True)
-    can_cent_sep_deg = models.FloatField(blank=True, null=True)
-    can_rad_pix = models.FloatField(blank=True, null=True)
-    can_rad_deg = models.FloatField(blank=True, null=True)
-    can_peak_flux = models.FloatField(blank=True, null=True)
-    can_fluence = models.FloatField(blank=True, null=True)
-    can_beam = models.FloatField(blank=True, null=True)
-    can_det_stat = models.FloatField(blank=True, null=True)
-    can_mod_ind = models.IntegerField(blank=True, null=True)
-    nks_name = models.CharField(max_length=64, blank=True, null=True)
-    nks_x_pix = models.FloatField(blank=True, null=True)
-    nks_y_pix = models.FloatField(blank=True, null=True)
-    nks_ra_deg = models.FloatField(blank=True, null=True)
-    nks_dec_deg = models.FloatField(blank=True, null=True)
-    nks_flux = models.FloatField(blank=True, null=True)
-    nks_res = models.FloatField(blank=True, null=True)
-    nks_res_dif = models.FloatField(blank=True, null=True)
-    nks_det_stat = models.FloatField(blank=True, null=True)
-    can_nks_sep_pix = models.FloatField(blank=True, null=True)
-    can_nks_sep_deg = models.FloatField(blank=True, null=True)
-    can_nks_flux_rat = models.FloatField(blank=True, null=True)
-    can_nks_is_close = models.BooleanField(null=True)
+    can_x_pix = models.FloatField(blank=True, null=True, verbose_name="Candidate x pixel coordinate in obsevration")
+    can_y_pix = models.FloatField(blank=True, null=True, verbose_name="Candidate y pixel coordinate in obsevration")
+    can_ra_deg = models.FloatField(blank=True, null=True, verbose_name="Candidate Right Acension (deg)")
+    can_dec_deg = models.FloatField(blank=True, null=True, verbose_name="Candidate Declination (deg)")
+    can_cent_sep_deg = models.FloatField(blank=True, null=True, verbose_name="Candidate seperation from observation central pointing (deg)")
+    can_rad_pix = models.FloatField(blank=True, null=True, verbose_name="Candidate radius in pixels")
+    can_rad_deg = models.FloatField(blank=True, null=True, verbose_name="Candidate radius in degrees")
+    can_peak_flux = models.FloatField(blank=True, null=True, verbose_name="Candidate peak flux in Jy")
+    can_fluence = models.FloatField(blank=True, null=True, verbose_name="Candidate fluence in Jy s")
+    can_beam = models.FloatField(blank=True, null=True, verbose_name="Primary beam value at the candidate location")
+    can_det_stat = models.FloatField(blank=True, null=True, verbose_name="Candidate detection statistic - arbitrary value returned by filter")
+    can_mod_ind = models.IntegerField(blank=True, null=True, verbose_name="Candidate modulation index")
+    nks_name = models.CharField(max_length=64, blank=True, null=True, verbose_name="Nearest known source name")
+    nks_x_pix = models.FloatField(blank=True, null=True, verbose_name="Nearest known source x pixel coordinate in observation")
+    nks_y_pix = models.FloatField(blank=True, null=True, verbose_name="Nearest known source y pixel coordinate in observation")
+    nks_ra_deg = models.FloatField(blank=True, null=True, verbose_name="Nearest known source Right Acension (deg)")
+    nks_dec_deg = models.FloatField(blank=True, null=True, verbose_name="Nearest known source Declination (deg)")
+    nks_flux = models.FloatField(blank=True, null=True, verbose_name="Nearest known source integrated flux density in Jy")
+    nks_res = models.FloatField(blank=True, null=True, verbose_name="")
+    nks_res_dif = models.FloatField(blank=True, null=True, verbose_name="Nearest known source number of stds above mean residual")
+    nks_det_stat = models.FloatField(blank=True, null=True, verbose_name="Nearest known source detection statistic - arbitrary value returned by filter")
+    can_nks_sep_pix = models.FloatField(blank=True, null=True, verbose_name="Separation between candidate and known in pixels")
+    can_nks_sep_deg = models.FloatField(blank=True, null=True, verbose_name="Separation between candidate and known in degrees")
+    can_nks_flux_rat = models.FloatField(blank=True, null=True, verbose_name="Ratio of candidate and known flux")
+    can_nks_is_close = models.BooleanField(null=True, verbose_name="")
 
     # Coordinates converted to hms/dms
     can_ra_hms  = models.CharField(max_length=32, blank=True, null=True, verbose_name="Candidate Right Acension (HH:MM:SS)")
     can_dec_dms = models.CharField(max_length=32, blank=True, null=True, verbose_name="Candidate Declination (DD:MM:SS)")
-    nks_ra_hms  = models.CharField(max_length=32, blank=True, null=True, verbose_name="nks Right Acension (HH:MM:SS)")
-    nks_dec_dms = models.CharField(max_length=32, blank=True, null=True, verbose_name="nks Declination (DD:MM:SS)")
+    nks_ra_hms  = models.CharField(max_length=32, blank=True, null=True, verbose_name="Nearest known source Right Acension (HH:MM:SS)")
+    nks_dec_dms = models.CharField(max_length=32, blank=True, null=True, verbose_name="Nearest known source Declination (DD:MM:SS)")
 
 
 
