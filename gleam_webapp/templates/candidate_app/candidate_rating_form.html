@@ -29,7 +29,7 @@
               <tr><td>Peak Flux (Jy)</td>      <td>{{ candidate.can_peak_flux|floatformat:2 }}</td></tr>
               <tr><td>Fluence (Jy s)</td>      <td>{{ candidate.can_fluence|floatformat:2 }}</td></tr>
               <tr><td>Primary Beam</td>        <td>{{ candidate.can_beam|floatformat:2 }}</td></tr>
-              <tr><td>Seperation from obs center (deg)</td> <td>{{ candidate.can_cent_sep_deg|floatformat:2 }}</td></tr>
+              <tr><td>Separation from obs center (deg)</td> <td>{{ candidate.can_cent_sep_deg|floatformat:2 }}</td></tr>
               <tr><td>Location</td>            <td>{{ candidate.can_ra_hms }}, {{ candidate.can_dec_dms }}</td></tr>
               <tr><td>Radius (deg)</td>        <td>{{ candidate.can_rad_deg|floatformat:2}}</td></tr>
               <tr><td>Modulation Index</td>    <td>{{ candidate.can_mod_ind }}</td></tr>
@@ -43,7 +43,7 @@
               {% else %}
                 <tr class="NegativeTransaction">
               {% endif %}
-              <td>Seperation (arcmin)</td>  <td>{{ sep_arcmin|floatformat:2 }}</td></tr>
+              <td>Separation (arcmin)</td>  <td>{{ sep_arcmin|floatformat:2 }}</td></tr>
               <tr><td>Flux (Jy)</td>        <td>{{ candidate.nks_flux|floatformat:2 }}</td></tr>
               <tr><td>Flux ratio</td>       <td>{{ candidate.can_nks_flux_rat|floatformat:2 }}</td></tr>
             </table>
