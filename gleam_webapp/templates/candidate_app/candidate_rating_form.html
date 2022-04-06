@@ -22,7 +22,7 @@
   <div class="col-md-3">
     <div class="card">
         <div class="card-content">
-            <h2>Candidate:</h2>
+            <h3>Candidate:</h3>
             <table>
               <!-- <tr><td>Location (deg)</td>                      <td>{{ candidate.ra_dec }}, {{ candidate.dec_dec}}</td></tr> -->
               <tr><td>Detection statistic</td> <td>{{ candidate.can_det_stat|floatformat:2 }}</td></tr>
@@ -34,7 +34,7 @@
               <tr><td>Radius (deg)</td>        <td>{{ candidate.can_rad_deg|floatformat:2}}</td></tr>
               <tr><td>Modulation Index</td>    <td>{{ candidate.can_mod_ind }}</td></tr>
             </table>
-            <h2>Nearest Known Source:</h2>
+            <h3>Nearest Known Source:</h3>
             <table>
               <tr><td>Source name</td>      <td>{{ candidate.nks_name }}</td></tr>
               <tr><td>Location</td>         <td>{{ candidate.nks_ra_hms }}, {{ candidate.nks_dec_dms }}</td></tr>
@@ -47,6 +47,34 @@
               <tr><td>Flux (Jy)</td>        <td>{{ candidate.nks_flux|floatformat:2 }}</td></tr>
               <tr><td>Flux ratio</td>       <td>{{ candidate.can_nks_flux_rat|floatformat:2 }}</td></tr>
             </table>
+            <h3>SIMBAD {{ arcmin_search }} arcmin search:</h3>
+            <table class="fl-table">
+              <!-- <thead> -->
+              <tr>
+                <th>Name</th>
+                <th>RA</th>
+                <th>Dec</th>
+              </tr>
+              <!-- </thead> -->
+              <!-- Iterate over object_list -->
+              {% for result in result_table %}
+              <!-- Display Objects -->
+              <tr>
+                <td><a href="https://simbad.cds.unistra.fr/simbad/sim-id?Ident={{ result.search_term }}&NbIdent=1&submit=submit+id" style="text-decoration:None">{{ result.name }}</a></td>
+                <td>{{ result.ra }}</td>
+                <td>{{ result.dec }}</td>
+              </tr>
+              <!-- If object_list is empty  -->
+              {% empty %}
+              <tr><td>No Sources found</td></tr>
+              {% endfor %}
+            </table>
+            <form action="{% url 'candidate_update_simbad' id=candidate.id %}" method="post">
+              {% csrf_token %}
+              <label for="simbad">Research with arcmins:</label>
+              <input id="simbad" type="text"  name="simbad">
+              <input class="btn btn-primary" type="submit" value="Submit">
+            </form>
         </div>
       </div>
   </div>
@@ -54,19 +82,19 @@
   <div class="col-md-3">
     <div class="card">
       <div class="card-content">
-        <h2>Observation:</h2>
+        <h3>Observation:</h3>
         <table>
           <tr><td>Observation ID</td>  <td><a href="http://ws.mwatelescope.org/observation/obs/?obs_id={{ candidate.obs_id.observation_id }}" target="_blank">{{ candidate.obs_id.observation_id }}</a></td></tr>
           <tr><td>Time (UTC)</td>      <td>{{ time }}</td></tr>
           <tr><td>Frequency (MHz)</td> <td>{{ candidate.obs_id.cent_freq }}</td></tr>
         </table>
-        <h2>Rate Current Candidate:</h2>
+        <h3>Rate Current Candidate:</h3>
         <form action="{% url 'candidate_update_rating' id=candidate.id %}" method="post">
           {% csrf_token %}
           <div class="field">
           <!-- <label for="rfi">Is RFI?</label>
           <input type="checkbox"  id='rfi' value='True' name="rfi"><br> -->
-          <h3>Choose candidate type:</h3>
+          <h4>Choose candidate type:</h4>
 
           <input type="radio" id="T" name="cand_type" value="T" checked="checked" >
           <label for="T">Transient</label><br>
@@ -78,7 +106,7 @@
           <label for="SL">Sidelobe</label><br>
           </div>
           <div class="field">
-          <h3>Rating from 1(noise) to 5(clear candidate){% if rating %}(currently {{rating.rating}}){% endif %}</h3>
+          <h4>Rating from 1(noise) to 5(clear candidate){% if rating %}(currently {{rating.rating}}){% endif %}</h4>
           <div>
             <input type="submit" class="btn btn-primary btn-lg" name="rating" value="1">
             <input type="submit" class="btn btn-primary btn-lg" name="rating" value="2">
@@ -88,7 +116,7 @@
           </div>
           </div>
           <div class="field">
-          <h3>Notes</h3>
+          <h4>Notes</h4>
           <textarea rows="5" id="notes" name="notes" placeholder="is it a known source?">{{candidate.notes}}</textarea>
           </div>
           <input type="hidden" name="id" value="">
