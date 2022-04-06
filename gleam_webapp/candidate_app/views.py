@@ -46,16 +46,17 @@ def candidate_rating(request, id, arcmin=2):
     raw_result_table = Simbad.query_region(cand_coord, radius=float(arcmin) * units.arcmin)
     result_table = []
     # Reformat the result into the format we want
-    for result in raw_result_table:
-        search_term = result["MAIN_ID"].replace("+", "%2B").replace(" ", "+")
-        ra  = Angle(result["RA"],  unit=units.hour).to_string(unit=units.hour, sep=':')[:11]
-        dec = Angle(result["DEC"], unit=units.deg).to_string(unit=units.deg, sep=':')[:11]
-        result_table.append({
-            'name': result["MAIN_ID"],
-            'search_term': search_term,
-            'ra': ra,
-            'dec': dec,
-        })
+    if raw_result_table is not None:
+        for result in raw_result_table:
+            search_term = result["MAIN_ID"].replace("+", "%2B").replace(" ", "+")
+            ra  = Angle(result["RA"],  unit=units.hour).to_string(unit=units.hour, sep=':')[:11]
+            dec = Angle(result["DEC"], unit=units.deg).to_string(unit=units.deg, sep=':')[:11]
+            result_table.append({
+                'name': result["MAIN_ID"],
+                'search_term': search_term,
+                'ra': ra,
+                'dec': dec,
+            })
 
     context = {
         'candidate': candidate,
