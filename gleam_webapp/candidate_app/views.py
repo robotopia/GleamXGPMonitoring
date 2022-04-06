@@ -13,6 +13,10 @@ from rest_framework.decorators import api_view
 
 import random
 from astropy.time import Time
+from astropy.coordinates import SkyCoord
+from astropy import units
+from astropy.coordinates import Angle
+from astroquery.simbad import Simbad
 
 from . import models, serializers
 
@@ -24,7 +28,7 @@ def home_page(request):
 
 
 @login_required
-def candidate_rating(request, id):
+def candidate_rating(request, id, arcmin=2):
     candidate = get_object_or_404(models.Candidate, id=id)
 
     # Convert time to readable format
@@ -37,11 +41,29 @@ def candidate_rating(request, id):
     # Convert seperation to arcminutes
     sep_arcmin = candidate.can_nks_sep_deg * 60
 
+    # Perform simbad query
+    cand_coord = SkyCoord(candidate.can_ra_deg, candidate.can_dec_deg, unit=(units.deg, units.deg), frame='icrs')
+    raw_result_table = Simbad.query_region(cand_coord, radius=float(arcmin) * units.arcmin)
+    result_table = []
+    # Reformat the result into the format we want
+    for result in raw_result_table:
+        search_term = result["MAIN_ID"].replace("+", "%2B").replace(" ", "+")
+        ra  = Angle(result["RA"],  unit=units.hour).to_string(unit=units.hour, sep=':')[:11]
+        dec = Angle(result["DEC"], unit=units.deg).to_string(unit=units.deg, sep=':')[:11]
+        result_table.append({
+            'name': result["MAIN_ID"],
+            'search_term': search_term,
+            'ra': ra,
+            'dec': dec,
+        })
+
     context = {
         'candidate': candidate,
         'rating': rating,
         'time': time,
         'sep_arcmin': sep_arcmin,
+        'result_table': result_table,
+        'arcmin_search': arcmin,
     }
     return render(request, 'candidate_app/candidate_rating_form.html', context)
 
@@ -92,6 +114,22 @@ def candidate_update_rating(request, id):
 
     # Redirects to a random next candidate
     return redirect(reverse('candidate_random'))
+
+
+@login_required
+@api_view(['POST'])
+@transaction.atomic
+def candidate_update_simbad(request, id):
+    logger.debug(request.data)
+    candidate = models.Candidate.objects.filter(id=id).first()
+    if candidate is None:
+        raise ValueError("Candidate not found")
+    logger.debug('candidate obj %s', candidate)
+
+    arcmin = request.data.get('simbad', None)
+    if arcmin:
+        logger.debug(f'New query with {arcmin}')
+        return candidate_rating(request, id, arcmin=arcmin)
 
 
 @login_required

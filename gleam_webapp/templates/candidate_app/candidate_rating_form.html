@@ -47,6 +47,34 @@
               <tr><td>Flux (Jy)</td>        <td>{{ candidate.nks_flux|floatformat:2 }}</td></tr>
               <tr><td>Flux ratio</td>       <td>{{ candidate.can_nks_flux_rat|floatformat:2 }}</td></tr>
             </table>
+            <h3>SIMBAD {{ arcmin_search }} arcmin search:</h3>
+            <table class="fl-table">
+              <!-- <thead> -->
+              <tr>
+                <th>Name</th>
+                <th>RA</th>
+                <th>Dec</th>
+              </tr>
+              <!-- </thead> -->
+              <!-- Iterate over object_list -->
+              {% for result in result_table %}
+              <!-- Display Objects -->
+              <tr>
+                <td><a href="https://simbad.cds.unistra.fr/simbad/sim-id?Ident={{ result.search_term }}&NbIdent=1&submit=submit+id" style="text-decoration:None">{{ result.name }}</a></td>
+                <td>{{ result.ra }}</td>
+                <td>{{ result.dec }}</td>
+              </tr>
+              <!-- If object_list is empty  -->
+              {% empty %}
+              <tr><td>No Sources found</td></tr>
+              {% endfor %}
+            </table>
+            <form action="{% url 'candidate_update_simbad' id=candidate.id %}" method="post">
+              {% csrf_token %}
+              <label for="simbad">Research with arcmins:</label>
+              <input id="simbad" type="text"  name="simbad">
+              <input class="btn btn-primary" type="submit" value="Submit">
+            </form>
         </div>
       </div>
   </div>
