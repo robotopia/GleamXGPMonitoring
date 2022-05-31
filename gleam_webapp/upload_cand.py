@@ -1,5 +1,3 @@
-
-
 #!/usr/bin/env python
 
 import os
@@ -16,7 +14,11 @@ from astropy.io import fits
 import logging
 logger = logging.getLogger(__name__)
 
-BASE_URL = 'https://mwa-image-plane.duckdns.org'
+SYSTEM_ENV = os.environ.get('SYSTEM_ENV', None)
+if SYSTEM_ENV == 'DEVELOPMENT':
+    BASE_URL = 'http://127.0.0.1:8000'
+else:
+    BASE_URL = 'https://mwa-image-plane.duckdns.org'
 
 def getmeta(servicetype='metadata', service='obs', params=None):
     """
@@ -81,7 +83,7 @@ def upload_obsid(obsid):
     }
     r = session.post(url, data=data)
 
-def upload_candidate(image_path, fits_path, filter_id):
+def upload_candidate(image_path, gif_path, fits_path, filter_id):
     """ Upload an MWA observation to the database.
 
     Parameters
@@ -102,7 +104,8 @@ def upload_candidate(image_path, fits_path, filter_id):
     hdul = fits.open(fits_path)
 
     # loop over each candidate
-    for cand in hdul[1].data[0]:
+    #for cand in hdul[1].data[0]:
+    for cand in hdul[1].data:
         data = {
             "filter_id": filter_id,
         }
@@ -135,9 +138,9 @@ def upload_candidate(image_path, fits_path, filter_id):
                 data[header] = dat
 
         # open the image file
-        with open(image_path, 'rb') as image:
+        with open(image_path, 'rb') as image, open(gif_path, 'rb') as gif:
             # upload to database
-            r = session.post(url, data=data, files={"png":image})
+            r = session.post(url, data=data, files={"png":image, "gif":gif})
         print(r.text)
         r.raise_for_status()
 
@@ -149,6 +152,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Upload a GLEAM transient candidate to the database.')
     parser.add_argument('--image', type=str,
                         help='The location of the image')
+    parser.add_argument('--gif', type=str,
+                        help='The location of the gif')
     parser.add_argument('--fits', type=str,
                         help='The location of the fits files containing the candidate information.')
     parser.add_argument('--filter', type=str,
@@ -166,4 +171,4 @@ if __name__ == '__main__':
     logger.addHandler(ch)
     logger.propagate = False
 
-    upload_candidate(args.image, args.fits, args.filter)
+    upload_candidate(args.image, args.gif, args.fits, args.filter)

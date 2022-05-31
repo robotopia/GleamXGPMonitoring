@@ -9,14 +9,25 @@
 
   <div class="col-md-5">
     <div class="card">
-        {% if candidate.png_path %}
-        <div class="card-image">
-          <figure class="image is-4by3">
+      {% if candidate.png_path %}
+        <center>
             <img src="{{candidate.png_path.url}}" alt="Diagnostic Plot for {{candidate.id}}" onClick="window.open(this.src)">
           </figure>
-        </div>
-        {% endif %}
-      </div>
+        </center>
+      {% endif %}
+    </div>
+  <!-- </div>
+  <div class="col-md-2"> -->
+    <div class="card">
+      {% if candidate.gif_path %}
+        <center>
+          <img src="{{candidate.gif_path.url}}"
+              width="370"
+              alt="Diagnostic GIF for {{candidate.id}}"
+              onClick="window.open(this.src)">
+        </center>
+      {% endif %}
+    </div>
   </div>
 
   <div class="col-md-3">

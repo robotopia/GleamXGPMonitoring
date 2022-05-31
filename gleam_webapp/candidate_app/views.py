@@ -39,11 +39,17 @@ def candidate_rating(request, id, arcmin=2):
     rating = models.Rating.objects.filter(candidate=candidate, user=u).first()
 
     # Convert seperation to arcminutes
-    sep_arcmin = candidate.can_nks_sep_deg * 60
+    if candidate.can_nks_sep_deg is None:
+        sep_arcmin = None
+    else:
+        sep_arcmin = candidate.can_nks_sep_deg * 60
 
     # Perform simbad query
-    cand_coord = SkyCoord(candidate.can_ra_deg, candidate.can_dec_deg, unit=(units.deg, units.deg), frame='icrs')
-    raw_result_table = Simbad.query_region(cand_coord, radius=float(arcmin) * units.arcmin)
+    if None in (candidate.can_ra_deg, candidate.can_dec_deg):
+        raw_result_table = None
+    else:
+        cand_coord = SkyCoord(candidate.can_ra_deg, candidate.can_dec_deg, unit=(units.deg, units.deg), frame='icrs')
+        raw_result_table = Simbad.query_region(cand_coord, radius=float(arcmin) * units.arcmin)
     result_table = []
     # Reformat the result into the format we want
     if raw_result_table is not None:
@@ -198,6 +204,7 @@ def observation_create(request):
 def candidate_create(request):
     cand = serializers.CandidateSerializer(data=request.data)
     png_file = request.data.get("png")
+    gif_file = request.data.get("gif")
     if cand.is_valid():
         # Find obsid
         #obs = models.Observation.objects.filter(observation_id=obsid).first()
@@ -205,7 +212,11 @@ def candidate_create(request):
             return Response(
                 "Missing png file", status=status.HTTP_400_BAD_REQUEST
             )
-        cand.save(png_path=png_file)
+        if gif_file is None:
+            return Response(
+                "Missing gif file", status=status.HTTP_400_BAD_REQUEST
+            )
+        cand.save(png_path=png_file, gif_path=gif_file)
         return Response(cand.data, status=status.HTTP_201_CREATED)
     logger.debug(request.data)
     logger.error(cand.errors)

@@ -37,6 +37,7 @@ class Candidate(models.Model):
         related_name="candidate",
     )
     png_path = models.FileField(upload_to="candidates/", max_length=1024, null=True)
+    gif_path = models.FileField(upload_to="candidates/", max_length=1024, null=True)
     notes = models.TextField(blank=True, null=True, default="")
 
     # Data in the fits file
