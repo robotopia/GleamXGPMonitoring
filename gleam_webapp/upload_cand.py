@@ -20,6 +20,16 @@ if SYSTEM_ENV == 'DEVELOPMENT':
 else:
     BASE_URL = 'https://mwa-image-plane.duckdns.org'
 
+
+class TokenAuth(requests.auth.AuthBase):
+    def __init__(self, token):
+        self.token = token
+
+    def __call__(self, r):
+        r.headers['Authorization'] = "Token {}".format(self.token)
+        return r
+
+
 def getmeta(servicetype='metadata', service='obs', params=None):
     """
     Function to call a JSON web service and return a dictionary:
@@ -62,7 +72,7 @@ def upload_obsid(obsid):
 
     # Upload
     session = requests.session()
-    session.auth = (os.environ['GLEAM_USER'], os.environ['GLEAM_PASSWORD'])
+    session.auth = TokenAuth(os.environ['IMAGE_PLANE_TOKEN'])
     url = f'{BASE_URL}/observation_create/'
     data = {
         'observation_id': obsid,
