@@ -5,32 +5,25 @@
 <title>Candidate Rating ID:{{ candidate.id }} </title>
 <h2>Candidate Rating ID:{{ candidate.id }}</h2>
 {% if candidate %}
-<div class="row fluid">
+<div class="row">
 
-  <div class="col-md-5">
+  <div class="col-md-8">
     <div class="card">
+      <center>
       {% if candidate.png_path %}
-        <center>
-            <img src="{{candidate.png_path.url}}" alt="Diagnostic Plot for {{candidate.id}}" onClick="window.open(this.src)">
-          </figure>
-        </center>
+          <img src="{{candidate.png_path.url}}" alt="Diagnostic Plot for {{candidate.id}}" onClick="window.open(this.src)">
       {% endif %}
-    </div>
-  <!-- </div>
-  <div class="col-md-2"> -->
-    <div class="card">
       {% if candidate.gif_path %}
-        <center>
-          <img src="{{candidate.gif_path.url}}"
-              width="370"
-              alt="Diagnostic GIF for {{candidate.id}}"
-              onClick="window.open(this.src)">
-        </center>
+        <img src="{{candidate.gif_path.url}}"
+            width="250"
+            alt="Diagnostic GIF for {{candidate.id}}"
+            onClick="window.open(this.src)">
       {% endif %}
+      </center>
     </div>
   </div>
 
-  <div class="col-md-3">
+  <div class="col-md-2">
     <div class="card">
         <div class="card-content">
             <h3>Candidate:</h3>
@@ -90,7 +83,7 @@
       </div>
   </div>
 
-  <div class="col-md-3">
+  <div class="col-md-2">
     <div class="card">
       <div class="card-content">
         <h3>Observation:</h3>
