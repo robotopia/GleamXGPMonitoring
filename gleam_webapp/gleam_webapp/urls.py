@@ -26,6 +26,8 @@ urlpatterns = [
     path('', views.home_page, name='home_page'),
     path('observation_create/', views.observation_create),
     path('candidate_create/', views.candidate_create),
+    path('token_manage/', views.token_manage, name='token_manage'),
+    path('token_create/', views.token_create),
     path('candidate_rating/<int:id>/', views.candidate_rating, name='candidate_rating'),
     path('candidate_rating/random/', views.candidate_random, name='candidate_random'),
     path('candidate_update_rating/<int:id>/', views.candidate_update_rating, name='candidate_update_rating'),

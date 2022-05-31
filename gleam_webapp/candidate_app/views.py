@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from rest_framework.authtoken.models import Token
 
 import random
 from astropy.time import Time
@@ -73,6 +74,23 @@ def candidate_rating(request, id, arcmin=2):
         'arcmin_search': arcmin,
     }
     return render(request, 'candidate_app/candidate_rating_form.html', context)
+
+@login_required
+def token_manage(request):
+    u = request.user
+    token = Token.objects.filter(user=u).first()
+    return render(request, 'candidate_app/token_manage.html', {"token":token})
+
+
+@login_required
+def token_create(request):
+    u = request.user
+    token = Token.objects.filter(user=u)
+    if token.exists():
+        token.delete()
+    new_token = Token.objects.create(user=u)
+    #return render(request, 'candidate_app/token_manage.html', {"token":new_token})
+    return redirect(reverse('token_manage'))
 
 
 @login_required
