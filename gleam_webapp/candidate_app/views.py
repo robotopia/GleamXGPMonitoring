@@ -40,16 +40,16 @@ def candidate_rating(request, id, arcmin=2):
     rating = models.Rating.objects.filter(candidate=candidate, user=u).first()
 
     # Convert seperation to arcminutes
-    if candidate.can_nks_sep_deg is None:
+    if candidate.nks_sep_deg is None:
         sep_arcmin = None
     else:
-        sep_arcmin = candidate.can_nks_sep_deg * 60
+        sep_arcmin = candidate.nks_sep_deg * 60
 
     # Perform simbad query
-    if None in (candidate.can_ra_deg, candidate.can_dec_deg):
+    if None in (candidate.ra_deg, candidate.dec_deg):
         raw_result_table = None
     else:
-        cand_coord = SkyCoord(candidate.can_ra_deg, candidate.can_dec_deg, unit=(units.deg, units.deg), frame='icrs')
+        cand_coord = SkyCoord(candidate.ra_deg, candidate.dec_deg, unit=(units.deg, units.deg), frame='icrs')
         raw_result_table = Simbad.query_region(cand_coord, radius=float(arcmin) * units.arcmin)
     result_table = []
     # Reformat the result into the format we want

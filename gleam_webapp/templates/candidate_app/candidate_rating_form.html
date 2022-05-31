@@ -31,11 +31,10 @@
               <!-- <tr><td>Location (deg)</td>                      <td>{{ candidate.ra_dec }}, {{ candidate.dec_dec}}</td></tr> -->
               <tr><td>Detection statistic</td> <td>{{ candidate.can_det_stat|floatformat:2 }}</td></tr>
               <tr><td>Peak Flux (Jy)</td>      <td>{{ candidate.can_peak_flux|floatformat:2 }}</td></tr>
-              <tr><td>Fluence (Jy s)</td>      <td>{{ candidate.can_fluence|floatformat:2 }}</td></tr>
               <tr><td>Primary Beam</td>        <td>{{ candidate.can_beam|floatformat:2 }}</td></tr>
-              <tr><td>Separation from obs center (deg)</td> <td>{{ candidate.can_cent_sep_deg|floatformat:2 }}</td></tr>
-              <tr><td>Location</td>            <td>{{ candidate.can_ra_hms }}, {{ candidate.can_dec_dms }}</td></tr>
-              <tr><td>Radius (deg)</td>        <td>{{ candidate.can_rad_deg|floatformat:2}}</td></tr>
+              <tr><td>Separation from obs center (deg)</td> <td>{{ candidate.cent_sep_deg|floatformat:2 }}</td></tr>
+              <tr><td>Location</td>            <td>{{ candidate.ra_hms }}, {{ candidate.dec_dms }}</td></tr>
+              <tr><td>Radius (deg)</td>        <td>{{ candidate.rad_deg|floatformat:3}}</td></tr>
               <tr><td>Modulation Index</td>    <td>{{ candidate.can_mod_ind }}</td></tr>
             </table>
             <h3>Nearest Known Source:</h3>
