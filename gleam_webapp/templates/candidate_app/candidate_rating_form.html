@@ -7,7 +7,7 @@
 {% if candidate %}
 <div class="row">
 
-  <div class="col-md-8">
+  <div class="col">
     <div class="card">
       <center>
       {% if candidate.png_path %}
@@ -15,7 +15,7 @@
       {% endif %}
       {% if candidate.gif_path %}
         <img src="{{candidate.gif_path.url}}"
-            width="250"
+            width="125"
             alt="Diagnostic GIF for {{candidate.id}}"
             onClick="window.open(this.src)">
       {% endif %}
@@ -23,7 +23,7 @@
     </div>
   </div>
 
-  <div class="col-md-2">
+  <div class="col-3">
     <div class="card">
         <div class="card-content">
             <h3>Candidate:</h3>
@@ -35,7 +35,6 @@
               <tr><td>Separation from obs center (deg)</td> <td>{{ candidate.cent_sep_deg|floatformat:2 }}</td></tr>
               <tr><td>Location</td>            <td>{{ candidate.ra_hms }}, {{ candidate.dec_dms }}</td></tr>
               <tr><td>Radius (deg)</td>        <td>{{ candidate.rad_deg|floatformat:3}}</td></tr>
-              <tr><td>Modulation Index</td>    <td>{{ candidate.can_mod_ind }}</td></tr>
             </table>
             <h3>Nearest Known Source:</h3>
             <table>
@@ -82,7 +81,7 @@
       </div>
   </div>
 
-  <div class="col-md-2">
+  <div class="col-2">
     <div class="card">
       <div class="card-content">
         <h3>Observation:</h3>
