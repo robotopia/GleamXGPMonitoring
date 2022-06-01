@@ -98,14 +98,16 @@
           <input type="checkbox"  id='rfi' value='True' name="rfi"><br> -->
           <h4>Choose candidate type:</h4>
 
-          <input type="radio" id="T" name="cand_type" value="T" checked="checked" >
-          <label for="T">Transient</label><br>
-          <input type="radio" id="A" name="cand_type" value="A">
-          <label for="A">Airplane</label><br>
-          <input type="radio" id="RFI" name="cand_type" value="RFI">
-          <label for="RFI">RFI</label><br>
-          <input type="radio" id="SL" name="cand_type" value="SL">
-          <label for="SL">Sidelobe</label><br>
+          {% for value, text in cand_type_choices %}
+            {% if value == "T" %}
+              <input checked="checked"
+            {% else %}
+              <input
+            {% endif %}
+              type="radio" name="cand_type" id="{{ value }}" value="{{ value }}">
+            <label for="{{ value }}">{{ text }}</label><br>
+          {% endfor %}
+
           </div>
           <div class="field">
           <h4>Rating from 1(noise) to 5(clear candidate){% if rating %}(currently {{rating.rating}}){% endif %}</h4>

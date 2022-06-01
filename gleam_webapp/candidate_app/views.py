@@ -72,6 +72,7 @@ def candidate_rating(request, id, arcmin=2):
         'sep_arcmin': sep_arcmin,
         'result_table': result_table,
         'arcmin_search': arcmin,
+        'cand_type_choices': models.CAND_TYPE_CHOICES
     }
     return render(request, 'candidate_app/candidate_rating_form.html', context)
 

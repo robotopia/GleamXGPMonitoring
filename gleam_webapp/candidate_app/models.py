@@ -75,7 +75,24 @@ class Candidate(models.Model):
     nks_dec_dms = models.CharField(max_length=32, blank=True, null=True, verbose_name="Nearest known source Declination (DD:MM:SS)")
 
 
-
+T = 'T'
+AP = 'AP'
+RFI = 'RFI'
+SL = 'SL'
+A = 'A'
+CC = 'CC'
+S = 'S'
+P = 'P'
+CAND_TYPE_CHOICES = (
+    (T,   'Transient'),
+    (AP,  'Airplane'),
+    (RFI, 'RFI'),
+    (SL,  'Sidelobe'),
+    (A,   'Alias'),
+    (CC,  'CHG Centre'),
+    (S,   'Scintillation'),
+    (P,   'Pulsar'),
+)
 class Rating(models.Model):
     id = models.AutoField(primary_key=True)
     candidate = models.ForeignKey(
@@ -89,14 +106,4 @@ class Rating(models.Model):
         related_name="rating",
     )
     rating = models.IntegerField(blank=True, null=True)
-    T = 'T'
-    A = 'A'
-    RFI = 'RFI'
-    SL = 'SL'
-    CAND_TYPE_CHOICES = (
-        (T,   'Transient'),
-        (A,   'Airplane'),
-        (RFI, 'RFI'),
-        (SL,  'Sidelobe'),
-    )
     cand_type = models.CharField(max_length=3, choices=CAND_TYPE_CHOICES, null=True)
