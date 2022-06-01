@@ -181,9 +181,13 @@ def candidate_table(request):
         num_ratings=Count('rating'),
         avg_rating=Avg('rating__rating'),
         transient_count=Count('rating', filter=Q(rating__cand_type='T')),
+        airplane_count=Count('rating', filter=Q(rating__cand_type='AP')),
         rfi_count=Count('rating', filter=Q(rating__cand_type='RFI')),
-        airplane_count=Count('rating', filter=Q(rating__cand_type='A')),
         sidelobe_count=Count('rating', filter=Q(rating__cand_type='SL')),
+        alias_count=Count('rating', filter=Q(rating__cand_type='A')),
+        chgcentre_count=Count('rating', filter=Q(rating__cand_type='CC')),
+        scintillation_count=Count('rating', filter=Q(rating__cand_type='S')),
+        pulsar_count=Count('rating', filter=Q(rating__cand_type='P')),
     ).order_by(order_by)
 
     # candidates = filter_claims(request, candidates)
