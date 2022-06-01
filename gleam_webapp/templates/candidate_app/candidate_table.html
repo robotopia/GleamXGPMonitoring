@@ -25,7 +25,7 @@
 
     {% for cand in page_obj %}
       <tr>
-        <td>{{cand.id}}</td>
+        <td><a href="/candidate_rating/{{cand.id}}/">{{cand.id}}</a></td>
         <td>
           {% if cand.num_ratings > 0 %}
             {{cand.avg_rating|floatformat:2}} ({{cand.num_ratings}})
