@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os
-import sys
+import glob
 import argparse
 import urllib.request
 import requests
@@ -93,7 +93,7 @@ def upload_obsid(obsid):
     }
     r = session.post(url, data=data)
 
-def upload_candidate(image_path, gif_path, fits_path, filter_id):
+def upload_candidate(fits_files, image_gif_directory):
     """ Upload an MWA observation to the database.
 
     Parameters
@@ -102,57 +102,59 @@ def upload_candidate(image_path, gif_path, fits_path, filter_id):
         The location of the candidate image to upload.
     obsid : `int`
         MWA observation ID.
-    filter_id : `int`
-        The ID of the filter used to detect this candidate.
     """
     # Set up session
     session = requests.session()
-    session.auth = (os.environ['GLEAM_USER'], os.environ['GLEAM_PASSWORD'])
+    session.auth = TokenAuth(os.environ['IMAGE_PLANE_TOKEN'])
     url = f'{BASE_URL}/candidate_create/'
 
-    # Read fits file
-    hdul = fits.open(fits_path)
+    # Loop over fits files
+    for fits_path in fits_files:
+        # Read fits file
+        hdul = fits.open(fits_path)
 
-    # loop over each candidate
-    #for cand in hdul[1].data[0]:
-    for cand in hdul[1].data:
-        data = {
-            "filter_id": filter_id,
-        }
-        # Loop over each header and append data to the upload dictionary
-        for hi, dat in enumerate(cand):
-            fits_header = f"TTYPE{hi+1}"
-            header = hdul[1].header[fits_header]
-            logger.debug("")
-            logger.debug(f"{header}: {dat}")
-            if f"TCOMM{hi+1}" in hdul[1].header.keys():
-                logger.debug(hdul[1].header[f"TCOMM{hi+1}"])
-            if header == "obs_cent_freq":
-                # Skip because already have that data in obsid
-                pass
-            elif header == "obs_id":
-                # upload obsid
-                upload_obsid(dat)
-                data[header] = dat
-            elif header.endswith("ra_deg"):
-                # parse to hms
-                data[header] = dat
-                hms_header = header[:-3]+"hms"
-                data[hms_header] = Angle(dat, unit=u.deg).to_string(unit=u.hour, sep=':')[:11]
-            elif header.endswith("dec_deg"):
-                # parse to dms
-                data[header] = dat
-                dms_header = header[:-3]+"dms"
-                data[dms_header] = Angle(dat, unit=u.deg).to_string(unit=u.deg, sep=':')[:12]
-            else:
-                data[header] = dat
+        # loop over each candidate
+        for cand in hdul[1].data:
+            data = {}
+            # Loop over each header and append data to the upload dictionary
+            for hi, dat in enumerate(cand):
+                fits_header = f"TTYPE{hi+1}"
+                header = hdul[1].header[fits_header]
+                logger.debug("")
+                logger.debug(f"{header}: {dat}")
+                if f"TCOMM{hi+1}" in hdul[1].header.keys():
+                    logger.debug(hdul[1].header[f"TCOMM{hi+1}"])
+                if header == "obs_cent_freq":
+                    # Skip because already have that data in obsid
+                    pass
+                elif header == "obs_id":
+                    # upload obsid
+                    upload_obsid(dat)
+                    data[header] = dat
+                elif header.endswith("ra_deg"):
+                    # parse to hms
+                    data[header] = dat
+                    hms_header = header[:-3]+"hms"
+                    data[hms_header] = Angle(dat, unit=u.deg).to_string(unit=u.hour, sep=':')[:11]
+                elif header.endswith("dec_deg"):
+                    # parse to dms
+                    data[header] = dat
+                    dms_header = header[:-3]+"dms"
+                    data[dms_header] = Angle(dat, unit=u.deg).to_string(unit=u.deg, sep=':')[:12]
+                else:
+                    data[header] = dat
 
-        # open the image file
-        with open(image_path, 'rb') as image, open(gif_path, 'rb') as gif:
-            # upload to database
-            r = session.post(url, data=data, files={"png":image, "gif":gif})
-        print(r.text)
-        r.raise_for_status()
+            # Work out image and gif path
+            base_path = f'{image_gif_directory}/{data["obs_id"]}_{data["filter_id"]}_{data["cand_id"]:03d}'
+            image_path = f"{base_path}.png"
+            gif_path = f"{base_path}.gif"
+
+            # open the image file
+            with open(image_path, 'rb') as image, open(gif_path, 'rb') as gif:
+                # upload to database
+                r = session.post(url, data=data, files={"png":image, "gif":gif})
+            print(r.text)
+            r.raise_for_status()
 
 
 if __name__ == '__main__':
@@ -160,14 +162,10 @@ if __name__ == '__main__':
                      INFO=logging.INFO,
                      WARNING=logging.WARNING)
     parser = argparse.ArgumentParser(description='Upload a GLEAM transient candidate to the database.')
-    parser.add_argument('--image', type=str,
-                        help='The location of the image')
-    parser.add_argument('--gif', type=str,
-                        help='The location of the gif')
+    parser.add_argument('--data_directory', type=str,
+                        help='Path to directory containing all of the gifs and images.')
     parser.add_argument('--fits', type=str,
-                        help='The location of the fits files containing the candidate information.')
-    parser.add_argument('--filter', type=str,
-                        help='The ID of the filter used for this candidate.')
+                        help='Optional option to specify a fits file. If not used, will get all fits files in the data_directory')
     parser.add_argument("-L", "--loglvl", type=str, help="Logger verbosity level. Default: INFO",
                                     choices=loglevels.keys(), default="INFO")
     args = parser.parse_args()
@@ -181,4 +179,8 @@ if __name__ == '__main__':
     logger.addHandler(ch)
     logger.propagate = False
 
-    upload_candidate(args.image, args.gif, args.fits, args.filter)
+    if args.fits:
+        fits_files = [args.fits]
+    else:
+        fits_files = glob.glob(f"{args.data_directory}/*fits")
+    upload_candidate(fits_files, args.data_directory)
