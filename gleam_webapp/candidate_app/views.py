@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from rest_framework.authtoken.models import Token
 
 import random
 from astropy.time import Time
@@ -39,11 +40,17 @@ def candidate_rating(request, id, arcmin=2):
     rating = models.Rating.objects.filter(candidate=candidate, user=u).first()
 
     # Convert seperation to arcminutes
-    sep_arcmin = candidate.can_nks_sep_deg * 60
+    if candidate.nks_sep_deg is None:
+        sep_arcmin = None
+    else:
+        sep_arcmin = candidate.nks_sep_deg * 60
 
     # Perform simbad query
-    cand_coord = SkyCoord(candidate.can_ra_deg, candidate.can_dec_deg, unit=(units.deg, units.deg), frame='icrs')
-    raw_result_table = Simbad.query_region(cand_coord, radius=float(arcmin) * units.arcmin)
+    if None in (candidate.ra_deg, candidate.dec_deg):
+        raw_result_table = None
+    else:
+        cand_coord = SkyCoord(candidate.ra_deg, candidate.dec_deg, unit=(units.deg, units.deg), frame='icrs')
+        raw_result_table = Simbad.query_region(cand_coord, radius=float(arcmin) * units.arcmin)
     result_table = []
     # Reformat the result into the format we want
     if raw_result_table is not None:
@@ -65,8 +72,26 @@ def candidate_rating(request, id, arcmin=2):
         'sep_arcmin': sep_arcmin,
         'result_table': result_table,
         'arcmin_search': arcmin,
+        'cand_type_choices': models.CAND_TYPE_CHOICES
     }
     return render(request, 'candidate_app/candidate_rating_form.html', context)
+
+@login_required
+def token_manage(request):
+    u = request.user
+    token = Token.objects.filter(user=u).first()
+    return render(request, 'candidate_app/token_manage.html', {"token":token})
+
+
+@login_required
+def token_create(request):
+    u = request.user
+    token = Token.objects.filter(user=u)
+    if token.exists():
+        token.delete()
+    new_token = Token.objects.create(user=u)
+    #return render(request, 'candidate_app/token_manage.html', {"token":new_token})
+    return redirect(reverse('token_manage'))
 
 
 @login_required
@@ -156,9 +181,13 @@ def candidate_table(request):
         num_ratings=Count('rating'),
         avg_rating=Avg('rating__rating'),
         transient_count=Count('rating', filter=Q(rating__cand_type='T')),
+        airplane_count=Count('rating', filter=Q(rating__cand_type='AP')),
         rfi_count=Count('rating', filter=Q(rating__cand_type='RFI')),
-        airplane_count=Count('rating', filter=Q(rating__cand_type='A')),
         sidelobe_count=Count('rating', filter=Q(rating__cand_type='SL')),
+        alias_count=Count('rating', filter=Q(rating__cand_type='A')),
+        chgcentre_count=Count('rating', filter=Q(rating__cand_type='CC')),
+        scintillation_count=Count('rating', filter=Q(rating__cand_type='S')),
+        pulsar_count=Count('rating', filter=Q(rating__cand_type='P')),
     ).order_by(order_by)
 
     # candidates = filter_claims(request, candidates)
@@ -196,8 +225,18 @@ def observation_create(request):
 @api_view(['POST'])
 @transaction.atomic
 def candidate_create(request):
+    # Get or create filter
+    filter_name = request.data.get("filter_id")
+    print(filter_name)
+    if models.Filter.objects.filter(name=filter_name).exists():
+        filter = models.Filter.objects.filter(name=filter_name).first()
+    else:
+        filter = models.Filter.objects.create(name=filter_name)
+    request.data["filter"] = filter.id
+
     cand = serializers.CandidateSerializer(data=request.data)
     png_file = request.data.get("png")
+    gif_file = request.data.get("gif")
     if cand.is_valid():
         # Find obsid
         #obs = models.Observation.objects.filter(observation_id=obsid).first()
@@ -205,7 +244,11 @@ def candidate_create(request):
             return Response(
                 "Missing png file", status=status.HTTP_400_BAD_REQUEST
             )
-        cand.save(png_path=png_file)
+        if gif_file is None:
+            return Response(
+                "Missing gif file", status=status.HTTP_400_BAD_REQUEST
+            )
+        cand.save(png_path=png_file, gif_path=gif_file, filter=filter)
         return Response(cand.data, status=status.HTTP_201_CREATED)
     logger.debug(request.data)
     logger.error(cand.errors)

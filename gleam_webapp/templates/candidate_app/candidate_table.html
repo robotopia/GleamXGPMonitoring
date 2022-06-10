@@ -15,9 +15,13 @@
       <th><a href="?{% url_replace request 'order_by' 'avg_rating' '-' %}">Rating</a> <a href="?{% url_replace request 'order_by' 'num_ratings' '-' %}">(Count)</a></th>
       <th><a href="?{% url_replace request 'order_by' 'notes' '-' %}">Notes</a></th>
       <th><a href="?{% url_replace request 'order_by' 'transient_count' '-' %}">N Tranisent</a></th>
-      <th><a href="?{% url_replace request 'order_by' 'rfi_count' '-' %}">N RFI</a></th>
       <th><a href="?{% url_replace request 'order_by' 'airplane_count' '-' %}">N Airplane</a></th>
+      <th><a href="?{% url_replace request 'order_by' 'rfi_count' '-' %}">N RFI</a></th>
       <th><a href="?{% url_replace request 'order_by' 'sidelobe_count' '-' %}">N Sidelobe</a></th>
+      <th><a href="?{% url_replace request 'order_by' 'alias_count' '-' %}">N Alias</a></th>
+      <th><a href="?{% url_replace request 'order_by' 'chgcentre_count' '-' %}">N CHG Center</a></th>
+      <th><a href="?{% url_replace request 'order_by' 'scintillation_count' '-' %}">N Scintillation</a></th>
+      <th><a href="?{% url_replace request 'order_by' 'pulsar_count' '-' %}">N Pulsar</a></th>
       <th><a href="?{% url_replace request 'order_by' 'can_ra_hms' '-' %}">RA (HH:MM:SS.SS)</a></th>
       <th><a href="?{% url_replace request 'order_by' 'can_dec_dms' '-' %}">Dec (DD:MM:SS.SS)</a></th>
       <th>Plot</th>
@@ -25,7 +29,7 @@
 
     {% for cand in page_obj %}
       <tr>
-        <td>{{cand.id}}</td>
+        <td><a href="/candidate_rating/{{cand.id}}/">{{cand.id}}</a></td>
         <td>
           {% if cand.num_ratings > 0 %}
             {{cand.avg_rating|floatformat:2}} ({{cand.num_ratings}})
@@ -35,9 +39,13 @@
         </td>
         <td>{{cand.notes}}</td>
         <td>{{cand.transient_count}}</td>
-        <td>{{cand.rfi_count}}</td>
         <td>{{cand.airplane_count}}</td>
+        <td>{{cand.rfi_count}}</td>
         <td>{{cand.sidelobe_count}}</td>
+        <td>{{cand.alias_count}}</td>
+        <td>{{cand.chgcentre_count}}</td>
+        <td>{{cand.scintillation_count}}</td>
+        <td>{{cand.pulsar_count}}</td>
         <td>{{cand.can_ra_hms}}</td>
         <td>{{cand.can_dec_dms}}</td>
         <td><img src="{{cand.png_path.url}}" alt="Diagnostic Plot for {{cand.id}}" style="width:100px;" onClick="window.open(this.src)" > </td>

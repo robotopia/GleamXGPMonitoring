@@ -5,21 +5,25 @@
 <title>Candidate Rating ID:{{ candidate.id }} </title>
 <h2>Candidate Rating ID:{{ candidate.id }}</h2>
 {% if candidate %}
-<div class="row fluid">
+<div class="row">
 
-  <div class="col-md-5">
+  <div class="col">
     <div class="card">
-        {% if candidate.png_path %}
-        <div class="card-image">
-          <figure class="image is-4by3">
-            <img src="{{candidate.png_path.url}}" alt="Diagnostic Plot for {{candidate.id}}" onClick="window.open(this.src)">
-          </figure>
-        </div>
-        {% endif %}
-      </div>
+      <center>
+      {% if candidate.png_path %}
+          <img src="{{candidate.png_path.url}}" alt="Diagnostic Plot for {{candidate.id}}" onClick="window.open(this.src)">
+      {% endif %}
+      {% if candidate.gif_path %}
+        <img src="{{candidate.gif_path.url}}"
+            width="125"
+            alt="Diagnostic GIF for {{candidate.id}}"
+            onClick="window.open(this.src)">
+      {% endif %}
+      </center>
+    </div>
   </div>
 
-  <div class="col-md-3">
+  <div class="col-3">
     <div class="card">
         <div class="card-content">
             <h3>Candidate:</h3>
@@ -27,12 +31,10 @@
               <!-- <tr><td>Location (deg)</td>                      <td>{{ candidate.ra_dec }}, {{ candidate.dec_dec}}</td></tr> -->
               <tr><td>Detection statistic</td> <td>{{ candidate.can_det_stat|floatformat:2 }}</td></tr>
               <tr><td>Peak Flux (Jy)</td>      <td>{{ candidate.can_peak_flux|floatformat:2 }}</td></tr>
-              <tr><td>Fluence (Jy s)</td>      <td>{{ candidate.can_fluence|floatformat:2 }}</td></tr>
               <tr><td>Primary Beam</td>        <td>{{ candidate.can_beam|floatformat:2 }}</td></tr>
-              <tr><td>Separation from obs center (deg)</td> <td>{{ candidate.can_cent_sep_deg|floatformat:2 }}</td></tr>
-              <tr><td>Location</td>            <td>{{ candidate.can_ra_hms }}, {{ candidate.can_dec_dms }}</td></tr>
-              <tr><td>Radius (deg)</td>        <td>{{ candidate.can_rad_deg|floatformat:2}}</td></tr>
-              <tr><td>Modulation Index</td>    <td>{{ candidate.can_mod_ind }}</td></tr>
+              <tr><td>Separation from obs center (deg)</td> <td>{{ candidate.cent_sep_deg|floatformat:2 }}</td></tr>
+              <tr><td>Location</td>            <td>{{ candidate.ra_hms }}, {{ candidate.dec_dms }}</td></tr>
+              <tr><td>Radius (deg)</td>        <td>{{ candidate.rad_deg|floatformat:3}}</td></tr>
             </table>
             <h3>Nearest Known Source:</h3>
             <table>
@@ -79,7 +81,7 @@
       </div>
   </div>
 
-  <div class="col-md-3">
+  <div class="col-2">
     <div class="card">
       <div class="card-content">
         <h3>Observation:</h3>
@@ -96,14 +98,16 @@
           <input type="checkbox"  id='rfi' value='True' name="rfi"><br> -->
           <h4>Choose candidate type:</h4>
 
-          <input type="radio" id="T" name="cand_type" value="T" checked="checked" >
-          <label for="T">Transient</label><br>
-          <input type="radio" id="A" name="cand_type" value="A">
-          <label for="A">Airplane</label><br>
-          <input type="radio" id="RFI" name="cand_type" value="RFI">
-          <label for="RFI">RFI</label><br>
-          <input type="radio" id="SL" name="cand_type" value="SL">
-          <label for="SL">Sidelobe</label><br>
+          {% for value, text in cand_type_choices %}
+            {% if value == "T" %}
+              <input checked="checked"
+            {% else %}
+              <input
+            {% endif %}
+              type="radio" name="cand_type" id="{{ value }}" value="{{ value }}">
+            <label for="{{ value }}">{{ text }}</label><br>
+          {% endfor %}
+
           </div>
           <div class="field">
           <h4>Rating from 1(noise) to 5(clear candidate){% if rating %}(currently {{rating.rating}}){% endif %}</h4>
