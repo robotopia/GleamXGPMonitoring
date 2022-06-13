@@ -219,6 +219,7 @@ def candidate_table(request):
         chgcentre_count=Count('rating', filter=Q(rating__cand_type='CC')),
         scintillation_count=Count('rating', filter=Q(rating__cand_type='S')),
         pulsar_count=Count('rating', filter=Q(rating__cand_type='P')),
+        other_count=Count('rating', filter=Q(rating__cand_type='O')),
     ).order_by(order_by)
 
     # candidates = filter_claims(request, candidates)

@@ -22,6 +22,7 @@
       <th><a href="?{% url_replace request 'order_by' 'chgcentre_count' '-' %}">N CHG Center</a></th>
       <th><a href="?{% url_replace request 'order_by' 'scintillation_count' '-' %}">N Scintillation</a></th>
       <th><a href="?{% url_replace request 'order_by' 'pulsar_count' '-' %}">N Pulsar</a></th>
+      <th><a href="?{% url_replace request 'order_by' 'other_count' '-' %}">N Other</a></th>
       <th><a href="?{% url_replace request 'order_by' 'ra_hms' '-' %}">RA (HH:MM:SS.SS)</a></th>
       <th><a href="?{% url_replace request 'order_by' 'dec_dms' '-' %}">Dec (DD:MM:SS.SS)</a></th>
       <th><a href="?{% url_replace request 'order_by' 'obs_id' '-' %}">Obs ID</a></th>
@@ -47,6 +48,7 @@
         <td>{{cand.chgcentre_count}}</td>
         <td>{{cand.scintillation_count}}</td>
         <td>{{cand.pulsar_count}}</td>
+        <td>{{cand.other_count}}</td>
         <td>{{cand.ra_hms}}</td>
         <td>{{cand.dec_dms}}</td>
         <td>{{cand.obs_id.observation_id}}</td>
