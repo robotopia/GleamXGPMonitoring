@@ -49,7 +49,17 @@
               <tr><td>Flux (Jy)</td>        <td>{{ candidate.nks_flux|floatformat:2 }}</td></tr>
               <tr><td>Flux ratio</td>       <td>{{ candidate.can_nks_flux_rat|floatformat:2 }}</td></tr>
             </table>
-            <h3>SIMBAD {{ arcmin_search }} arcmin search:</h3>
+
+
+            <h2>Catalogue {{ arcmin_search }} arcmin search:</h3>
+              <form action="{% url 'candidate_update_catalogue_query' id=candidate.id %}" method="post">
+                {% csrf_token %}
+                <label for="arcmin">Refilter with arcmins:</label>
+                <input id="arcmin" type="text"  name="arcmin">
+                <input class="btn btn-primary" type="submit" value="Submit">
+              </form>
+
+            <h3>SIMBAD:</h3>
             <table class="fl-table">
               <!-- <thead> -->
               <tr>
@@ -59,7 +69,7 @@
               </tr>
               <!-- </thead> -->
               <!-- Iterate over object_list -->
-              {% for result in result_table %}
+              {% for result in simbad_result_table %}
               <!-- Display Objects -->
               <tr>
                 <td><a href="https://simbad.cds.unistra.fr/simbad/sim-id?Ident={{ result.search_term }}&NbIdent=1&submit=submit+id" style="text-decoration:None">{{ result.name }}</a></td>
@@ -71,12 +81,30 @@
               <tr><td>No Sources found</td></tr>
               {% endfor %}
             </table>
-            <form action="{% url 'candidate_update_simbad' id=candidate.id %}" method="post">
-              {% csrf_token %}
-              <label for="simbad">Research with arcmins:</label>
-              <input id="simbad" type="text"  name="simbad">
-              <input class="btn btn-primary" type="submit" value="Submit">
-            </form>
+            <h3>ATNF pulsars:</h3>
+            <table class="fl-table">
+              <!-- <thead> -->
+              <tr>
+                <th>Name</th>
+                <th>Period</th>
+                <th>DM</th>
+                <th>S400</th>
+              </tr>
+              <!-- </thead> -->
+              <!-- Iterate over object_list -->
+              {% for result in atnf_result_table %}
+              <!-- Display Objects -->
+              <tr>
+                <td><a href="https://www.atnf.csiro.au/research/pulsar/psrcat/proc_form.php?version=1.67&startUserDefined=true&c1_val=&c2_val=&c3_val=&c4_val=&sort_attr=jname&sort_order=asc&condition=&pulsar_names={{ result.name|urlize }}&ephemeris=long&submit_ephemeris=Get+Ephemeris&coords_unit=raj%2Fdecj&radius=&coords_1=&coords_2=&style=Long+with+last+digit+error&no_value=*&fsize=3&x_axis=&x_scale=linear&y_axis=&y_scale=linear&state=query" style="text-decoration:None">{{ result.name }}</a></td>
+                <td>{{ result.period }}</td>
+                <td>{{ result.dm }}</td>
+                <td>{{ result.s400 }}</td>
+              </tr>
+              <!-- If object_list is empty  -->
+              {% empty %}
+              <tr><td>No Sources found</td></tr>
+              {% endfor %}
+            </table>
         </div>
       </div>
   </div>
@@ -127,6 +155,7 @@
           <input type="hidden" name="username" value="{{user}}">
         </form>
         <button class="btn btn-info" onclick="window.history.go(-1)">Back to previous</button>
+        <a class="btn btn-info" href="/candidate_rating/random/">Skip</a>
       </div>
     </div>
   </div>

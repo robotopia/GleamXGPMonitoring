@@ -13,6 +13,7 @@ from rest_framework.decorators import api_view
 from rest_framework.authtoken.models import Token
 
 import random
+import psrqpy
 from astropy.time import Time
 from astropy.coordinates import SkyCoord
 from astropy import units
@@ -51,18 +52,47 @@ def candidate_rating(request, id, arcmin=2):
     else:
         cand_coord = SkyCoord(candidate.ra_deg, candidate.dec_deg, unit=(units.deg, units.deg), frame='icrs')
         raw_result_table = Simbad.query_region(cand_coord, radius=float(arcmin) * units.arcmin)
-    result_table = []
+    simbad_result_table = []
     # Reformat the result into the format we want
     if raw_result_table is not None:
         for result in raw_result_table:
             search_term = result["MAIN_ID"].replace("+", "%2B").replace(" ", "+")
             ra  = Angle(result["RA"],  unit=units.hour).to_string(unit=units.hour, sep=':')[:11]
             dec = Angle(result["DEC"], unit=units.deg).to_string(unit=units.deg, sep=':')[:11]
-            result_table.append({
+            simbad_result_table.append({
                 'name': result["MAIN_ID"],
                 'search_term': search_term,
                 'ra': ra,
                 'dec': dec,
+            })
+
+    # Perform atnf query
+    if None in (candidate.ra_hms, candidate.dec_dms):
+        atnf_query = None
+    else:
+        atnf_query = psrqpy.QueryATNF(
+            coord1=candidate.ra_hms,
+            coord2=candidate.dec_dms,
+            radius=float(arcmin)/60,
+            params=["PSRJ", "NAME", "P0", "DM", "S400"],
+        ).pandas
+    atnf_result_table = []
+    # Reformat the result into the format we want
+    if atnf_query is not None:
+        for index, pulsar in atnf_query.iterrows():
+            # check for psrqpy missing data
+            if "PSRJ" in pulsar.keys():
+                name = pulsar["PSRJ"]
+            elif "NAME" in pulsar.keys():
+                name = pulsar["NAME"]
+            else:
+                name = None
+                print(pulsar.keys())
+            atnf_result_table.append({
+                'name': name,
+                'period': pulsar["P0"],
+                'dm': pulsar["DM"],
+                's400': pulsar["S400"],
             })
 
     context = {
@@ -70,7 +100,8 @@ def candidate_rating(request, id, arcmin=2):
         'rating': rating,
         'time': time,
         'sep_arcmin': sep_arcmin,
-        'result_table': result_table,
+        'simbad_result_table': simbad_result_table,
+        'atnf_result_table': atnf_result_table,
         'arcmin_search': arcmin,
         'cand_type_choices': models.CAND_TYPE_CHOICES
     }
@@ -145,14 +176,14 @@ def candidate_update_rating(request, id):
 @login_required
 @api_view(['POST'])
 @transaction.atomic
-def candidate_update_simbad(request, id):
+def candidate_update_catalogue_query(request, id):
     logger.debug(request.data)
     candidate = models.Candidate.objects.filter(id=id).first()
     if candidate is None:
         raise ValueError("Candidate not found")
     logger.debug('candidate obj %s', candidate)
 
-    arcmin = request.data.get('simbad', None)
+    arcmin = request.data.get('arcmin', None)
     if arcmin:
         logger.debug(f'New query with {arcmin}')
         return candidate_rating(request, id, arcmin=arcmin)
