@@ -34,7 +34,8 @@
               <tr><td>Primary Beam</td>        <td>{{ candidate.can_beam|floatformat:2 }}</td></tr>
               <tr><td>Separation from obs center (deg)</td> <td>{{ candidate.cent_sep_deg|floatformat:2 }}</td></tr>
               <tr><td>Location</td>            <td>{{ candidate.ra_hms }}, {{ candidate.dec_dms }}</td></tr>
-              <tr><td>Radius (deg)</td>        <td>{{ candidate.rad_deg|floatformat:3}}</td></tr>
+              <tr><td>Radius (deg)</td>        <td>{{ candidate.rad_deg|floatformat:3 }}</td></tr>
+              <tr><td>Filter name</td>         <td>{{ candidate.filter.name }}</td></tr>
             </table>
             <h3>Nearest Known Source:</h3>
             <table>
@@ -86,9 +87,9 @@
               <!-- <thead> -->
               <tr>
                 <th>Name</th>
-                <th>Period</th>
-                <th>DM</th>
-                <th>S400</th>
+                <th>Period (s)</th>
+                <th>DM (pc / cm^3)</th>
+                <th>S400 (mJy)</th>
               </tr>
               <!-- </thead> -->
               <!-- Iterate over object_list -->
