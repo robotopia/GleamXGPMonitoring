@@ -98,10 +98,10 @@ def upload_candidate(fits_files, image_gif_directory):
 
     Parameters
     ----------
-    image : `str`
-        The location of the candidate image to upload.
-    obsid : `int`
-        MWA observation ID.
+    fits_files : `list`
+        A list of the file locations of each fits file you would like to upload.
+    image_gif_directory : `str`
+        The directory containing all the images and gifs.
     """
     # Set up session
     session = requests.session()
