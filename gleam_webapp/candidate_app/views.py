@@ -14,11 +14,18 @@ from rest_framework.authtoken.models import Token
 
 import random
 import psrqpy
+from datetime import datetime, timedelta
+from mwa_trigger.parse_xml import parsed_VOEvent
+
 from astropy.time import Time
 from astropy.coordinates import SkyCoord
 from astropy import units
 from astropy.coordinates import Angle
 from astroquery.simbad import Simbad
+
+import voeventdb.remote.apiv1 as apiv1
+from voeventdb.remote.apiv1 import FilterKeys, OrderValues
+import voeventparse
 
 from . import models, serializers
 
@@ -46,12 +53,11 @@ def candidate_rating(request, id, arcmin=2):
     else:
         sep_arcmin = candidate.nks_sep_deg * 60
 
+    cand_coord = SkyCoord(candidate.ra_deg, candidate.dec_deg, unit=(units.deg, units.deg), frame='icrs')
+
     # Perform simbad query
-    if None in (candidate.ra_deg, candidate.dec_deg):
-        raw_result_table = None
-    else:
-        cand_coord = SkyCoord(candidate.ra_deg, candidate.dec_deg, unit=(units.deg, units.deg), frame='icrs')
-        raw_result_table = Simbad.query_region(cand_coord, radius=float(arcmin) * units.arcmin)
+    cand_coord = SkyCoord(candidate.ra_deg, candidate.dec_deg, unit=(units.deg, units.deg), frame='icrs')
+    raw_result_table = Simbad.query_region(cand_coord, radius=float(arcmin) * units.arcmin)
     simbad_result_table = []
     # Reformat the result into the format we want
     if raw_result_table is not None:
@@ -67,15 +73,12 @@ def candidate_rating(request, id, arcmin=2):
             })
 
     # Perform atnf query
-    if None in (candidate.ra_hms, candidate.dec_dms):
-        atnf_query = None
-    else:
-        atnf_query = psrqpy.QueryATNF(
-            coord1=candidate.ra_hms,
-            coord2=candidate.dec_dms,
-            radius=float(arcmin)/60,
-            params=["PSRJ", "NAME", "P0", "DM", "S400"],
-        ).pandas
+    atnf_query = psrqpy.QueryATNF(
+        coord1=candidate.ra_hms,
+        coord2=candidate.dec_dms,
+        radius=float(arcmin)/60,
+        params=["PSRJ", "NAME", "P0", "DM", "S400"],
+    ).pandas
     atnf_result_table = []
     # Reformat the result into the format we want
     if atnf_query is not None:
@@ -95,6 +98,44 @@ def candidate_rating(request, id, arcmin=2):
                 's400': pulsar["S400"],
             })
 
+    # Perform voevent database query https://voeventdbremote.readthedocs.io/en/latest/notebooks/00_quickstart.html
+    # conesearch skycoord and angle error
+    cand_err = Angle(arcmin,  unit=units.arcmin)
+    #cand_err = Angle(5,  unit=units.deg)
+    cone = (cand_coord, cand_err)
+
+    my_filters = {
+        FilterKeys.role: 'observation',
+        FilterKeys.authored_since: time.tt.datetime - timedelta(hours=1),
+        FilterKeys.authored_until: time.tt.datetime + timedelta(hours=1),
+        # FilterKeys.authored_since: time.tt.datetime - timedelta(days=1),
+        # FilterKeys.authored_until: time.tt.datetime + timedelta(days=1),
+        FilterKeys.cone: cone,
+        }
+    voevent_list = apiv1.list_ivorn(
+        filters=my_filters,
+        order=OrderValues.author_datetime_desc,
+    )
+    voevents = []
+    for ivorn in voevent_list:
+        xml_packet = apiv1.packet_xml(ivorn)
+        # Record xml ivorn into database
+        xml_obj = models.xml_ivorns.objects.filter(ivorn=ivorn)
+        if xml_obj.exists():
+            xml_obj = xml_obj.first()
+        else:
+            xml_obj = models.xml_ivorns.objects.create(ivorn=ivorn)
+        xml_id = xml_obj.id
+        parsed_xml = parsed_VOEvent(None, packet=xml_packet.decode())
+        voevents.append({
+            "telescope" : parsed_xml.telescope,
+            "event_type" : parsed_xml.event_type,
+            "ignored" : parsed_xml.ignore,
+            "source_type" : parsed_xml.source_type,
+            "trig_id" : parsed_xml.trig_id,
+            "xml" : xml_id,
+        })
+
     context = {
         'candidate': candidate,
         'rating': rating,
@@ -103,9 +144,19 @@ def candidate_rating(request, id, arcmin=2):
         'simbad_result_table': simbad_result_table,
         'atnf_result_table': atnf_result_table,
         'arcmin_search': arcmin,
-        'cand_type_choices': models.CAND_TYPE_CHOICES
+        'cand_type_choices': models.CAND_TYPE_CHOICES,
+        'voevents' : voevents,
     }
     return render(request, 'candidate_app/candidate_rating_form.html', context)
+
+
+def voevent_view(request, id):
+    ivorn = models.xml_ivorns.objects.filter(id=id).first().ivorn
+    xml_packet = apiv1.packet_xml(ivorn)
+    v = voeventparse.loads(xml_packet)
+    xml_pretty_str = voeventparse.prettystr(v)
+    return HttpResponse(xml_pretty_str, content_type='text/xml')
+
 
 @login_required
 def token_manage(request):

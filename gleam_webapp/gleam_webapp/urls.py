@@ -34,6 +34,7 @@ urlpatterns = [
     path('candidate_update_catalogue_query/<int:id>/', views.candidate_update_catalogue_query, name='candidate_update_catalogue_query'),
     path('candidate_table/', views.candidate_table),
     path('survey_status/', views.survey_status),
+    path('voevent_view/<int:id>/', views.voevent_view, name='voevent_view'),
 ]
 
 # allow media files to be linked and viewed directly
