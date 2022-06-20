@@ -31,7 +31,7 @@ urlpatterns = [
     path('candidate_rating/<int:id>/', views.candidate_rating, name='candidate_rating'),
     path('candidate_rating/random/', views.candidate_random, name='candidate_random'),
     path('candidate_update_rating/<int:id>/', views.candidate_update_rating, name='candidate_update_rating'),
-    path('candidate_update_simbad/<int:id>/', views.candidate_update_simbad, name='candidate_update_simbad'),
+    path('candidate_update_catalogue_query/<int:id>/', views.candidate_update_catalogue_query, name='candidate_update_catalogue_query'),
     path('candidate_table/', views.candidate_table),
     path('survey_status/', views.survey_status),
 ]

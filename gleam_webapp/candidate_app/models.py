@@ -83,6 +83,7 @@ A = 'A'
 CC = 'CC'
 S = 'S'
 P = 'P'
+O = 'O'
 CAND_TYPE_CHOICES = (
     (T,   'Transient'),
     (AP,  'Airplane'),
@@ -92,6 +93,7 @@ CAND_TYPE_CHOICES = (
     (CC,  'CHG Centre'),
     (S,   'Scintillation'),
     (P,   'Pulsar'),
+    (O,   'Other'),
 )
 class Rating(models.Model):
     id = models.AutoField(primary_key=True)
