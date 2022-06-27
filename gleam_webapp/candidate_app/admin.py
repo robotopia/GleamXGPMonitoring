@@ -1,7 +1,12 @@
 from django.contrib import admin
 from .models import Observation, Filter, Candidate, Rating
 
+class CandidateAdmin(admin.ModelAdmin):
+    list_filter = ('obs_id', )
+    list_display = ('id', 'obs_id', 'filter')
+    model = Candidate
+
 admin.site.register(Observation)
 admin.site.register(Filter)
-admin.site.register(Candidate)
+admin.site.register(Candidate, CandidateAdmin)
 admin.site.register(Rating)

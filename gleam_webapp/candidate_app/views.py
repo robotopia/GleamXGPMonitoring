@@ -99,10 +99,10 @@ def candidate_rating(request, id, arcmin=2):
             })
 
     # Perform voevent database query https://voeventdbremote.readthedocs.io/en/latest/notebooks/00_quickstart.html
-    conesearch skycoord and angle error
+    # conesearch skycoord and angle error
     cand_err = Angle(arcmin,  unit=units.arcmin)
     # cand_err = Angle(5,  unit=units.deg)
-    # cone = (cand_coord, cand_err)
+    cone = (cand_coord, cand_err)
 
     my_filters = {
         FilterKeys.role: 'observation',

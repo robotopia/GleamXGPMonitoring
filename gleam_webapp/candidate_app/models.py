@@ -17,11 +17,15 @@ class Observation(models.Model):
     cent_freq = models.FloatField(blank=True, null=True, verbose_name="Centre Frequency (MHz)")
     freq_res = models.IntegerField(blank=True, null=True, verbose_name="Frequency Resolution (KHz)")
     int_time = models.FloatField(blank=True, null=True, verbose_name="Integration Time (s)")
+    def __str__(self):
+        return f"{self.observation_id}"
 
 class Filter(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(verbose_name="Short Name", max_length=64, blank=True, null=True)
     description = models.CharField(verbose_name="Description", max_length=256, blank=True, null=True)
+    def __str__(self):
+        return f"{self.name}"
 
 class Candidate(models.Model):
     id = models.AutoField(primary_key=True)
@@ -73,6 +77,9 @@ class Candidate(models.Model):
     dec_dms = models.CharField(max_length=32, blank=True, null=True, verbose_name="Candidate Declination (DD:MM:SS)")
     nks_ra_hms  = models.CharField(max_length=32, blank=True, null=True, verbose_name="Nearest known source Right Acension (HH:MM:SS)")
     nks_dec_dms = models.CharField(max_length=32, blank=True, null=True, verbose_name="Nearest known source Declination (DD:MM:SS)")
+
+    # def __str__(self):
+    #     return f"{self.id}_obs{self.obs_id.observation_id}_{self.filter.name}"
 
 
 T = 'T'
