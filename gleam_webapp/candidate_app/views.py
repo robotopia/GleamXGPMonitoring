@@ -99,10 +99,10 @@ def candidate_rating(request, id, arcmin=2):
             })
 
     # Perform voevent database query https://voeventdbremote.readthedocs.io/en/latest/notebooks/00_quickstart.html
-    # conesearch skycoord and angle error
+    conesearch skycoord and angle error
     cand_err = Angle(arcmin,  unit=units.arcmin)
-    #cand_err = Angle(5,  unit=units.deg)
-    cone = (cand_coord, cand_err)
+    # cand_err = Angle(5,  unit=units.deg)
+    # cone = (cand_coord, cand_err)
 
     my_filters = {
         FilterKeys.role: 'observation',
@@ -127,12 +127,21 @@ def candidate_rating(request, id, arcmin=2):
             xml_obj = models.xml_ivorns.objects.create(ivorn=ivorn)
         xml_id = xml_obj.id
         parsed_xml = parsed_VOEvent(None, packet=xml_packet.decode())
+        # Check for ra and dec data
+        if None in (parsed_xml.ra, parsed_xml.dec):
+            ra = None
+            dec = None
+        else:
+            ra = Angle(parsed_xml.ra, unit=units.deg).to_string(unit=units.hour, sep=':'),
+            dec = Angle(parsed_xml.dec, unit=units.deg).to_string(unit=units.deg, sep=':'),
         voevents.append({
             "telescope" : parsed_xml.telescope,
             "event_type" : parsed_xml.event_type,
             "ignored" : parsed_xml.ignore,
             "source_type" : parsed_xml.source_type,
             "trig_id" : parsed_xml.trig_id,
+            'ra': ra,
+            'dec': dec,
             "xml" : xml_id,
         })
 

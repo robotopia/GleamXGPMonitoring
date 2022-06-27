@@ -114,6 +114,8 @@
                 <th>Event type</th>
                 <th>Event source</th>
                 <th>ID</th>
+                <th>RA</th>
+                <th>Dec</th>
                 <th>XML file</th>
               </tr>
               {% for result in voevents %}
@@ -125,6 +127,8 @@
                 <td>{% if resultsource_type is not None %} {{ result.source_type }}  {% endif %}</td>
                 <td>{{ result.telescope }} {{ result.event_type }}</td>
                 <td>{{ result.trig_id }}</td>
+                <td>{{ result.ra }}</td>
+                <td>{{ result.dec }}</td>
                 <td><a href="/voevent_view/{{ result.xml }}">View</a></td>
               </tr>
               <!-- If object_list is empty  -->
