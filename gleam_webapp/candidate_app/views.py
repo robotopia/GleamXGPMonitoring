@@ -288,7 +288,7 @@ def candidate_table(request):
         scintillation_count=Count('rating', filter=Q(rating__cand_type='S')),
         pulsar_count=Count('rating', filter=Q(rating__cand_type='P')),
         other_count=Count('rating', filter=Q(rating__cand_type='O')),
-    ).order_by(order_by)
+    ).order_by(order_by, '-avg_rating')
 
     # candidates = filter_claims(request, candidates)
 
