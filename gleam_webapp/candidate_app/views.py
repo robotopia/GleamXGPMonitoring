@@ -56,20 +56,22 @@ def candidate_rating(request, id, arcmin=2):
     cand_coord = SkyCoord(candidate.ra_deg, candidate.dec_deg, unit=(units.deg, units.deg), frame='icrs')
 
     # Perform simbad query
-    cand_coord = SkyCoord(candidate.ra_deg, candidate.dec_deg, unit=(units.deg, units.deg), frame='icrs')
     raw_result_table = Simbad.query_region(cand_coord, radius=float(arcmin) * units.arcmin)
     simbad_result_table = []
     # Reformat the result into the format we want
     if raw_result_table is not None:
         for result in raw_result_table:
             search_term = result["MAIN_ID"].replace("+", "%2B").replace(" ", "+")
-            ra  = Angle(result["RA"],  unit=units.hour).to_string(unit=units.hour, sep=':')[:11]
-            dec = Angle(result["DEC"], unit=units.deg).to_string(unit=units.deg, sep=':')[:11]
+            simbad_coord = SkyCoord(result["RA"], result["DEC"], unit=(units.hour, units.deg), frame='icrs')
+            ra  = simbad_coord.ra.to_string(unit=units.hour, sep=':')[:11]
+            dec = simbad_coord.dec.to_string(unit=units.deg, sep=':')[:11]
+            sep = cand_coord.separation(simbad_coord).arcminute
             simbad_result_table.append({
                 'name': result["MAIN_ID"],
                 'search_term': search_term,
                 'ra': ra,
                 'dec': dec,
+                'sep': sep,
             })
 
     # Perform atnf query
@@ -77,7 +79,7 @@ def candidate_rating(request, id, arcmin=2):
         coord1=candidate.ra_hms,
         coord2=candidate.dec_dms,
         radius=float(arcmin)/60,
-        params=["PSRJ", "NAME", "P0", "DM", "S400"],
+        params=["PSRJ", "NAME", "P0", "DM", "S400", "RAJ", "DECJ"],
     ).pandas
     atnf_result_table = []
     # Reformat the result into the format we want
@@ -90,12 +92,14 @@ def candidate_rating(request, id, arcmin=2):
                 name = pulsar["NAME"]
             else:
                 name = None
-                print(pulsar.keys())
+            atnf_coord = SkyCoord(pulsar["RAJ"], pulsar["DECJ"], unit=(units.hour, units.deg), frame='icrs')
+            sep = cand_coord.separation(atnf_coord).arcminute
             atnf_result_table.append({
                 'name': name,
                 'period': pulsar["P0"],
                 'dm': pulsar["DM"],
                 's400': pulsar["S400"],
+                'sep': sep,
             })
 
     # Perform voevent database query https://voeventdbremote.readthedocs.io/en/latest/notebooks/00_quickstart.html
@@ -131,9 +135,12 @@ def candidate_rating(request, id, arcmin=2):
         if None in (parsed_xml.ra, parsed_xml.dec):
             ra = None
             dec = None
+            sep = None
         else:
-            ra = Angle(parsed_xml.ra, unit=units.deg).to_string(unit=units.hour, sep=':'),
-            dec = Angle(parsed_xml.dec, unit=units.deg).to_string(unit=units.deg, sep=':'),
+            voevent_coord = SkyCoord(parsed_xml.ra, parsed_xml.dec, unit=(units.deg, units.deg), frame='icrs')
+            ra  = voevent_coord.ra.to_string(unit=units.hour, sep=':')[:11]
+            dec = voevent_coord.dec.to_string(unit=units.deg, sep=':')[:11]
+            sep = cand_coord.separation(voevent_coord).arcminute
         voevents.append({
             "telescope" : parsed_xml.telescope,
             "event_type" : parsed_xml.event_type,
@@ -142,6 +149,7 @@ def candidate_rating(request, id, arcmin=2):
             "trig_id" : parsed_xml.trig_id,
             'ra': ra,
             'dec': dec,
+            'sep': sep,
             "xml" : xml_id,
         })
 

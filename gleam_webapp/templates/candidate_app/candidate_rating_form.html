@@ -67,6 +67,7 @@
                 <th>Name</th>
                 <th>RA</th>
                 <th>Dec</th>
+                <th>Separation (arcmin)</th>
               </tr>
               <!-- </thead> -->
               <!-- Iterate over object_list -->
@@ -76,6 +77,7 @@
                 <td><a href="https://simbad.cds.unistra.fr/simbad/sim-id?Ident={{ result.search_term }}&NbIdent=1&submit=submit+id" style="text-decoration:None">{{ result.name }}</a></td>
                 <td>{{ result.ra }}</td>
                 <td>{{ result.dec }}</td>
+                <td>{{ result.sep|floatformat:2 }}</td>
               </tr>
               <!-- If object_list is empty  -->
               {% empty %}
@@ -91,6 +93,7 @@
                 <th>Period (s)</th>
                 <th>DM (pc / cm^3)</th>
                 <th>S400 (mJy)</th>
+                <th>Separation (arcmin)</th>
               </tr>
               <!-- </thead> -->
               <!-- Iterate over object_list -->
@@ -101,6 +104,7 @@
                 <td>{{ result.period }}</td>
                 <td>{{ result.dm }}</td>
                 <td>{{ result.s400 }}</td>
+                <td>{{ result.sep|floatformat:2 }}</td>
               </tr>
               <!-- If object_list is empty  -->
               {% empty %}
@@ -116,6 +120,7 @@
                 <th>ID</th>
                 <th>RA</th>
                 <th>Dec</th>
+                <th>Separation (arcmin)</th>
                 <th>XML file</th>
               </tr>
               {% for result in voevents %}
@@ -129,6 +134,7 @@
                 <td>{{ result.trig_id }}</td>
                 <td>{{ result.ra }}</td>
                 <td>{{ result.dec }}</td>
+                <td>{{ result.sep|floatformat:2 }}</td>
                 <td><a href="/voevent_view/{{ result.xml }}">View</a></td>
               </tr>
               <!-- If object_list is empty  -->
