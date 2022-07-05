@@ -6,8 +6,23 @@
 
 <title>Candidate Ratings Table</title>
 <h2>Candidate Ratings Table</h2>
-
-<div>
+<h3>Filter Candidate Ratings:</h3>
+  <div style="background-color:#f8f8f8; width:90%; margin: 0 auto; padding-bottom: 20px;">
+    <form method="get">
+      <label class="label">Average rating cutoff: <input class="input" name="rating_cutoff" type=number placeholder="1.0" step="0.01"></label>
+      <label class="label">Observation ID:
+        <select name="obs_id">
+          <option disabled selected value> Any Observation ID </option>
+          {% for obs in obs_id %}
+            <option value="{{ obs.observation_id }}">{{ obs.observation_id }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <!-- <label class="label">Minimum number of ratings: <input class="input" name="min_ratings" type=number value=5></label>
+      <label class="label">Sigma cutoff: <input class="input" name="sigma_cutoff" type=number placeholder="1.0" step="0.01"></label> -->
+      <input class="button is-primary" type=submit value="Apply">
+    </form>
+  <div>
 {% if page_obj %}
   <table class="fl-table">
     <thead>

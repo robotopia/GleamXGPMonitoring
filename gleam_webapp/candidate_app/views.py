@@ -274,9 +274,11 @@ def candidate_random(request):
 
 
 def candidate_table(request):
+    obs_id = models.Observation.objects.all().order_by("observation_id")
+
     # Order by the column the user clicked or by observation_id by default
     order_by = request.GET.get('order_by', '-avg_rating')
-    candidates = models.Candidate.objects.annotate(
+    candidates = models.Candidate.objects.all().annotate(
         num_ratings=Count('rating'),
         avg_rating=Avg('rating__rating'),
         transient_count=Count('rating', filter=Q(rating__cand_type='T')),
@@ -290,23 +292,24 @@ def candidate_table(request):
         other_count=Count('rating', filter=Q(rating__cand_type='O')),
     ).order_by(order_by, '-avg_rating')
 
-    # candidates = filter_claims(request, candidates)
+    # Ratings filter
+    try:
+        rating_cutoff = float(request.GET.get("rating_cutoff"))
+        candidates = candidates.filter(avg_rating__gte=rating_cutoff)
+    except (ValueError, TypeError) as e:
+        logger.debug(e)
 
-    # rating_cutoff = get_rating_cutoff(request)
-    # min_ratings = get_min_ratings(request)
-    # sigma_cutoff = get_sigma_cutoff(request)
-
-    # if rating_cutoff is not None:
-    #     candidates = candidates.filter(avg_rating__gte=rating_cutoff)
-    # if min_ratings is not None:
-    #     candidates = candidates.filter(num_ratings__gte=min_ratings)
-    # if sigma_cutoff is not None:
-    #     candidates = candidates.filter(sigma__gte=sigma_cutoff)
+    # Obsid filter
+    try:
+        obs_filter = float(request.GET.get("obs_id"))
+        candidates = candidates.filter(obs_id__observation_id=obs_filter)
+    except (ValueError, TypeError) as e:
+        logger.debug(e)
 
     paginator = Paginator(candidates, 25)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
-    return render(request, 'candidate_app/candidate_table.html', {'page_obj': page_obj})
+    return render(request, 'candidate_app/candidate_table.html', {'page_obj': page_obj, "obs_id": obs_id})
 
 
 @api_view(['POST'])
