@@ -14,13 +14,20 @@ from rest_framework.authtoken.models import Token
 
 import random
 import psrqpy
+from datetime import datetime, timedelta
+from mwa_trigger.parse_xml import parsed_VOEvent
+
 from astropy.time import Time
 from astropy.coordinates import SkyCoord
 from astropy import units
 from astropy.coordinates import Angle
 from astroquery.simbad import Simbad
 
-from . import models, serializers
+import voeventdb.remote.apiv1 as apiv1
+from voeventdb.remote.apiv1 import FilterKeys, OrderValues
+import voeventparse
+
+from . import models, serializers, forms
 
 import logging
 logger = logging.getLogger(__name__)
@@ -46,36 +53,34 @@ def candidate_rating(request, id, arcmin=2):
     else:
         sep_arcmin = candidate.nks_sep_deg * 60
 
+    cand_coord = SkyCoord(candidate.ra_deg, candidate.dec_deg, unit=(units.deg, units.deg), frame='icrs')
+
     # Perform simbad query
-    if None in (candidate.ra_deg, candidate.dec_deg):
-        raw_result_table = None
-    else:
-        cand_coord = SkyCoord(candidate.ra_deg, candidate.dec_deg, unit=(units.deg, units.deg), frame='icrs')
-        raw_result_table = Simbad.query_region(cand_coord, radius=float(arcmin) * units.arcmin)
+    raw_result_table = Simbad.query_region(cand_coord, radius=float(arcmin) * units.arcmin)
     simbad_result_table = []
     # Reformat the result into the format we want
     if raw_result_table is not None:
         for result in raw_result_table:
             search_term = result["MAIN_ID"].replace("+", "%2B").replace(" ", "+")
-            ra  = Angle(result["RA"],  unit=units.hour).to_string(unit=units.hour, sep=':')[:11]
-            dec = Angle(result["DEC"], unit=units.deg).to_string(unit=units.deg, sep=':')[:11]
+            simbad_coord = SkyCoord(result["RA"], result["DEC"], unit=(units.hour, units.deg), frame='icrs')
+            ra  = simbad_coord.ra.to_string(unit=units.hour, sep=':')[:11]
+            dec = simbad_coord.dec.to_string(unit=units.deg, sep=':')[:11]
+            sep = cand_coord.separation(simbad_coord).arcminute
             simbad_result_table.append({
                 'name': result["MAIN_ID"],
                 'search_term': search_term,
                 'ra': ra,
                 'dec': dec,
+                'sep': sep,
             })
 
     # Perform atnf query
-    if None in (candidate.ra_hms, candidate.dec_dms):
-        atnf_query = None
-    else:
-        atnf_query = psrqpy.QueryATNF(
-            coord1=candidate.ra_hms,
-            coord2=candidate.dec_dms,
-            radius=float(arcmin)/60,
-            params=["PSRJ", "NAME", "P0", "DM", "S400"],
-        ).pandas
+    atnf_query = psrqpy.QueryATNF(
+        coord1=candidate.ra_hms,
+        coord2=candidate.dec_dms,
+        radius=float(arcmin)/60,
+        params=["PSRJ", "NAME", "P0", "DM", "S400", "RAJ", "DECJ"],
+    ).pandas
     atnf_result_table = []
     # Reformat the result into the format we want
     if atnf_query is not None:
@@ -87,13 +92,66 @@ def candidate_rating(request, id, arcmin=2):
                 name = pulsar["NAME"]
             else:
                 name = None
-                print(pulsar.keys())
+            atnf_coord = SkyCoord(pulsar["RAJ"], pulsar["DECJ"], unit=(units.hour, units.deg), frame='icrs')
+            sep = cand_coord.separation(atnf_coord).arcminute
             atnf_result_table.append({
                 'name': name,
                 'period': pulsar["P0"],
                 'dm': pulsar["DM"],
                 's400': pulsar["S400"],
+                'sep': sep,
             })
+
+    # Perform voevent database query https://voeventdbremote.readthedocs.io/en/latest/notebooks/00_quickstart.html
+    # conesearch skycoord and angle error
+    cand_err = Angle(arcmin,  unit=units.arcmin)
+    # cand_err = Angle(5,  unit=units.deg)
+    cone = (cand_coord, cand_err)
+
+    my_filters = {
+        FilterKeys.role: 'observation',
+        FilterKeys.authored_since: time.tt.datetime - timedelta(hours=1),
+        FilterKeys.authored_until: time.tt.datetime + timedelta(hours=1),
+        # FilterKeys.authored_since: time.tt.datetime - timedelta(days=1),
+        # FilterKeys.authored_until: time.tt.datetime + timedelta(days=1),
+        FilterKeys.cone: cone,
+        }
+    voevent_list = apiv1.list_ivorn(
+        filters=my_filters,
+        order=OrderValues.author_datetime_desc,
+    )
+    voevents = []
+    for ivorn in voevent_list:
+        xml_packet = apiv1.packet_xml(ivorn)
+        # Record xml ivorn into database
+        xml_obj = models.xml_ivorns.objects.filter(ivorn=ivorn)
+        if xml_obj.exists():
+            xml_obj = xml_obj.first()
+        else:
+            xml_obj = models.xml_ivorns.objects.create(ivorn=ivorn)
+        xml_id = xml_obj.id
+        parsed_xml = parsed_VOEvent(None, packet=xml_packet.decode())
+        # Check for ra and dec data
+        if None in (parsed_xml.ra, parsed_xml.dec):
+            ra = None
+            dec = None
+            sep = None
+        else:
+            voevent_coord = SkyCoord(parsed_xml.ra, parsed_xml.dec, unit=(units.deg, units.deg), frame='icrs')
+            ra  = voevent_coord.ra.to_string(unit=units.hour, sep=':')[:11]
+            dec = voevent_coord.dec.to_string(unit=units.deg, sep=':')[:11]
+            sep = cand_coord.separation(voevent_coord).arcminute
+        voevents.append({
+            "telescope" : parsed_xml.telescope,
+            "event_type" : parsed_xml.event_type,
+            "ignored" : parsed_xml.ignore,
+            "source_type" : parsed_xml.source_type,
+            "trig_id" : parsed_xml.trig_id,
+            'ra': ra,
+            'dec': dec,
+            'sep': sep,
+            "xml" : xml_id,
+        })
 
     context = {
         'candidate': candidate,
@@ -103,9 +161,19 @@ def candidate_rating(request, id, arcmin=2):
         'simbad_result_table': simbad_result_table,
         'atnf_result_table': atnf_result_table,
         'arcmin_search': arcmin,
-        'cand_type_choices': models.CAND_TYPE_CHOICES
+        'cand_type_choices': models.CAND_TYPE_CHOICES,
+        'voevents' : voevents,
     }
     return render(request, 'candidate_app/candidate_rating_form.html', context)
+
+
+def voevent_view(request, id):
+    ivorn = models.xml_ivorns.objects.filter(id=id).first().ivorn
+    xml_packet = apiv1.packet_xml(ivorn)
+    v = voeventparse.loads(xml_packet)
+    xml_pretty_str = voeventparse.prettystr(v)
+    return HttpResponse(xml_pretty_str, content_type='text/xml')
+
 
 @login_required
 def token_manage(request):
@@ -206,9 +274,54 @@ def candidate_random(request):
 
 
 def candidate_table(request):
-    # Order by the column the user clicked or by observation_id by default
-    order_by = request.GET.get('order_by', '-avg_rating')
-    candidates = models.Candidate.objects.annotate(
+    # Get session data to keep filters when changing page
+    candidate_table_session_data = request.session.get('current_filter_data', 0)
+    print(candidate_table_session_data)
+
+    # Check filter form
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = forms.CanidateFilterForm(request.POST)
+        # check whether it's valid:
+        if form.is_valid():
+            column_display = form.cleaned_data['column_display']
+            if form.cleaned_data['observation_id'] is None:
+                observation_id_filter = None
+            else:
+                observation_id_filter = form.cleaned_data['observation_id'].observation_id
+            rating_cutoff = form.cleaned_data['rating_cutoff']
+            order_by = form.cleaned_data['order_by']
+            asc_dec = form.cleaned_data['asc_dec']
+            cleaned_data = {**form.cleaned_data}
+            cleaned_data['observation_id'] = observation_id_filter
+            request.session['current_filter_data'] = cleaned_data
+    else:
+        if candidate_table_session_data != 0:
+            # Prefil form with previous session results
+            form = forms.CanidateFilterForm(
+                initial= candidate_table_session_data,
+            )
+            column_display = candidate_table_session_data['column_display']
+            observation_id_filter = candidate_table_session_data['observation_id']
+            rating_cutoff = candidate_table_session_data['rating_cutoff']
+            order_by = candidate_table_session_data['order_by']
+            asc_dec = candidate_table_session_data['asc_dec']
+        else:
+            form = forms.CanidateFilterForm()
+            column_display = None
+            observation_id_filter = None
+            rating_cutoff = None
+            order_by = 'avg_rating'
+            asc_dec = '-'
+
+    print(f"column_display: {column_display}")
+    print(f"observation_id_filter: {observation_id_filter}")
+    print(f"rating_cutoff: {rating_cutoff}")
+    print(f"order_by: {order_by}")
+    print(f"asc_dec: {asc_dec}")
+
+    # Anontate with counts of different candidate type counts
+    candidates = models.Candidate.objects.all().annotate(
         num_ratings=Count('rating'),
         avg_rating=Avg('rating__rating'),
         transient_count=Count('rating', filter=Q(rating__cand_type='T')),
@@ -220,25 +333,45 @@ def candidate_table(request):
         scintillation_count=Count('rating', filter=Q(rating__cand_type='S')),
         pulsar_count=Count('rating', filter=Q(rating__cand_type='P')),
         other_count=Count('rating', filter=Q(rating__cand_type='O')),
-    ).order_by(order_by)
+    )
 
-    # candidates = filter_claims(request, candidates)
+    # If user only wants to display a single column anotate it and return it's name
+    if column_display is not None and column_display != "None":
+        candidates = candidates.annotate(
+            selected_count=Count('rating', filter=Q(rating__cand_type=column_display)),
+        )
+        # Filter count columns
+        column_type_to_name = {
+            "T": "N Tranisent",
+            "AP": "N Airplane",
+            "RFI": "N RFI",
+            "SL": "N Sidelobe",
+            "A": "N Alias",
+            "CC": "N CHG Center",
+            "S": "N Scintillation",
+            "P": "N Pulsar",
+            "O": "N Other",
+        }
+        selected_column = column_type_to_name[column_display]
+    else:
+        selected_column = None
 
-    # rating_cutoff = get_rating_cutoff(request)
-    # min_ratings = get_min_ratings(request)
-    # sigma_cutoff = get_sigma_cutoff(request)
+    # Ratings filter
+    if rating_cutoff is not None:
+        candidates = candidates.filter(avg_rating__gte=rating_cutoff)
 
-    # if rating_cutoff is not None:
-    #     candidates = candidates.filter(avg_rating__gte=rating_cutoff)
-    # if min_ratings is not None:
-    #     candidates = candidates.filter(num_ratings__gte=min_ratings)
-    # if sigma_cutoff is not None:
-    #     candidates = candidates.filter(sigma__gte=sigma_cutoff)
+    # Obsid filter
+    if observation_id_filter is not None:
+        candidates = candidates.filter(obs_id__observation_id=observation_id_filter)
 
+    # Order by the column the user clicked or by avg_rating by default
+    candidates = candidates.order_by(asc_dec + order_by, '-avg_rating')
+
+    # Paginate
     paginator = Paginator(candidates, 25)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
-    return render(request, 'candidate_app/candidate_table.html', {'page_obj': page_obj})
+    return render(request, 'candidate_app/candidate_table.html', {'page_obj': page_obj, "form": form, "selected_column": selected_column})
 
 
 @api_view(['POST'])
@@ -259,7 +392,6 @@ def observation_create(request):
 def candidate_create(request):
     # Get or create filter
     filter_name = request.data.get("filter_id")
-    print(filter_name)
     if models.Filter.objects.filter(name=filter_name).exists():
         filter = models.Filter.objects.filter(name=filter_name).first()
     else:

@@ -33,6 +33,7 @@ kiwisolver==1.4.2
 matplotlib==3.5.2
 matplotlib-inline==0.1.3
 mock==4.0.3
+mwa_trigger @ git+https://github.com/ADACS-Australia/mwa_trigger.git
 numpy==1.22.3
 packaging==21.3
 pandas==1.4.2

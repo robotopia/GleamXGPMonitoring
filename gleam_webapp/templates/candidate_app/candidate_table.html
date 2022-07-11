@@ -6,26 +6,57 @@
 
 <title>Candidate Ratings Table</title>
 <h2>Candidate Ratings Table</h2>
-
-<div>
-{% if page_obj %}
+<h3>Filter Candidate Ratings:</h3>
+  <div style="background-color:#f8f8f8; width:90%; margin: 0 auto; padding-bottom: 20px;">
+    <form method="post">
+      {% csrf_token %}
+      <div class="fieldWrapper">
+        {{ form.rating_cutoff.errors }}
+        <label for="{{ form.rating_cutoff.id_for_label }}">Average rating cutoff:</label>
+        {{ form.rating_cutoff }}
+      </div>
+      <div class="fieldWrapper">
+        {{ form.observation_id.errors }}
+        <label for="{{ form.observation_id.id_for_label }}">Observation ID:</label>
+        {{ form.observation_id }}
+      </div>
+      <div class="fieldWrapper">
+        {{ form.column_display.errors }}
+        <label for="{{ form.column_display.id_for_label }}">Display Count Columns:</label>
+        {{ form.column_display }}
+      </div>
+      <div class="fieldWrapper">
+        {{ form.order_by.errors }}
+        <label for="{{ form.order_by.id_for_label }}">Order by:</label>
+        {{ form.order_by }}
+        {{ form.asc_dec.errors }}
+        {{ form.asc_dec }}
+      </div>
+      <input class="button is-primary" type=submit value="Submit">
+    </form>
+  <div>
+  {% if page_obj %}
   <table class="fl-table">
     <thead>
-      <th><a href="?{% url_replace request 'order_by' 'id' '-' %}">ID</a></th>
-      <th><a href="?{% url_replace request 'order_by' 'avg_rating' '-' %}">Rating</a> <a href="?{% url_replace request 'order_by' 'num_ratings' '-' %}">(Count)</a></th>
-      <th><a href="?{% url_replace request 'order_by' 'notes' '-' %}">Notes</a></th>
-      <th><a href="?{% url_replace request 'order_by' 'transient_count' '-' %}">N Tranisent</a></th>
-      <th><a href="?{% url_replace request 'order_by' 'airplane_count' '-' %}">N Airplane</a></th>
-      <th><a href="?{% url_replace request 'order_by' 'rfi_count' '-' %}">N RFI</a></th>
-      <th><a href="?{% url_replace request 'order_by' 'sidelobe_count' '-' %}">N Sidelobe</a></th>
-      <th><a href="?{% url_replace request 'order_by' 'alias_count' '-' %}">N Alias</a></th>
-      <th><a href="?{% url_replace request 'order_by' 'chgcentre_count' '-' %}">N CHG Center</a></th>
-      <th><a href="?{% url_replace request 'order_by' 'scintillation_count' '-' %}">N Scintillation</a></th>
-      <th><a href="?{% url_replace request 'order_by' 'pulsar_count' '-' %}">N Pulsar</a></th>
-      <th><a href="?{% url_replace request 'order_by' 'other_count' '-' %}">N Other</a></th>
-      <th><a href="?{% url_replace request 'order_by' 'ra_hms' '-' %}">RA (HH:MM:SS.SS)</a></th>
-      <th><a href="?{% url_replace request 'order_by' 'dec_dms' '-' %}">Dec (DD:MM:SS.SS)</a></th>
-      <th><a href="?{% url_replace request 'order_by' 'obs_id' '-' %}">Obs ID</a></th>
+      <th>ID</th>
+      <th>Rating(Count)</th>
+      <th>Notes</th>
+      {% if form.column_display.value != "None" %}
+        <th>{{ selected_column }}<th>
+      {% else %}
+        <th>N Tranisent</th>
+        <th>N Airplane</th>
+        <th>N RFI</th>
+        <th> Sidelobe</th>
+        <th>N Alias</th>
+        <th>N CHG Center</th>
+        <th>N Scintillation</th>
+        <th>N Pulsar</th>
+        <th>N Other</th>
+      {% endif %}
+      <th>RA (HH:MM:SS.SS)</th>
+      <th>Dec (DD:MM:SS.SS)</th>
+      <th>Obs ID</th>
       <th>Plot</th>
     </thead>
 
@@ -40,15 +71,19 @@
           {% endif %}
         </td>
         <td>{{cand.notes}}</td>
-        <td>{{cand.transient_count}}</td>
-        <td>{{cand.airplane_count}}</td>
-        <td>{{cand.rfi_count}}</td>
-        <td>{{cand.sidelobe_count}}</td>
-        <td>{{cand.alias_count}}</td>
-        <td>{{cand.chgcentre_count}}</td>
-        <td>{{cand.scintillation_count}}</td>
-        <td>{{cand.pulsar_count}}</td>
-        <td>{{cand.other_count}}</td>
+        {% if form.column_display.value != "None" %}
+          <td>{{cand.selected_count}}</td>
+        {% else %}
+          <td>{{cand.transient_count}}</td>
+          <td>{{cand.airplane_count}}</td>
+          <td>{{cand.rfi_count}}</td>
+          <td>{{cand.sidelobe_count}}</td>
+          <td>{{cand.alias_count}}</td>
+          <td>{{cand.chgcentre_count}}</td>
+          <td>{{cand.scintillation_count}}</td>
+          <td>{{cand.pulsar_count}}</td>
+          <td>{{cand.other_count}}</td>
+        {% endif %}
         <td>{{cand.ra_hms}}</td>
         <td>{{cand.dec_dms}}</td>
         <td>{{cand.obs_id.observation_id}}</td>
@@ -61,21 +96,6 @@
 {% endif %}
 </div>
 
-<div class="pagination">
-  <span class="step-links">
-    {% if page_obj.has_previous %}
-    <a href="?page=1">&laquo; first</a>
-    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-    {% endif %}
+{% include "candidate_app/pagination.html" %}
 
-    <span class="current">
-      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-    </span>
-
-    {% if page_obj.has_next %}
-    <a href="?page={{ page_obj.next_page_number }}">next</a>
-    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-    {% endif %}
-  </span>
-</div>
 {% endblock %}
