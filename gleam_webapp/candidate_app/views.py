@@ -285,11 +285,16 @@ def candidate_table(request):
         # check whether it's valid:
         if form.is_valid():
             column_display = form.cleaned_data['column_display']
-            observation_id_filter = form.cleaned_data['observation_id']
+            if form.cleaned_data['observation_id'] is None:
+                observation_id_filter = None
+            else:
+                observation_id_filter = form.cleaned_data['observation_id'].observation_id
             rating_cutoff = form.cleaned_data['rating_cutoff']
             order_by = form.cleaned_data['order_by']
             asc_dec = form.cleaned_data['asc_dec']
-            request.session['current_filter_data'] = {**form.cleaned_data}
+            cleaned_data = {**form.cleaned_data}
+            cleaned_data['observation_id'] = observation_id_filter
+            request.session['current_filter_data'] = cleaned_data
     else:
         if candidate_table_session_data != 0:
             # Prefil form with previous session results
@@ -357,7 +362,7 @@ def candidate_table(request):
 
     # Obsid filter
     if observation_id_filter is not None:
-        candidates = candidates.filter(obs_id__observation_id=observation_id_filter.observation_id)
+        candidates = candidates.filter(obs_id__observation_id=observation_id_filter)
 
     # Order by the column the user clicked or by avg_rating by default
     candidates = candidates.order_by(asc_dec + order_by, '-avg_rating')

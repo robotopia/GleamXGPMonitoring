@@ -32,7 +32,7 @@ ASC_DEC_CHOICES = (
 
 class CanidateFilterForm(forms.Form):
     rating_cutoff = forms.FloatField(required=False)
-    observation_id = forms.ModelChoiceField(models.Observation.objects.all(), to_field_name="observation_id", empty_label="All observations", required=False)
+    observation_id = forms.ModelChoiceField(models.Observation.objects.all(), empty_label="All observations", required=False)
     column_display = forms.ChoiceField(choices=CAND_TYPE_CHOICES, required=False, initial='None')
     order_by = forms.ChoiceField(choices=ORDER_BY_CHOICES, required=False, initial='avg_rating')
     asc_dec = forms.ChoiceField(choices=ASC_DEC_CHOICES, required=False, initial='-')
