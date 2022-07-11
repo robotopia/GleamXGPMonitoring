@@ -274,12 +274,11 @@ def candidate_random(request):
 
 
 def candidate_table(request):
+    # Get session data to keep filters when changing page
+    candidate_table_session_data = request.session.get('current_filter_data', 0)
+    print(candidate_table_session_data)
+
     # Check filter form
-    column_display = None
-    observation_id_filter = None
-    rating_cutoff = None
-    order_by = 'avg_rating'
-    asc_dec = '-'
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
         form = forms.CanidateFilterForm(request.POST)
@@ -290,8 +289,26 @@ def candidate_table(request):
             rating_cutoff = form.cleaned_data['rating_cutoff']
             order_by = form.cleaned_data['order_by']
             asc_dec = form.cleaned_data['asc_dec']
+            request.session['current_filter_data'] = {**form.cleaned_data}
     else:
-        form = forms.CanidateFilterForm()
+        if candidate_table_session_data != 0:
+            # Prefil form with previous session results
+            form = forms.CanidateFilterForm(
+                initial= candidate_table_session_data,
+            )
+            column_display = candidate_table_session_data['column_display']
+            observation_id_filter = candidate_table_session_data['observation_id']
+            rating_cutoff = candidate_table_session_data['rating_cutoff']
+            order_by = candidate_table_session_data['order_by']
+            asc_dec = candidate_table_session_data['asc_dec']
+        else:
+            form = forms.CanidateFilterForm()
+            column_display = None
+            observation_id_filter = None
+            rating_cutoff = None
+            order_by = 'avg_rating'
+            asc_dec = '-'
+
     print(f"column_display: {column_display}")
     print(f"observation_id_filter: {observation_id_filter}")
     print(f"rating_cutoff: {rating_cutoff}")
