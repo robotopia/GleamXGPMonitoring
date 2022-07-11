@@ -27,7 +27,7 @@ import voeventdb.remote.apiv1 as apiv1
 from voeventdb.remote.apiv1 import FilterKeys, OrderValues
 import voeventparse
 
-from . import models, serializers
+from . import models, serializers, forms
 
 import logging
 logger = logging.getLogger(__name__)
@@ -274,10 +274,31 @@ def candidate_random(request):
 
 
 def candidate_table(request):
-    obs_id = models.Observation.objects.all().order_by("observation_id")
+    # Check filter form
+    column_display = None
+    observation_id_filter = None
+    rating_cutoff = None
+    order_by = 'avg_rating'
+    asc_dec = '-'
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = forms.CanidateFilterForm(request.POST)
+        # check whether it's valid:
+        if form.is_valid():
+            column_display = form.cleaned_data['column_display']
+            observation_id_filter = form.cleaned_data['observation_id']
+            rating_cutoff = form.cleaned_data['rating_cutoff']
+            order_by = form.cleaned_data['order_by']
+            asc_dec = form.cleaned_data['asc_dec']
+    else:
+        form = forms.CanidateFilterForm()
+    print(f"column_display: {column_display}")
+    print(f"observation_id_filter: {observation_id_filter}")
+    print(f"rating_cutoff: {rating_cutoff}")
+    print(f"order_by: {order_by}")
+    print(f"asc_dec: {asc_dec}")
 
-    # Order by the column the user clicked or by observation_id by default
-    order_by = request.GET.get('order_by', '-avg_rating')
+    # Anontate with counts of different candidate type counts
     candidates = models.Candidate.objects.all().annotate(
         num_ratings=Count('rating'),
         avg_rating=Avg('rating__rating'),
@@ -290,26 +311,45 @@ def candidate_table(request):
         scintillation_count=Count('rating', filter=Q(rating__cand_type='S')),
         pulsar_count=Count('rating', filter=Q(rating__cand_type='P')),
         other_count=Count('rating', filter=Q(rating__cand_type='O')),
-    ).order_by(order_by, '-avg_rating')
+    )
+
+    # If user only wants to display a single column anotate it and return it's name
+    if column_display is not None and column_display != "None":
+        candidates = candidates.annotate(
+            selected_count=Count('rating', filter=Q(rating__cand_type=column_display)),
+        )
+        # Filter count columns
+        column_type_to_name = {
+            "T": "N Tranisent",
+            "AP": "N Airplane",
+            "RFI": "N RFI",
+            "SL": "N Sidelobe",
+            "A": "N Alias",
+            "CC": "N CHG Center",
+            "S": "N Scintillation",
+            "P": "N Pulsar",
+            "O": "N Other",
+        }
+        selected_column = column_type_to_name[column_display]
+    else:
+        selected_column = None
 
     # Ratings filter
-    try:
-        rating_cutoff = float(request.GET.get("rating_cutoff"))
+    if rating_cutoff is not None:
         candidates = candidates.filter(avg_rating__gte=rating_cutoff)
-    except (ValueError, TypeError) as e:
-        logger.debug(e)
 
     # Obsid filter
-    try:
-        obs_filter = float(request.GET.get("obs_id"))
-        candidates = candidates.filter(obs_id__observation_id=obs_filter)
-    except (ValueError, TypeError) as e:
-        logger.debug(e)
+    if observation_id_filter is not None:
+        candidates = candidates.filter(obs_id__observation_id=observation_id_filter.observation_id)
 
+    # Order by the column the user clicked or by avg_rating by default
+    candidates = candidates.order_by(asc_dec + order_by, '-avg_rating')
+
+    # Paginate
     paginator = Paginator(candidates, 25)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
-    return render(request, 'candidate_app/candidate_table.html', {'page_obj': page_obj, "obs_id": obs_id})
+    return render(request, 'candidate_app/candidate_table.html', {'page_obj': page_obj, "form": form, "selected_column": selected_column})
 
 
 @api_view(['POST'])
@@ -330,7 +370,6 @@ def observation_create(request):
 def candidate_create(request):
     # Get or create filter
     filter_name = request.data.get("filter_id")
-    print(filter_name)
     if models.Filter.objects.filter(name=filter_name).exists():
         filter = models.Filter.objects.filter(name=filter_name).first()
     else:
