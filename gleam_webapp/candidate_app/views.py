@@ -6,6 +6,8 @@ from django.db.models import Count, Q, Avg
 from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from django_q3c.expressions import Q3CRadialQuery
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -295,6 +297,9 @@ def candidate_table(request):
             cleaned_data = {**form.cleaned_data}
             cleaned_data['observation_id'] = observation_id_filter
             request.session['current_filter_data'] = cleaned_data
+            ra_hms = form.cleaned_data['ra_hms']
+            dec_dms = form.cleaned_data['dec_dms']
+            search_radius_arcmin = form.cleaned_data['search_radius_arcmin']
     else:
         if candidate_table_session_data != 0:
             # Prefil form with previous session results
@@ -306,6 +311,9 @@ def candidate_table(request):
             rating_cutoff = candidate_table_session_data['rating_cutoff']
             order_by = candidate_table_session_data['order_by']
             asc_dec = candidate_table_session_data['asc_dec']
+            ra_hms = candidate_table_session_data['ra_hms']
+            dec_dms = candidate_table_session_data['dec_dms']
+            search_radius_arcmin = candidate_table_session_data['search_radius_arcmin']
         else:
             form = forms.CanidateFilterForm()
             column_display = None
@@ -313,6 +321,9 @@ def candidate_table(request):
             rating_cutoff = None
             order_by = 'avg_rating'
             asc_dec = '-'
+            ra_hms = None
+            dec_dms = None
+            search_radius_arcmin = 2
 
     print(f"column_display: {column_display}")
     print(f"observation_id_filter: {observation_id_filter}")
@@ -366,6 +377,18 @@ def candidate_table(request):
 
     # Order by the column the user clicked or by avg_rating by default
     candidates = candidates.order_by(asc_dec + order_by, '-avg_rating')
+
+    # Filter by position
+    if None not in (ra_hms, dec_dms):
+        ra_deg = Angle(ra_hms,  unit=units.hour).deg
+        dec_deg = Angle(dec_dms,  unit=units.deg).deg
+        candidates = candidates.filter(Q(Q3CRadialQuery(
+            center_ra=ra_deg,
+            center_dec=dec_deg,
+            ra_col="ra_deg",
+            dec_col="dec_deg",
+            radius=search_radius_arcmin/60.,
+        )))
 
     # Paginate
     paginator = Paginator(candidates, 25)
