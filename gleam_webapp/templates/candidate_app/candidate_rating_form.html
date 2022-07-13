@@ -60,6 +60,31 @@
                 <input class="btn btn-primary" type="submit" value="Submit">
               </form>
 
+              <h3>Nearby Candidates:</h3>
+              <table class="fl-table">
+                <!-- <thead> -->
+                <tr>
+                  <th>ID</th>
+                  <th>RA</th>
+                  <th>Dec</th>
+                  <th>Separation (arcmin)</th>
+                </tr>
+                <!-- </thead> -->
+                <!-- Iterate over object_list -->
+                {% for result in nearby_candidates_table %}
+                <!-- Display Objects -->
+                <tr>
+                  <td><a href="/candidate_rating/{{ result.id }}/" style="text-decoration:None">{{ result.id }}</a></td>
+                  <td>{{ result.ra }}</td>
+                  <td>{{ result.dec }}</td>
+                  <td>{{ result.sep|floatformat:2 }}</td>
+                </tr>
+                <!-- If object_list is empty  -->
+                {% empty %}
+                <tr><td>No Sources found</td></tr>
+                {% endfor %}
+              </table>
+
             <h3>SIMBAD:</h3>
             <table class="fl-table">
               <!-- <thead> -->
@@ -112,7 +137,7 @@
               {% endfor %}
             </table>
 
-            <h3>Transient VOEvents:</h3>
+            <h3>Transient VOEvents (within one hour):</h3>
             <table class="fl-table">
               <tr>
                 <th>Event type</th>

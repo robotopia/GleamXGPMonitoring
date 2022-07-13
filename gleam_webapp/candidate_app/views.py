@@ -57,6 +57,27 @@ def candidate_rating(request, id, arcmin=2):
 
     cand_coord = SkyCoord(candidate.ra_deg, candidate.dec_deg, unit=(units.deg, units.deg), frame='icrs')
 
+    # Find nearby candidates
+    nearby_candidates = models.Candidate.objects.filter(Q(Q3CRadialQuery(
+        center_ra=candidate.ra_deg,
+        center_dec=candidate.dec_deg,
+        ra_col="ra_deg",
+        dec_col="dec_deg",
+        radius=sep_arcmin/60.,
+    ))).exclude(id=candidate.id)
+    nearby_candidates_table = []
+    for nearby_cand in nearby_candidates:
+        # Calculate seperation
+        nearby_coord = SkyCoord(nearby_cand.ra_deg, nearby_cand.dec_deg, unit=(units.deg, units.deg), frame='icrs')
+        sep = cand_coord.separation(nearby_coord).arcminute
+        nearby_candidates_table.append({
+            'id': nearby_cand.id,
+            'ra': nearby_cand.ra_hms,
+            'dec': nearby_cand.dec_dms,
+            'sep': sep,
+        })
+
+
     # Perform simbad query
     raw_result_table = Simbad.query_region(cand_coord, radius=float(arcmin) * units.arcmin)
     simbad_result_table = []
@@ -160,6 +181,7 @@ def candidate_rating(request, id, arcmin=2):
         'rating': rating,
         'time': time,
         'sep_arcmin': sep_arcmin,
+        'nearby_candidates_table': nearby_candidates_table,
         'simbad_result_table': simbad_result_table,
         'atnf_result_table': atnf_result_table,
         'arcmin_search': arcmin,
@@ -379,7 +401,7 @@ def candidate_table(request):
     candidates = candidates.order_by(asc_dec + order_by, '-avg_rating')
 
     # Filter by position
-    if None not in (ra_hms, dec_dms):
+    if not ( None in (ra_hms, dec_dms) or ra_hms == "" or dec_dms == "" ):
         ra_deg = Angle(ra_hms,  unit=units.hour).deg
         dec_deg = Angle(dec_dms,  unit=units.deg).deg
         candidates = candidates.filter(Q(Q3CRadialQuery(
