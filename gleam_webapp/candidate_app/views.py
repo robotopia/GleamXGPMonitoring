@@ -373,7 +373,9 @@ def candidate_table(request):
         candidates = candidates.annotate(
             selected_count=Count('rating', filter=Q(rating__cand_type=column_display)),
         )
-        # Filter count columns
+        # Filter data to only show candidates with at least one count
+        candidates = candidates.filter(selected_count__gte=1)
+        # Filter displayed count columns
         column_type_to_name = {
             "T": "N Tranisent",
             "AP": "N Airplane",

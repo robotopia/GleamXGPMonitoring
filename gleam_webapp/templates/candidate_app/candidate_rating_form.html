@@ -202,11 +202,31 @@
           <div class="field">
           <h4>Rating from 1(noise) to 5(clear candidate){% if rating %}(currently {{rating.rating}}){% endif %}</h4>
           <div>
-            <input type="submit" class="btn btn-primary btn-lg" name="rating" value="1">
-            <input type="submit" class="btn btn-primary btn-lg" name="rating" value="2">
-            <input type="submit" class="btn btn-primary btn-lg" name="rating" value="3">
-            <input type="submit" class="btn btn-primary btn-lg" name="rating" value="4">
-            <input type="submit" class="btn btn-primary btn-lg" name="rating" value="5">
+            {% if rating.rating == 1 %}
+              <input type="submit" class="btn btn-success btn-lg" name="rating" value="1">
+            {% else %}
+              <input type="submit" class="btn btn-primary btn-lg" name="rating" value="1">
+            {% endif %}
+            {% if rating.rating == 2 %}
+              <input type="submit" class="btn btn-success btn-lg" name="rating" value="2">
+            {% else %}
+              <input type="submit" class="btn btn-primary btn-lg" name="rating" value="2">
+            {% endif %}
+            {% if rating.rating == 3 %}
+              <input type="submit" class="btn btn-success btn-lg" name="rating" value="3">
+            {% else %}
+              <input type="submit" class="btn btn-primary btn-lg" name="rating" value="3">
+            {% endif %}
+            {% if rating.rating == 4 %}
+              <input type="submit" class="btn btn-success btn-lg" name="rating" value="4">
+            {% else %}
+              <input type="submit" class="btn btn-primary btn-lg" name="rating" value="4">
+            {% endif %}
+            {% if rating.rating == 5 %}
+              <input type="submit" class="btn btn-success btn-lg" name="rating" value="5">
+            {% else %}
+              <input type="submit" class="btn btn-primary btn-lg" name="rating" value="5">
+            {% endif %}
           </div>
           </div>
           <div class="field">
