@@ -36,3 +36,6 @@ class CanidateFilterForm(forms.Form):
     column_display = forms.ChoiceField(choices=CAND_TYPE_CHOICES, required=False, initial='None')
     order_by = forms.ChoiceField(choices=ORDER_BY_CHOICES, required=False, initial='avg_rating')
     asc_dec = forms.ChoiceField(choices=ASC_DEC_CHOICES, required=False, initial='-')
+    ra_hms = forms.CharField(required=False, max_length=64)
+    dec_dms = forms.CharField(required=False, max_length=64)
+    search_radius_arcmin = forms.FloatField(required=False, initial=2)

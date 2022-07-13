@@ -6,6 +6,8 @@ from django.db.models import Count, Q, Avg
 from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from django_q3c.expressions import Q3CRadialQuery
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -54,6 +56,27 @@ def candidate_rating(request, id, arcmin=2):
         sep_arcmin = candidate.nks_sep_deg * 60
 
     cand_coord = SkyCoord(candidate.ra_deg, candidate.dec_deg, unit=(units.deg, units.deg), frame='icrs')
+
+    # Find nearby candidates
+    nearby_candidates = models.Candidate.objects.filter(Q(Q3CRadialQuery(
+        center_ra=candidate.ra_deg,
+        center_dec=candidate.dec_deg,
+        ra_col="ra_deg",
+        dec_col="dec_deg",
+        radius=sep_arcmin/60.,
+    ))).exclude(id=candidate.id)
+    nearby_candidates_table = []
+    for nearby_cand in nearby_candidates:
+        # Calculate seperation
+        nearby_coord = SkyCoord(nearby_cand.ra_deg, nearby_cand.dec_deg, unit=(units.deg, units.deg), frame='icrs')
+        sep = cand_coord.separation(nearby_coord).arcminute
+        nearby_candidates_table.append({
+            'id': nearby_cand.id,
+            'ra': nearby_cand.ra_hms,
+            'dec': nearby_cand.dec_dms,
+            'sep': sep,
+        })
+
 
     # Perform simbad query
     raw_result_table = Simbad.query_region(cand_coord, radius=float(arcmin) * units.arcmin)
@@ -158,6 +181,7 @@ def candidate_rating(request, id, arcmin=2):
         'rating': rating,
         'time': time,
         'sep_arcmin': sep_arcmin,
+        'nearby_candidates_table': nearby_candidates_table,
         'simbad_result_table': simbad_result_table,
         'atnf_result_table': atnf_result_table,
         'arcmin_search': arcmin,
@@ -295,6 +319,9 @@ def candidate_table(request):
             cleaned_data = {**form.cleaned_data}
             cleaned_data['observation_id'] = observation_id_filter
             request.session['current_filter_data'] = cleaned_data
+            ra_hms = form.cleaned_data['ra_hms']
+            dec_dms = form.cleaned_data['dec_dms']
+            search_radius_arcmin = form.cleaned_data['search_radius_arcmin']
     else:
         if candidate_table_session_data != 0:
             # Prefil form with previous session results
@@ -306,6 +333,9 @@ def candidate_table(request):
             rating_cutoff = candidate_table_session_data['rating_cutoff']
             order_by = candidate_table_session_data['order_by']
             asc_dec = candidate_table_session_data['asc_dec']
+            ra_hms = candidate_table_session_data['ra_hms']
+            dec_dms = candidate_table_session_data['dec_dms']
+            search_radius_arcmin = candidate_table_session_data['search_radius_arcmin']
         else:
             form = forms.CanidateFilterForm()
             column_display = None
@@ -313,6 +343,9 @@ def candidate_table(request):
             rating_cutoff = None
             order_by = 'avg_rating'
             asc_dec = '-'
+            ra_hms = None
+            dec_dms = None
+            search_radius_arcmin = 2
 
     print(f"column_display: {column_display}")
     print(f"observation_id_filter: {observation_id_filter}")
@@ -368,6 +401,18 @@ def candidate_table(request):
 
     # Order by the column the user clicked or by avg_rating by default
     candidates = candidates.order_by(asc_dec + order_by, '-avg_rating')
+
+    # Filter by position
+    if not ( None in (ra_hms, dec_dms) or ra_hms == "" or dec_dms == "" ):
+        ra_deg = Angle(ra_hms,  unit=units.hour).deg
+        dec_deg = Angle(dec_dms,  unit=units.deg).deg
+        candidates = candidates.filter(Q(Q3CRadialQuery(
+            center_ra=ra_deg,
+            center_dec=dec_deg,
+            ra_col="ra_deg",
+            dec_col="dec_deg",
+            radius=search_radius_arcmin/60.,
+        )))
 
     # Paginate
     paginator = Paginator(candidates, 25)
