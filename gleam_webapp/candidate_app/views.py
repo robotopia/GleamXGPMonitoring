@@ -365,6 +365,7 @@ def candidate_table(request):
         chgcentre_count=Count('rating', filter=Q(rating__cand_type='CC')),
         scintillation_count=Count('rating', filter=Q(rating__cand_type='S')),
         pulsar_count=Count('rating', filter=Q(rating__cand_type='P')),
+        agn_count=Count('rating', filter=Q(rating__cand_type='AGN')),
         other_count=Count('rating', filter=Q(rating__cand_type='O')),
     )
 
@@ -385,6 +386,7 @@ def candidate_table(request):
             "CC": "N CHG Center",
             "S": "N Scintillation",
             "P": "N Pulsar",
+            "AGN": "N AGN",
             "O": "N Other",
         }
         selected_column = column_type_to_name[column_display]
