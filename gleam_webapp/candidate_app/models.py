@@ -90,6 +90,7 @@ A = 'A'
 CC = 'CC'
 S = 'S'
 P = 'P'
+AGN = 'AGN'
 O = 'O'
 CAND_TYPE_CHOICES = (
     (T,   'Transient'),
@@ -100,6 +101,7 @@ CAND_TYPE_CHOICES = (
     (CC,  'CHG Centre'),
     (S,   'Scintillation'),
     (P,   'Pulsar'),
+    (AGN, 'AGN'),
     (O,   'Other'),
 )
 class Rating(models.Model):

@@ -189,7 +189,9 @@
           <h4>Choose candidate type:</h4>
 
           {% for value, text in cand_type_choices %}
-            {% if value == "T" %}
+            {% if value == "T" and not rating %}
+              <input checked="checked"
+            {% elif value == rating.cand_type %}
               <input checked="checked"
             {% else %}
               <input

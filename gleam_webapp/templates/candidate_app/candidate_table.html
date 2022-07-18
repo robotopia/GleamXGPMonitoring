@@ -5,58 +5,58 @@
 {% block content %}
 
 <title>Candidate Ratings Table</title>
-<h2>Candidate Ratings Table</h2>
-<h3>Filter Candidate Ratings:</h3>
-  <div style="background-color:#f8f8f8; width:90%; margin: 0 auto; padding-bottom: 20px;">
-    <form method="post">
-      {% csrf_token %}
-      <div class="row justify-content-center">
-        <div class="col-4">
-          <div class="fieldWrapper">
-            {{ form.rating_cutoff.errors }}
-            <label for="{{ form.rating_cutoff.id_for_label }}">Average rating cutoff:</label>
-            {{ form.rating_cutoff }}
-          </div>
-          <div class="fieldWrapper">
-            {{ form.observation_id.errors }}
-            <label for="{{ form.observation_id.id_for_label }}">Observation ID:</label>
-            {{ form.observation_id }}
-          </div>
-          <div class="fieldWrapper">
-            {{ form.column_display.errors }}
-            <label for="{{ form.column_display.id_for_label }}">Display Count Columns:</label>
-            {{ form.column_display }}
-          </div>
-          <div class="fieldWrapper">
-            {{ form.order_by.errors }}
-            <label for="{{ form.order_by.id_for_label }}">Order by:</label>
-            {{ form.order_by }}
-            {{ form.asc_dec.errors }}
-            {{ form.asc_dec }}
-          </div>
+<h1>Candidate Ratings Table</h1>
+<div class="col-6" style="width:90%; margin: 0 auto; padding-bottom: 20px;">
+  <h2>Filter Candidate Ratings:</h2>
+  <form method="post">
+    {% csrf_token %}
+    <div class="row justify-content-center" style="background-color:#f8f8f8; margin: 0;">
+      <div class="col-3">
+        <div class="fieldWrapper">
+          {{ form.rating_cutoff.errors }}
+          <label for="{{ form.rating_cutoff.id_for_label }}">Average rating cutoff:</label>
+          {{ form.rating_cutoff }}
         </div>
-        <div class="col-4">
-          <p>Filter by position:</p>
-          <div class="fieldWrapper">
-            {{ form.ra_hms.errors }}
-            <label for="{{ form.ra_hms.id_for_label }}">RA (HH:MM:SS):</label>
-            {{ form.ra_hms }}
-          </div>
-          <div class="fieldWrapper">
-            {{ form.dec_dms.errors }}
-            <label for="{{ form.dec_dms.id_for_label }}">Dec (DD:MM:SS)::</label>
-            {{ form.dec_dms }}
-          </div>
-          <div class="fieldWrapper">
-            {{ form.search_radius_arcmin.errors }}
-            <label for="{{ form.search_radius_arcmin.id_for_label }}">Search radius (arcmin):</label>
-            {{ form.search_radius_arcmin }}
-          </div>
+        <div class="fieldWrapper">
+          {{ form.observation_id.errors }}
+          <label for="{{ form.observation_id.id_for_label }}">Observation ID:</label>
+          {{ form.observation_id }}
+        </div>
+        <div class="fieldWrapper">
+          {{ form.column_display.errors }}
+          <label for="{{ form.column_display.id_for_label }}">Display Count Columns:</label>
+          {{ form.column_display }}
+        </div>
+        <div class="fieldWrapper">
+          {{ form.order_by.errors }}
+          <label for="{{ form.order_by.id_for_label }}">Order by:</label>
+          {{ form.order_by }}
+          {{ form.asc_dec.errors }}
+          {{ form.asc_dec }}
+        </div>
+        <input class="button is-primary" type=submit value="Submit">
+      </div>
+      <div class="col-3">
+        <h4>Filter by position:</h4>
+        <div class="fieldWrapper">
+          {{ form.ra_hms.errors }}
+          <label for="{{ form.ra_hms.id_for_label }}">RA (HH:MM:SS):</label>
+          {{ form.ra_hms }}
+        </div>
+        <div class="fieldWrapper">
+          {{ form.dec_dms.errors }}
+          <label for="{{ form.dec_dms.id_for_label }}">Dec (DD:MM:SS)::</label>
+          {{ form.dec_dms }}
+        </div>
+        <div class="fieldWrapper">
+          {{ form.search_radius_arcmin.errors }}
+          <label for="{{ form.search_radius_arcmin.id_for_label }}">Search radius (arcmin):</label>
+          {{ form.search_radius_arcmin }}
         </div>
       </div>
-      <input class="button is-primary" type=submit value="Submit">
-    </form>
-  <div>
+    </div>
+  </form>
+</div>
   {% if page_obj %}
   <table class="fl-table">
     <thead>
