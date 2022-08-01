@@ -39,3 +39,12 @@ class CanidateFilterForm(forms.Form):
     ra_hms = forms.CharField(required=False, max_length=64)
     dec_dms = forms.CharField(required=False, max_length=64)
     search_radius_arcmin = forms.FloatField(required=False, initial=2)
+
+SESSION_ORDER_CHOICES = (
+    ('rand','Random'),
+    ('new', 'Newest'),
+    ('old', 'Oldest'),
+
+)
+class SessionSettingsForm(forms.Form):
+    ordering = forms.ChoiceField(choices=SESSION_ORDER_CHOICES, required=False, initial='rand')

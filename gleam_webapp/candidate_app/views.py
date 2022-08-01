@@ -292,8 +292,16 @@ def candidate_random(request):
     if not unrated_cand.exists():
         # No candidates left so return to home screen
         return HttpResponse('<h3>No unrated canidate left</h3><h3><a href="/">Home Page</a></h3>')
-    # Get random cand
-    candidate = random.choice(list(unrated_cand))
+
+    # Use session data to decide candidate order
+    session_settings = request.session.get('session_settings', 0)
+    if session_settings == 0 or session_settings['ordering'] == 'rand':
+        # Get random cand (This is the default)
+        candidate = random.choice(list(unrated_cand))
+    elif session_settings['ordering'] == 'new':
+        candidate = unrated_cand.order_by('-obs_id__starttime').first()
+    elif session_settings['ordering'] == 'old':
+        candidate = unrated_cand.order_by('obs_id__starttime').first()
     return redirect(reverse('candidate_rating', args=(candidate.id,)))
 
 
@@ -326,7 +334,7 @@ def candidate_table(request):
         if candidate_table_session_data != 0:
             # Prefil form with previous session results
             form = forms.CanidateFilterForm(
-                initial= candidate_table_session_data,
+                initial=candidate_table_session_data,
             )
             column_display = candidate_table_session_data['column_display']
             observation_id_filter = candidate_table_session_data['observation_id']
@@ -421,6 +429,36 @@ def candidate_table(request):
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     return render(request, 'candidate_app/candidate_table.html', {'page_obj': page_obj, "form": form, "selected_column": selected_column})
+
+
+def session_settings(request):
+    # Get session data to keep filters when changing page
+    session_settings = request.session.get('session_settings', 0)
+    print(session_settings)
+
+    # Check filter form
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = forms.SessionSettingsForm(request.POST)
+        # check whether it's valid:
+        if form.is_valid():
+            cleaned_data = {**form.cleaned_data}
+            request.session['session_settings'] = cleaned_data
+    else:
+        if session_settings != 0:
+            # Prefil form with previous session results
+            form = forms.SessionSettingsForm(
+                initial=session_settings,
+            )
+        else:
+            form = forms.CanidateFilterForm()
+
+    context = {
+        "form": form,
+        'choices': forms.SESSION_ORDER_CHOICES,
+    }
+
+    return render(request, 'candidate_app/session_settings.html', context)
 
 
 @api_view(['POST'])
