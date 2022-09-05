@@ -4,18 +4,42 @@
 <title>Session settings</title>
 <div class="container py-4">
   <h1>Session settings</h1>
-  <p>Select one of the following to decide which ordering you would like the candidates to appear in the Candidate Rating page</p>
+  <p>The following settings affect the order of the candidates and the type of candidates that will appear on the Candidate Rating page.</p>
   <form  method="post">
     {% csrf_token %}
-    {% for value, text in choices %}
-      {% if value == form.ordering.value %}
-        <input checked="checked"
-      {% else %}
-        <input
-      {% endif %}
-        type="radio" name="ordering" id="{{ value }}" value="{{ value }}">
-      <label for="{{ value }}">{{ text }}</label><br>
-    {% endfor %}
+    <!-- Display any errors -->
+    {% if form.errors %}
+      {% for field in form %}
+        {% for error in field.errors %}
+          <div class="alert alert-danger">
+            <strong>{{ error|escape }}</strong>
+          </div>
+        {% endfor %}
+      {% endfor %}
+      {% for error in form.non_field_errors %}
+        <div class="alert alert-danger">
+          <strong>{{ error|escape }}</strong>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <h4>Candidate ordering</h4>
+    <div class="form-check">
+      {% for value, text in order_choices %}
+        <input {% if value == form.ordering.value %} checked="checked" {% endif %}
+          class="form-check-input" type="radio" name="ordering" id="{{ value }}" value="{{ value }}">
+        <label class="form-check-label" for="{{ value }}">{{ text }}</label><br>
+      {% endfor %}
+    </div>
+
+    <h4>Candidate filtering</h4>
+    <div class="form-check">
+      {% for value, text in filter_choices %}
+        <input {% if value == form.filtering.value %} checked="checked" {% endif %}
+          class="form-check-input" type="radio" name="filtering" id="{{ value }}" value="{{ value }}">
+        <label class="form-check-label" for="{{ value }}">{{ text }}</label><br>
+      {% endfor %}
+    </div>
     <input type="submit" class="btn btn-primary btn-lg" name="Submit">
   </form>
 </div>

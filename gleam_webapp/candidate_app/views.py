@@ -1,4 +1,3 @@
-from itertools import count
 from django.shortcuts import render
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
@@ -7,8 +6,8 @@ from django.db.models import Count, Q, Avg
 from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django_q3c.expressions import Q3CRadialQuery
+from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -253,6 +252,9 @@ def candidate_update_rating(request, id):
         logger.debug('setting score %s=>%s', rating.rating, score)
         rating.rating = score
 
+    # Update time
+    rating.date = datetime.now(tz=timezone.utc)
+
     rating.save()
 
     # Update candidate notes
@@ -285,24 +287,42 @@ def candidate_update_catalogue_query(request, id):
 @login_required
 def candidate_random(request):
     user = request.user
-    # Get unrated candidates
-    unrated_cand = models.Candidate.objects.filter(rating__isnull=True)
-    if not unrated_cand.exists():
-        # No unrated candiate so see if user hasn't rated one
-        unrated_cand = models.Candidate.objects.exclude(rating__user=user)
-    if not unrated_cand.exists():
-        # No candidates left so return to home screen
-        return HttpResponse('<h3>No unrated canidate left</h3><h3><a href="/">Home Page</a></h3>')
+
+    # Get session data for candidate ordering and inclusion settings
+
+    session_settings = request.session.get('session_settings', 0)
+    if session_settings == 0 or session_settings['filtering'] == 'unrank':
+        # Get unrated candidates
+        next_cands = models.Candidate.objects.filter(rating__isnull=True)
+        if not next_cands.exists():
+            # No unrated candiate so see if user hasn't rated one
+            next_cands = models.Candidate.objects.exclude(rating__user=user)
+        if not next_cands.exists():
+            # No candidates left so return to home screen
+            return HttpResponse('<h3>No unrated canidate left</h3><h3><a href="/">Home Page</a></h3>')
+    elif session_settings['filtering'] == 'old':
+        # Get candidates the user hasn't recently ranked
+        next_cands = models.Candidate.objects.exclude(rating__user=user, rating__date__gte=datetime.now()-timedelta(days=7))
+        if not next_cands.exists():
+            # No candidates left so return to home screen
+            return HttpResponse('<h3>No recently unrated canidate left</h3><h3><a href="/">Home Page</a></h3>')
+    else:
+        # Get all candidates (not the default but what user wanted)
+        next_cands = models.Candidate.objects.all()
+    print(len(next_cands))
 
     # Use session data to decide candidate order
-    session_settings = request.session.get('session_settings', 0)
     if session_settings == 0 or session_settings['ordering'] == 'rand':
         # Get random cand (This is the default)
-        candidate = random.choice(list(unrated_cand))
+        candidate = random.choice(list(next_cands))
     elif session_settings['ordering'] == 'new':
-        candidate = unrated_cand.order_by('-obs_id__starttime').first()
+        candidate = next_cands.order_by('-obs_id__starttime').first()
     elif session_settings['ordering'] == 'old':
-        candidate = unrated_cand.order_by('obs_id__starttime').first()
+        candidate = next_cands.order_by('obs_id__starttime').first()
+    elif session_settings['ordering'] == 'brig':
+        candidate = next_cands.order_by('-can_peak_flux').first()
+    elif session_settings['ordering'] == 'faint':
+        candidate = next_cands.order_by('can_peak_flux').first()
     return redirect(reverse('candidate_rating', args=(candidate.id,)))
 
 
@@ -440,6 +460,7 @@ def session_settings(request):
         if form.is_valid():
             cleaned_data = {**form.cleaned_data}
             request.session['session_settings'] = cleaned_data
+            print('here', cleaned_data["filtering"])
     else:
         if session_settings != 0:
             # Prefil form with previous session results
@@ -448,10 +469,10 @@ def session_settings(request):
             )
         else:
             form = forms.CanidateFilterForm()
-
     context = {
         "form": form,
-        'choices': forms.SESSION_ORDER_CHOICES,
+        'order_choices': forms.SESSION_ORDER_CHOICES,
+        'filter_choices': forms.SESSION_FILTER_CHOICES,
     }
 
     return render(request, 'candidate_app/session_settings.html', context)

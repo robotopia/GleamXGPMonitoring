@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
 
+from datetime import datetime
+
 class Observation(models.Model):
     observation_id = models.BigIntegerField(primary_key=True)
     obsname = models.CharField(max_length=128, blank=True, null=True, verbose_name="Obs name")
@@ -122,6 +124,7 @@ class Rating(models.Model):
     )
     rating = models.IntegerField(blank=True, null=True)
     cand_type = models.CharField(max_length=3, choices=CAND_TYPE_CHOICES, null=True)
+    date = models.DateTimeField(default=datetime.now, blank=True)
 
 
 class xml_ivorns(models.Model):
