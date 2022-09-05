@@ -91,6 +91,8 @@ CC = 'CC'
 S = 'S'
 P = 'P'
 AGN = 'AGN'
+D = 'D'
+BF = 'BF'
 O = 'O'
 CAND_TYPE_CHOICES = (
     (T,   'Transient'),
@@ -102,6 +104,8 @@ CAND_TYPE_CHOICES = (
     (S,   'Scintillation'),
     (P,   'Pulsar'),
     (AGN, 'AGN'),
+    (D,   'Drift'),
+    (BF,  'Bad Frame'),
     (O,   'Other'),
 )
 class Rating(models.Model):
