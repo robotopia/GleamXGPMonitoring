@@ -66,15 +66,9 @@
       {% if form.column_display.value != "None" %}
         <th>{{ selected_column }}</th>
       {% else %}
-        <th>N Tranisent</th>
-        <th>N Airplane</th>
-        <th>N RFI</th>
-        <th> Sidelobe</th>
-        <th>N Alias</th>
-        <th>N CHG Center</th>
-        <th>N Scintillation</th>
-        <th>N Pulsar</th>
-        <th>N Other</th>
+        {% for key, name in column_names.items %}
+          <th>{{ name }}</th>
+        {% endfor %}
       {% endif %}
       <th>RA (HH:MM:SS.SS)</th>
       <th>Dec (DD:MM:SS.SS)</th>
@@ -96,15 +90,9 @@
         {% if form.column_display.value != "None" %}
           <td>{{cand.selected_count}}</td>
         {% else %}
-          <td>{{cand.transient_count}}</td>
-          <td>{{cand.airplane_count}}</td>
-          <td>{{cand.rfi_count}}</td>
-          <td>{{cand.sidelobe_count}}</td>
-          <td>{{cand.alias_count}}</td>
-          <td>{{cand.chgcentre_count}}</td>
-          <td>{{cand.scintillation_count}}</td>
-          <td>{{cand.pulsar_count}}</td>
-          <td>{{cand.other_count}}</td>
+          {% for key, name in column_names.items %}
+            <td>{% get_type_count cand key %}</td>
+          {% endfor %}
         {% endif %}
         <td>{{cand.ra_hms}}</td>
         <td>{{cand.dec_dms}}</td>

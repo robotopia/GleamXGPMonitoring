@@ -1,3 +1,4 @@
+from itertools import count
 from django.shortcuts import render
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
@@ -361,20 +362,21 @@ def candidate_table(request):
     print(f"order_by: {order_by}")
     print(f"asc_dec: {asc_dec}")
 
+    # Gather all the cand types and prepare them as kwargs
+    CAND_TYPE_CHOICES = models.CAND_TYPE_CHOICES
+    count_kwargs = {}
+    column_type_to_name = {}
+    for cand_type_tuple in CAND_TYPE_CHOICES:
+        cand_type_short, cand_type = cand_type_tuple
+        count_kwargs[f"{cand_type_short}_count"] = Count('rating', filter=Q(rating__cand_type=cand_type_short))
+        # Also create a column name
+        column_type_to_name[cand_type_short] = f"N {cand_type}"
+
     # Anontate with counts of different candidate type counts
     candidates = models.Candidate.objects.all().annotate(
         num_ratings=Count('rating'),
         avg_rating=Avg('rating__rating'),
-        transient_count=Count('rating', filter=Q(rating__cand_type='T')),
-        airplane_count=Count('rating', filter=Q(rating__cand_type='AP')),
-        rfi_count=Count('rating', filter=Q(rating__cand_type='RFI')),
-        sidelobe_count=Count('rating', filter=Q(rating__cand_type='SL')),
-        alias_count=Count('rating', filter=Q(rating__cand_type='A')),
-        chgcentre_count=Count('rating', filter=Q(rating__cand_type='CC')),
-        scintillation_count=Count('rating', filter=Q(rating__cand_type='S')),
-        pulsar_count=Count('rating', filter=Q(rating__cand_type='P')),
-        agn_count=Count('rating', filter=Q(rating__cand_type='AGN')),
-        other_count=Count('rating', filter=Q(rating__cand_type='O')),
+        **count_kwargs,
     )
 
     # If user only wants to display a single column anotate it and return it's name
@@ -384,19 +386,6 @@ def candidate_table(request):
         )
         # Filter data to only show candidates with at least one count
         candidates = candidates.filter(selected_count__gte=1)
-        # Filter displayed count columns
-        column_type_to_name = {
-            "T": "N Tranisent",
-            "AP": "N Airplane",
-            "RFI": "N RFI",
-            "SL": "N Sidelobe",
-            "A": "N Alias",
-            "CC": "N CHG Center",
-            "S": "N Scintillation",
-            "P": "N Pulsar",
-            "AGN": "N AGN",
-            "O": "N Other",
-        }
         selected_column = column_type_to_name[column_display]
     else:
         selected_column = None
@@ -428,7 +417,14 @@ def candidate_table(request):
     paginator = Paginator(candidates, 25)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
-    return render(request, 'candidate_app/candidate_table.html', {'page_obj': page_obj, "form": form, "selected_column": selected_column})
+
+    content = {
+        'page_obj': page_obj,
+        "form": form,
+        "selected_column": selected_column,
+        "column_names" : column_type_to_name,
+    }
+    return render(request, 'candidate_app/candidate_table.html', content)
 
 
 def session_settings(request):
