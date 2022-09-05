@@ -1,0 +1,22 @@
+{% extends 'candidate_app/header.html' %}
+
+{% block content %}
+<title>Session settings</title>
+<div class="container py-4">
+  <h1>Session settings</h1>
+  <p>Select one of the following to decide which ordering you would like the candidates to appear in the Candidate Rating page</p>
+  <form  method="post">
+    {% csrf_token %}
+    {% for value, text in choices %}
+      {% if value == form.ordering.value %}
+        <input checked="checked"
+      {% else %}
+        <input
+      {% endif %}
+        type="radio" name="ordering" id="{{ value }}" value="{{ value }}">
+      <label for="{{ value }}">{{ text }}</label><br>
+    {% endfor %}
+    <input type="submit" class="btn btn-primary btn-lg" name="Submit">
+  </form>
+</div>
+{% endblock %}
