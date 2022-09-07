@@ -56,6 +56,12 @@ SESSION_FILTER_CHOICES = (
 class SessionSettingsForm(forms.Form):
     ordering  = forms.ChoiceField(choices=SESSION_ORDER_CHOICES,  required=False, initial='rand')
     filtering = forms.ChoiceField(choices=SESSION_FILTER_CHOICES, required=False, initial='unrank')
+    exclude_87  = forms.BooleanField(required=False)
+    exclude_118 = forms.BooleanField(required=False)
+    exclude_154 = forms.BooleanField(required=False)
+    exclude_184 = forms.BooleanField(required=False)
+    exclude_200 = forms.BooleanField(required=False)
+    exclude_215 = forms.BooleanField(required=False)
 
     def clean(self):
         cleaned_data = super().clean()

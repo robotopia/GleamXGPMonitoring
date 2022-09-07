@@ -289,8 +289,9 @@ def candidate_random(request):
     user = request.user
 
     # Get session data for candidate ordering and inclusion settings
-
     session_settings = request.session.get('session_settings', 0)
+
+    # Filter candidates based on ranking
     if session_settings == 0 or session_settings['filtering'] == 'unrank':
         # Get unrated candidates
         next_cands = models.Candidate.objects.filter(rating__isnull=True)
@@ -309,7 +310,20 @@ def candidate_random(request):
     else:
         # Get all candidates (not the default but what user wanted)
         next_cands = models.Candidate.objects.all()
-    print(len(next_cands))
+
+    # Filter based on observation frequencies (+/- 1 MHz)
+    if session_settings['exclude_87']:
+        next_cands = next_cands.exclude(obs_id__cent_freq__lt=87.68  + 1, obs_id__cent_freq__gt=87.68  - 1)
+    if session_settings['exclude_118']:
+        next_cands = next_cands.exclude(obs_id__cent_freq__lt=118.50 + 1, obs_id__cent_freq__gt=118.50 - 1)
+    if session_settings['exclude_154']:
+        next_cands = next_cands.exclude(obs_id__cent_freq__lt=154.24 + 1, obs_id__cent_freq__gt=154.24 - 1)
+    if session_settings['exclude_184']:
+        next_cands = next_cands.exclude(obs_id__cent_freq__lt=184.96 + 1, obs_id__cent_freq__gt=184.96 - 1)
+    if session_settings['exclude_200']:
+        next_cands = next_cands.exclude(obs_id__cent_freq__lt=200.32 + 1, obs_id__cent_freq__gt=200.32 - 1)
+    if session_settings['exclude_215']:
+        next_cands = next_cands.exclude(obs_id__cent_freq__lt=215.68 + 1, obs_id__cent_freq__gt=215.68 - 1)
 
     # Use session data to decide candidate order
     if session_settings == 0 or session_settings['ordering'] == 'rand':
@@ -468,7 +482,7 @@ def session_settings(request):
                 initial=session_settings,
             )
         else:
-            form = forms.CanidateFilterForm()
+            form = forms.SessionSettingsForm()
     context = {
         "form": form,
         'order_choices': forms.SESSION_ORDER_CHOICES,

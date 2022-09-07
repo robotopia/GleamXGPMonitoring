@@ -32,7 +32,7 @@
       {% endfor %}
     </div>
 
-    <h4>Candidate filtering</h4>
+    <h4>Candidate filtering: ranking</h4>
     <div class="form-check">
       {% for value, text in filter_choices %}
         <input {% if value == form.filtering.value %} checked="checked" {% endif %}
@@ -40,6 +40,29 @@
         <label class="form-check-label" for="{{ value }}">{{ text }}</label><br>
       {% endfor %}
     </div>
+
+    <h4>Candidate filtering: observing frequency</h4>
+    <div class="form-check">
+      <input {% if form.exclude_87.value %} checked="checked" {% endif %}
+        class="form-check-input" type="checkbox" name="exclude_87" id="id_exclude_87">
+      <label class="form-check-label" for="id_exclude_87">Exclude 87 MHz</label><br>
+      <input {% if form.exclude_118.value %} checked="checked" {% endif %}
+        class="form-check-input" type="checkbox" name="exclude_118" id="id_exclude_118">
+      <label class="form-check-label" for="id_exclude_118">Exclude 118 MHz</label><br>
+      <input {% if form.exclude_154.value %} checked="checked" {% endif %}
+        class="form-check-input" type="checkbox" name="exclude_154" id="id_exclude_154">
+      <label class="form-check-label" for="id_exclude_154">Exclude 154 MHz</label><br>
+      <input {% if form.exclude_184.value %} checked="checked" {% endif %}
+        class="form-check-input" type="checkbox" name="exclude_184" id="id_exclude_184">
+      <label class="form-check-label" for="id_exclude_184">Exclude 184 MHz</label><br>
+      <input {% if form.exclude_200.value %} checked="checked" {% endif %}
+        class="form-check-input" type="checkbox" name="exclude_200" id="id_exclude_200">
+      <label class="form-check-label" for="id_exclude_200">Exclude 200 MHz</label><br>
+      <input {% if form.exclude_215.value %} checked="checked" {% endif %}
+        class="form-check-input" type="checkbox" name="exclude_215" id="id_exclude_215">
+      <label class="form-check-label" for="id_exclude_215">Exclude 215 MHz</label><br>
+    </div>
+
     <input type="submit" class="btn btn-primary btn-lg" name="Submit">
   </form>
 </div>
