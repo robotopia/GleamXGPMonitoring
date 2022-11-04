@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
+from django.views.generic import TemplateView
 
 from candidate_app import views
 
@@ -36,6 +37,8 @@ urlpatterns = [
     path('survey_status/', views.survey_status),
     path('voevent_view/<int:id>/', views.voevent_view, name='voevent_view'),
     path('session_settings/', views.session_settings),
+    path('download_data/<str:table>/', views.download_data),
+    path('download_page/', TemplateView.as_view(template_name='candidate_app/download_page.html')),
 ]
 
 # allow media files to be linked and viewed directly

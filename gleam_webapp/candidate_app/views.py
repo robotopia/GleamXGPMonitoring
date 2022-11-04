@@ -8,6 +8,7 @@ from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django_q3c.expressions import Q3CRadialQuery
 from django.utils import timezone
+from django.core.exceptions import PermissionDenied
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -18,6 +19,7 @@ import random
 import psrqpy
 from datetime import datetime, timedelta
 from mwa_trigger.parse_xml import parsed_VOEvent
+import csv
 
 from astropy.time import Time
 from astropy.coordinates import SkyCoord
@@ -549,3 +551,40 @@ def survey_status(request):
     ).order_by(order_by)
     context = {'obs': obs_list}
     return render(request, 'candidate_app/survey_status.html', context)
+
+
+def download_csv(request, queryset, table):
+    if not request.user.is_staff:
+        raise PermissionDenied
+    opts = queryset.model._meta
+    response = HttpResponse(content_type='text/csv')
+    # force download.
+    response['Content-Disposition'] = f'attachment; filename="{table}.csv"'
+    # the csv writer
+    writer = csv.writer(response)
+    field_names = [field.name for field in opts.fields]
+    # Write a first row with header information
+    writer.writerow(field_names)
+    # Write data rows
+    for obj in queryset:
+        writer.writerow([getattr(obj, field) for field in field_names])
+    return response
+
+
+def download_data(request, table):
+    if table == "user":
+        from django.contrib.auth import get_user_model
+        this_model = get_user_model()
+    elif table == "rating":
+        this_model = models.Rating
+    elif table == "candidate":
+        this_model = models.Candidate
+    elif table == "observation":
+        this_model = models.Observation
+    elif table == "filter":
+        this_model = models.Filter
+    data = download_csv(request, this_model.objects.all(), table)
+
+    response = HttpResponse(data, content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{table}.csv"'
+    return response
