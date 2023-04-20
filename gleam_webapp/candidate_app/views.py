@@ -141,42 +141,43 @@ def candidate_rating(request, id, arcmin=2):
         # FilterKeys.authored_until: time.tt.datetime + timedelta(days=1),
         FilterKeys.cone: cone,
         }
-    voevent_list = apiv1.list_ivorn(
-        filters=my_filters,
-        order=OrderValues.author_datetime_desc,
-    )
+
+    #voevent_list = apiv1.list_ivorn(
+    #    filters=my_filters,
+    #    order=OrderValues.author_datetime_desc,
+    #)
     voevents = []
-    for ivorn in voevent_list:
-        xml_packet = apiv1.packet_xml(ivorn)
-        # Record xml ivorn into database
-        xml_obj = models.xml_ivorns.objects.filter(ivorn=ivorn)
-        if xml_obj.exists():
-            xml_obj = xml_obj.first()
-        else:
-            xml_obj = models.xml_ivorns.objects.create(ivorn=ivorn)
-        xml_id = xml_obj.id
-        parsed_xml = parsed_VOEvent(None, packet=xml_packet.decode())
-        # Check for ra and dec data
-        if None in (parsed_xml.ra, parsed_xml.dec):
-            ra = None
-            dec = None
-            sep = None
-        else:
-            voevent_coord = SkyCoord(parsed_xml.ra, parsed_xml.dec, unit=(units.deg, units.deg), frame='icrs')
-            ra  = voevent_coord.ra.to_string(unit=units.hour, sep=':')[:11]
-            dec = voevent_coord.dec.to_string(unit=units.deg, sep=':')[:11]
-            sep = cand_coord.separation(voevent_coord).arcminute
-        voevents.append({
-            "telescope" : parsed_xml.telescope,
-            "event_type" : parsed_xml.event_type,
-            "ignored" : parsed_xml.ignore,
-            "source_type" : parsed_xml.source_type,
-            "trig_id" : parsed_xml.trig_id,
-            'ra': ra,
-            'dec': dec,
-            'sep': sep,
-            "xml" : xml_id,
-        })
+    #for ivorn in voevent_list:
+    #    xml_packet = apiv1.packet_xml(ivorn)
+    #    # Record xml ivorn into database
+    #    xml_obj = models.xml_ivorns.objects.filter(ivorn=ivorn)
+    #    if xml_obj.exists():
+    #        xml_obj = xml_obj.first()
+    #    else:
+    #        xml_obj = models.xml_ivorns.objects.create(ivorn=ivorn)
+    #    xml_id = xml_obj.id
+    #    parsed_xml = parsed_VOEvent(None, packet=xml_packet.decode())
+    #    # Check for ra and dec data
+    #    if None in (parsed_xml.ra, parsed_xml.dec):
+    #        ra = None
+    #        dec = None
+    #        sep = None
+    #    else:
+    #        voevent_coord = SkyCoord(parsed_xml.ra, parsed_xml.dec, unit=(units.deg, units.deg), frame='icrs')
+    #        ra  = voevent_coord.ra.to_string(unit=units.hour, sep=':')[:11]
+    #        dec = voevent_coord.dec.to_string(unit=units.deg, sep=':')[:11]
+    #        sep = cand_coord.separation(voevent_coord).arcminute
+    #    voevents.append({
+    #        "telescope" : parsed_xml.telescope,
+    #        "event_type" : parsed_xml.event_type,
+    #        "ignored" : parsed_xml.ignore,
+    #        "source_type" : parsed_xml.source_type,
+    #        "trig_id" : parsed_xml.trig_id,
+    #        'ra': ra,
+    #        'dec': dec,
+    #        'sep': sep,
+    #        "xml" : xml_id,
+    #    })
 
     context = {
         'candidate': candidate,
