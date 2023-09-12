@@ -5,6 +5,7 @@ Running Server
 Checking for errors and inspecting logs
 ---------------------------------------
 nginx errors are in
+
 .. code-block::
 
    tail -f cat /var/log/nginx/error.log
