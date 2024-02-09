@@ -1,0 +1,13 @@
+astropy==5.2
+astroquery==0.4.6
+django==4.2
+djangorestframework==3.14
+django-rest-auth==0.9.5
+django-q3c==0.2
+psrqpy==1.2.7
+voevent-parse==1.0.3
+voeventdb.remote==1.1.0
+
+# matplotlib==3.5.2
+# TODO: remove this dependency as it's rather bulky and we only use one file!
+# mwa_trigger @ git+https://github.com/ADACS-Australia/mwa_trigger.git
