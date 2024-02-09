@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
@@ -22,23 +23,34 @@ from django.views.generic import TemplateView
 from candidate_app import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')),
-    path('', views.home_page, name='home_page'),
-    path('observation_create/', views.observation_create),
-    path('candidate_create/', views.candidate_create),
-    path('token_manage/', views.token_manage, name='token_manage'),
-    path('token_create/', views.token_create),
-    path('candidate_rating/<int:id>/', views.candidate_rating, name='candidate_rating'),
-    path('candidate_rating/random/', views.candidate_random, name='candidate_random'),
-    path('candidate_update_rating/<int:id>/', views.candidate_update_rating, name='candidate_update_rating'),
-    path('candidate_update_catalogue_query/<int:id>/', views.candidate_update_catalogue_query, name='candidate_update_catalogue_query'),
-    path('candidate_table/', views.candidate_table),
-    path('survey_status/', views.survey_status),
-    path('voevent_view/<int:id>/', views.voevent_view, name='voevent_view'),
-    path('session_settings/', views.session_settings),
-    path('download_data/<str:table>/', views.download_data),
-    path('download_page/', TemplateView.as_view(template_name='candidate_app/download_page.html')),
+    path("admin/", admin.site.urls),
+    path("accounts/", include("django.contrib.auth.urls")),
+    path("", views.home_page, name="home_page"),
+    path("observation_create/", views.observation_create),
+    path("candidate_create/", views.candidate_create),
+    path("token_manage/", views.token_manage, name="token_manage"),
+    path("token_create/", views.token_create),
+    path("candidate_rating/<int:id>/", views.candidate_rating, name="candidate_rating"),
+    path("candidate_rating/random/", views.candidate_random, name="candidate_random"),
+    path(
+        "candidate_update_rating/<int:id>/",
+        views.candidate_update_rating,
+        name="candidate_update_rating",
+    ),
+    path(
+        "candidate_update_catalogue_query/<int:id>/",
+        views.candidate_update_catalogue_query,
+        name="candidate_update_catalogue_query",
+    ),
+    path("candidate_table/", views.candidate_table),
+    path("survey_status/", views.survey_status),
+    path("voevent_view/<int:id>/", views.voevent_view, name="voevent_view"),
+    path("session_settings/", views.session_settings),
+    path("download_data/<str:table>/", views.download_data),
+    path(
+        "download_page/",
+        TemplateView.as_view(template_name="candidate_app/download_page.html"),
+    ),
 ]
 
 # allow media files to be linked and viewed directly

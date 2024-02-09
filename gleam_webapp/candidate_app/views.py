@@ -1,40 +1,34 @@
-from django.shortcuts import render
-from django.db import transaction
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
-from django.db.models import Count, Q, Avg
-from django.core.paginator import Paginator
-from django.http import HttpResponse
-from django.contrib.auth.decorators import login_required
-from django_q3c.expressions import Q3CRadialQuery
-from django.utils import timezone
-from django.core.exceptions import PermissionDenied
-
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from rest_framework.authtoken.models import Token
-
-import random
-import psrqpy
-from datetime import datetime, timedelta
-
 # from mwa_trigger.parse_xml import parsed_VOEvent
 import csv
-
-from astropy.time import Time
-from astropy.coordinates import SkyCoord
-from astropy import units
-from astropy.coordinates import Angle
-from astroquery.simbad import Simbad
-
-import voeventdb.remote.apiv1 as apiv1
-from voeventdb.remote.apiv1 import FilterKeys  # , OrderValues
-import voeventparse
-
-from . import models, serializers, forms
-
 import logging
+import random
+from datetime import datetime, timedelta
+
+import psrqpy
+import voeventdb.remote.apiv1 as apiv1
+import voeventparse
+from astropy import units
+from astropy.coordinates import Angle, SkyCoord
+from astropy.time import Time
+from astroquery.simbad import Simbad
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.db.models import Avg, Count, Q
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils import timezone
+from django_q3c.expressions import Q3CRadialQuery
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+# from voeventdb.remote.apiv1 import FilterKeys, OrderValues
+
+from . import forms, models, serializers
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +126,7 @@ def candidate_rating(request, id, arcmin=2):
     atnf_result_table = []
     # Reformat the result into the format we want
     if atnf_query is not None:
-        for index, pulsar in atnf_query.iterrows():
+        for _, pulsar in atnf_query.iterrows():
             # check for psrqpy missing data
             if "PSRJ" in pulsar.keys():
                 name = pulsar["PSRJ"]
@@ -157,57 +151,23 @@ def candidate_rating(request, id, arcmin=2):
                 }
             )
 
-    # Perform voevent database query https://voeventdbremote.readthedocs.io/en/latest/notebooks/00_quickstart.html
+    # Perform voevent database query
+    # https://voeventdbremote.readthedocs.io/en/latest/notebooks/00_quickstart.html
     # conesearch skycoord and angle error
-    cand_err = Angle(arcmin, unit=units.arcmin)
+    # cand_err = Angle(arcmin, unit=units.arcmin)
     # cand_err = Angle(5,  unit=units.deg)
-    cone = (cand_coord, cand_err)
+    # cone = (cand_coord, cand_err)
 
-    my_filters = {
-        FilterKeys.role: "observation",
-        FilterKeys.authored_since: time.tt.datetime - timedelta(hours=1),
-        FilterKeys.authored_until: time.tt.datetime + timedelta(hours=1),
-        # FilterKeys.authored_since: time.tt.datetime - timedelta(days=1),
-        # FilterKeys.authored_until: time.tt.datetime + timedelta(days=1),
-        FilterKeys.cone: cone,
-    }
+    # my_filters = {
+    #     FilterKeys.role: "observation",
+    #     FilterKeys.authored_since: time.tt.datetime - timedelta(hours=1),
+    #     FilterKeys.authored_until: time.tt.datetime + timedelta(hours=1),
+    #     # FilterKeys.authored_since: time.tt.datetime - timedelta(days=1),
+    #     # FilterKeys.authored_until: time.tt.datetime + timedelta(days=1),
+    #     FilterKeys.cone: cone,
+    # }
 
-    # voevent_list = apiv1.list_ivorn(
-    #    filters=my_filters,
-    #    order=OrderValues.author_datetime_desc,
-    # )
     voevents = []
-    # for ivorn in voevent_list:
-    #    xml_packet = apiv1.packet_xml(ivorn)
-    #    # Record xml ivorn into database
-    #    xml_obj = models.xml_ivorns.objects.filter(ivorn=ivorn)
-    #    if xml_obj.exists():
-    #        xml_obj = xml_obj.first()
-    #    else:
-    #        xml_obj = models.xml_ivorns.objects.create(ivorn=ivorn)
-    #    xml_id = xml_obj.id
-    #    parsed_xml = parsed_VOEvent(None, packet=xml_packet.decode())
-    #    # Check for ra and dec data
-    #    if None in (parsed_xml.ra, parsed_xml.dec):
-    #        ra = None
-    #        dec = None
-    #        sep = None
-    #    else:
-    #        voevent_coord = SkyCoord(parsed_xml.ra, parsed_xml.dec, unit=(units.deg, units.deg), frame='icrs')
-    #        ra  = voevent_coord.ra.to_string(unit=units.hour, sep=':')[:11]
-    #        dec = voevent_coord.dec.to_string(unit=units.deg, sep=':')[:11]
-    #        sep = cand_coord.separation(voevent_coord).arcminute
-    #    voevents.append({
-    #        "telescope" : parsed_xml.telescope,
-    #        "event_type" : parsed_xml.event_type,
-    #        "ignored" : parsed_xml.ignore,
-    #        "source_type" : parsed_xml.source_type,
-    #        "trig_id" : parsed_xml.trig_id,
-    #        'ra': ra,
-    #        'dec': dec,
-    #        'sep': sep,
-    #        "xml" : xml_id,
-    #    })
 
     context = {
         "candidate": candidate,
@@ -245,8 +205,7 @@ def token_create(request):
     token = Token.objects.filter(user=u)
     if token.exists():
         token.delete()
-    new_token = Token.objects.create(user=u)
-    # return render(request, 'candidate_app/token_manage.html', {"token":new_token})
+    Token.objects.create(user=u)
     return redirect(reverse("token_manage"))
 
 
