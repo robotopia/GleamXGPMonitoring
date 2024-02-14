@@ -2,3 +2,4 @@
 .env.prod
 .env.prod.db
 env/*
+*.json
