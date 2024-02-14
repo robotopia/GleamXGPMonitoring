@@ -30,6 +30,9 @@ from rest_framework.response import Response
 
 from . import forms, models, serializers
 
+# reset the cache dir
+psrqpy.CACHEDIR = "/home/app/web/psrcat/psrcat_tar/"
+
 logger = logging.getLogger(__name__)
 
 
@@ -118,6 +121,7 @@ def candidate_rating(request, id, arcmin=2):
 
     # Perform atnf query
     atnf_query = psrqpy.QueryATNF(
+        loadfromdb=psrqpy.CACHEDIR + "/psrcat.db",
         coord1=candidate.ra_hms,
         coord2=candidate.dec_dms,
         radius=float(arcmin) / 60,
