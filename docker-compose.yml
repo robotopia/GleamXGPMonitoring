@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: ./containers/Dockerfile
       target: GleamXDev
-    command: python gleam_webapp/manage.py runserver 0.0.0.0:8000
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./:/home/app/web/
     ports:
@@ -22,6 +22,19 @@ services:
       timeout: 30s
       retries: 3
       start_period: 30s
+
+  vo:
+    build:
+      context: ./containers/
+      dockerfile: vo.Dockerfile
+      target: VOServer
+    # volumes:
+    #   - ./webapps:/usr/local/tomcat/webapps/
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - 8888:8080
 
   db:
     build:
