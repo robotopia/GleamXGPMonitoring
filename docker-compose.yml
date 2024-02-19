@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: ./containers/Dockerfile
       target: GleamXDev
-    command: python manage.py runserver 0.0.0.0:8000
+    command: python gleam_webapp/manage.py runserver 0.0.0.0:8000
     volumes:
       - ./:/home/app/web/
     ports:
