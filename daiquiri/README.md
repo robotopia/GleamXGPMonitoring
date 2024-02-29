@@ -1,5 +1,4 @@
-Daiquiri Application (Django version)
-=====================================
+# Daiquiri Application (Django version)
 
 This application is meant to be used with the Django version of the [Daiquiri Framework](https://github.com/aipescience/django-daiquiri).
 

@@ -1,4 +1,4 @@
-name: gleamx
+name: daiquiri
 channels:
   - conda-forge
   - defaults
@@ -6,4 +6,5 @@ dependencies:
   - python=3.10
   - pip
   - pip:
-      - -r requirements.txt
+      - django-daiquiri
+      - psycopg2-binary
