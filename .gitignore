@@ -3,7 +3,9 @@
 .env.prod.db
 env/*
 *.json
+*.log
 
 *.sqlite3
 daiquiri/vendor/
 daiquiri/static_root/
+
