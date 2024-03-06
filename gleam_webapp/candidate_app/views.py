@@ -9,6 +9,7 @@ import voeventdb.remote.apiv1 as apiv1
 import voeventparse
 from astropy import units
 from astropy.coordinates import Angle, SkyCoord
+from astropy.io import fits
 from astropy.time import Time
 from astroquery.simbad import Simbad
 from django.contrib.auth.decorators import login_required
@@ -21,6 +22,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django_q3c.expressions import Q3CRadialQuery
+import numpy as np
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
@@ -596,6 +598,54 @@ def download_csv(request, queryset, table):
     return response
 
 
+def FITSTableType(val):
+    """
+    Return the FITSTable type corresponding to each named parameter in obj
+    """
+    if isinstance(val, bool):
+        types = "L"
+    elif isinstance(val, (int, np.int64, np.int32)):
+        types = "J"
+    elif isinstance(val, (float, np.float64, np.float32)):
+        types = "E"
+    elif isinstance(val, str):
+        types = "{0}A".format(len(val))
+    else:
+        types = "5A"
+    return types
+
+
+def download_fits(request, queryset, table):
+    if not request.user.is_staff:
+        raise PermissionDenied
+    opts = queryset.model._meta
+
+    response = HttpResponse(content_type="application/octet-stream")
+    # force download.
+    response["Content-Disposition"] = f'attachment; filename="{table}.fits"'
+
+    cols = []
+    for name in [field.name for field in opts.fields]:
+        # Cause error columns to always be floats even when they are set to -1
+        if name.startswith("err_"):
+            fmt = "E"
+        else:
+            fmt = FITSTableType(getattr(queryset.first(), name))
+        cols.append(
+            fits.Column(
+                name=name,
+                format=fmt,
+                array=[a[0] for a in queryset.all().values_list(name)],
+            )
+        )
+
+    cols = fits.ColDefs(cols)
+    tbhdu = fits.BinTableHDU.from_columns(cols)
+    tbhdu.writeto(response)
+
+    return response
+
+
 def download_data(request, table):
     if table == "user":
         from django.contrib.auth import get_user_model
@@ -609,8 +659,8 @@ def download_data(request, table):
         this_model = models.Observation
     elif table == "filter":
         this_model = models.Filter
-    data = download_csv(request, this_model.objects.all(), table)
+    response = download_fits(request, this_model.objects.all(), table)
 
-    response = HttpResponse(data, content_type="text/csv")
-    response["Content-Disposition"] = f'attachment; filename="{table}.csv"'
+    # response = HttpResponse(data, content_type="text/csv")
+    # response["Content-Disposition"] = f'attachment; filename="{table}.csv"'
     return response
