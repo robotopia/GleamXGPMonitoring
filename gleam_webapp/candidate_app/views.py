@@ -357,7 +357,9 @@ def candidate_random(request):
 
 
 def candidate_table(request):
+
     # Get session data to keep filters when changing page
+    session_settings = request.session.get("session_settings", 0)
     candidate_table_session_data = request.session.get("current_filter_data", 0)
     print(candidate_table_session_data)
 
@@ -426,8 +428,13 @@ def candidate_table(request):
         # Also create a column name
         column_type_to_name[cand_type_short] = f"N {cand_type}"
 
+    candidates = models.Candidate.objects.all()
+    project = "All projects"
+    if session_settings:
+        candidates = candidates.filter(project__name=session_settings["project"])
+        project = "Project " + session_settings["project"]
     # Anontate with counts of different candidate type counts
-    candidates = models.Candidate.objects.all().annotate(
+    candidates = candidates.annotate(
         num_ratings=Count("rating"),
         avg_rating=Avg("rating__rating"),
         **count_kwargs,
@@ -481,6 +488,7 @@ def candidate_table(request):
         "form": form,
         "selected_column": selected_column,
         "column_names": column_type_to_name,
+        "project_name": project,
     }
     return render(request, "candidate_app/candidate_table.html", content)
 
