@@ -75,7 +75,10 @@ class SessionSettingsForm(forms.Form):
     exclude_215 = forms.BooleanField(required=False)
 
     project = forms.ChoiceField(
-        choices=tuple((p.name, p.description) for p in models.Project.objects.all()),
+        choices=tuple(
+            (p.name, p.name + ": " + p.description)
+            for p in models.Project.objects.all()
+        ),
         required=True,
     )
 

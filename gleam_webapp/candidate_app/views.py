@@ -524,7 +524,8 @@ def session_settings(request):
         "order_choices": forms.SESSION_ORDER_CHOICES,
         "filter_choices": forms.SESSION_FILTER_CHOICES,
         "project_choices": tuple(
-            (p.name, p.description) for p in models.Project.objects.all()
+            (p.name, p.name + ": " + p.description)
+            for p in models.Project.objects.all()
         ),
     }
 
