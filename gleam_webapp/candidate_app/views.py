@@ -285,36 +285,41 @@ def candidate_update_catalogue_query(request, id):
 
 @login_required
 def candidate_random(request):
-    user = request.user
-
     # Get session data for candidate ordering and inclusion settings
     session_settings = request.session.get("session_settings", 0)
 
+    # deal with users who have no session settings
+    if not session_settings:
+        return render(request, "candidate_app/nothing_to_rate.html")
+
+    user = request.user
+    # choose all the candidates this user hasn't rated
+    next_cands = models.Candidate.objects.exclude(rating__user=user)
+
+    # filter based on selected project
+    next_cands = next_cands.filter(project__name=session_settings["project"])
+
     # Filter candidates based on ranking
-    if session_settings == 0 or session_settings["filtering"] == "unrank":
+    if session_settings["filtering"] == "unrank":
         # Get unrated candidates
-        next_cands = models.Candidate.objects.filter(rating__isnull=True)
+        next_cands = next_cands.filter(rating__isnull=True)
         if not next_cands.exists():
-            # No unrated candiate so see if user hasn't rated one
-            next_cands = models.Candidate.objects.exclude(rating__user=user)
-        if not next_cands.exists():
-            # No candidates left so return to home screen
-            return HttpResponse(
-                '<h3>No unrated canidate left</h3><h3><a href="/">Home Page</a></h3>'
+            return render(
+                request,
+                "candidate_app/nothing_to_rate.html",
+                {"project": session_settings["project"]},
             )
     elif session_settings["filtering"] == "old":
         # Get candidates the user hasn't recently ranked
-        next_cands = models.Candidate.objects.exclude(
-            rating__user=user, rating__date__gte=datetime.now() - timedelta(days=7)
+        next_cands = next_cands.exclude(
+            rating__date__gte=datetime.now() - timedelta(days=7)
         )
         if not next_cands.exists():
-            # No candidates left so return to home screen
-            return HttpResponse(
-                '<h3>No recently unrated canidate left</h3><h3><a href="/">Home Page</a></h3>'
+            return render(
+                request,
+                "candidate_app/nothing_to_rate.html",
+                {"project": session_settings["project"]},
             )
-    else:
-        # Get all candidates (not the default but what user wanted)
-        next_cands = models.Candidate.objects.all()
 
     # Filter based on observation frequencies (+/- 1 MHz)
     if session_settings["exclude_87"]:
@@ -343,8 +348,7 @@ def candidate_random(request):
         )
 
     # Use session data to decide candidate order
-    if session_settings == 0 or session_settings["ordering"] == "rand":
-        # Get random cand (This is the default)
+    if session_settings["ordering"] == "rand":
         candidate = random.choice(list(next_cands))
     elif session_settings["ordering"] == "new":
         candidate = next_cands.order_by("-obs_id__starttime").first()
@@ -358,7 +362,9 @@ def candidate_random(request):
 
 
 def candidate_table(request):
+
     # Get session data to keep filters when changing page
+    session_settings = request.session.get("session_settings", 0)
     candidate_table_session_data = request.session.get("current_filter_data", 0)
     print(candidate_table_session_data)
 
@@ -427,8 +433,13 @@ def candidate_table(request):
         # Also create a column name
         column_type_to_name[cand_type_short] = f"N {cand_type}"
 
+    candidates = models.Candidate.objects.all()
+    project = "All projects"
+    if session_settings:
+        candidates = candidates.filter(project__name=session_settings["project"])
+        project = "Project " + session_settings["project"]
     # Anontate with counts of different candidate type counts
-    candidates = models.Candidate.objects.all().annotate(
+    candidates = candidates.annotate(
         num_ratings=Count("rating"),
         avg_rating=Avg("rating__rating"),
         **count_kwargs,
@@ -482,6 +493,7 @@ def candidate_table(request):
         "form": form,
         "selected_column": selected_column,
         "column_names": column_type_to_name,
+        "project_name": project,
     }
     return render(request, "candidate_app/candidate_table.html", content)
 
@@ -489,7 +501,7 @@ def candidate_table(request):
 def session_settings(request):
     # Get session data to keep filters when changing page
     session_settings = request.session.get("session_settings", 0)
-    print(session_settings)
+    # print(session_settings)
 
     # Check filter form
     if request.method == "POST":
@@ -499,7 +511,7 @@ def session_settings(request):
         if form.is_valid():
             cleaned_data = {**form.cleaned_data}
             request.session["session_settings"] = cleaned_data
-            print("here", cleaned_data["filtering"])
+            # print("here", cleaned_data["filtering"])
     else:
         if session_settings != 0:
             # Prefil form with previous session results
@@ -512,6 +524,10 @@ def session_settings(request):
         "form": form,
         "order_choices": forms.SESSION_ORDER_CHOICES,
         "filter_choices": forms.SESSION_FILTER_CHOICES,
+        "project_choices": tuple(
+            (p.name, p.name + ": " + p.description)
+            for p in models.Project.objects.all()
+        ),
     }
 
     return render(request, "candidate_app/session_settings.html", context)
