@@ -289,10 +289,7 @@ def candidate_random(request):
 
     # deal with users who have no session settings
     if not session_settings:
-        return HttpResponse(
-            "<h3>Please select a project to work on</h3>"
-            '<h3><a href="/session_settings">here</a></h3>'
-        )
+        return render(request, "candidate_app/nothing_to_rate.html")
 
     user = request.user
     # choose all the candidates this user hasn't rated
@@ -306,10 +303,10 @@ def candidate_random(request):
         # Get unrated candidates
         next_cands = next_cands.filter(rating__isnull=True)
         if not next_cands.exists():
-            # No candidates left so return to home screen
-            return HttpResponse(
-                f"<h3>No unrated candidates for project: {session_settings['project']}</h3>"
-                "<h3><a href='/'>Home Page</a></h3>"
+            return render(
+                request,
+                "candidate_app/nothing_to_rate.html",
+                {"project": session_settings["project"]},
             )
     elif session_settings["filtering"] == "old":
         # Get candidates the user hasn't recently ranked
@@ -317,10 +314,10 @@ def candidate_random(request):
             rating__date__gte=datetime.now() - timedelta(days=7)
         )
         if not next_cands.exists():
-            # No candidates left so return to home screen
-            return HttpResponse(
-                "<h3>No recently unrated candidates left</h3>"
-                '<h3><a href="/">Home Page</a></h3>'
+            return render(
+                request,
+                "candidate_app/nothing_to_rate.html",
+                {"project": session_settings["project"]},
             )
 
     # Filter based on observation frequencies (+/- 1 MHz)
