@@ -284,36 +284,44 @@ def candidate_update_catalogue_query(request, id):
 
 @login_required
 def candidate_random(request):
-    user = request.user
-
     # Get session data for candidate ordering and inclusion settings
     session_settings = request.session.get("session_settings", 0)
 
+    # deal with users who have no session settings
+    if not session_settings:
+        return HttpResponse(
+            "<h3>Please select a project to work on</h3>"
+            '<h3><a href="/session_settings">here</a></h3>'
+        )
+
+    user = request.user
+    # choose all the candidates this user hasn't rated
+    next_cands = models.Candidate.objects.exclude(rating__user=user)
+
+    # filter based on selected project
+    next_cands = next_cands.filter(project__name=session_settings["project"])
+
     # Filter candidates based on ranking
-    if session_settings == 0 or session_settings["filtering"] == "unrank":
+    if session_settings["filtering"] == "unrank":
         # Get unrated candidates
-        next_cands = models.Candidate.objects.filter(rating__isnull=True)
-        if not next_cands.exists():
-            # No unrated candiate so see if user hasn't rated one
-            next_cands = models.Candidate.objects.exclude(rating__user=user)
+        next_cands = next_cands.filter(rating__isnull=True)
         if not next_cands.exists():
             # No candidates left so return to home screen
             return HttpResponse(
-                '<h3>No unrated canidate left</h3><h3><a href="/">Home Page</a></h3>'
+                f"<h3>No unrated candidates for project: {session_settings['project']}</h3>"
+                "<h3><a href='/'>Home Page</a></h3>"
             )
     elif session_settings["filtering"] == "old":
         # Get candidates the user hasn't recently ranked
-        next_cands = models.Candidate.objects.exclude(
-            rating__user=user, rating__date__gte=datetime.now() - timedelta(days=7)
+        next_cands = next_cands.exclude(
+            rating__date__gte=datetime.now() - timedelta(days=7)
         )
         if not next_cands.exists():
             # No candidates left so return to home screen
             return HttpResponse(
-                '<h3>No recently unrated canidate left</h3><h3><a href="/">Home Page</a></h3>'
+                "<h3>No recently unrated candidates left</h3>"
+                '<h3><a href="/">Home Page</a></h3>'
             )
-    else:
-        # Get all candidates (not the default but what user wanted)
-        next_cands = models.Candidate.objects.all()
 
     # Filter based on observation frequencies (+/- 1 MHz)
     if session_settings["exclude_87"]:
@@ -342,8 +350,7 @@ def candidate_random(request):
         )
 
     # Use session data to decide candidate order
-    if session_settings == 0 or session_settings["ordering"] == "rand":
-        # Get random cand (This is the default)
+    if session_settings["ordering"] == "rand":
         candidate = random.choice(list(next_cands))
     elif session_settings["ordering"] == "new":
         candidate = next_cands.order_by("-obs_id__starttime").first()
