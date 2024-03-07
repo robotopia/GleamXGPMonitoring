@@ -488,7 +488,7 @@ def candidate_table(request):
 def session_settings(request):
     # Get session data to keep filters when changing page
     session_settings = request.session.get("session_settings", 0)
-    print(session_settings)
+    # print(session_settings)
 
     # Check filter form
     if request.method == "POST":
@@ -498,7 +498,7 @@ def session_settings(request):
         if form.is_valid():
             cleaned_data = {**form.cleaned_data}
             request.session["session_settings"] = cleaned_data
-            print("here", cleaned_data["filtering"])
+            # print("here", cleaned_data["filtering"])
     else:
         if session_settings != 0:
             # Prefil form with previous session results
@@ -511,6 +511,9 @@ def session_settings(request):
         "form": form,
         "order_choices": forms.SESSION_ORDER_CHOICES,
         "filter_choices": forms.SESSION_FILTER_CHOICES,
+        "project_choices": tuple(
+            (p.name, p.description) for p in models.Project.objects.all()
+        ),
     }
 
     return render(request, "candidate_app/session_settings.html", context)
