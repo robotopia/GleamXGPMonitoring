@@ -25,6 +25,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from .utils import download_fits
 
 # from voeventdb.remote.apiv1 import FilterKeys, OrderValues
 
@@ -609,8 +610,6 @@ def download_data(request, table):
         this_model = models.Observation
     elif table == "filter":
         this_model = models.Filter
-    data = download_csv(request, this_model.objects.all(), table)
-
-    response = HttpResponse(data, content_type="text/csv")
-    response["Content-Disposition"] = f'attachment; filename="{table}.csv"'
+    response = download_fits(request, this_model.objects.all(), table)
+    # response = download_csv(request, this_model.objects.all(), table)
     return response
