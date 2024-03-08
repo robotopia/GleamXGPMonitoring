@@ -68,6 +68,19 @@ class Filter(models.Model):
         return f"{self.name}"
 
 
+class Classification(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(
+        verbose_name="Classification", max_length=64, blank=True, null=True
+    )
+    description = models.CharField(
+        verbose_name="Description", max_length=256, blank=True, null=True
+    )
+
+    def __str__(self):
+        return f"{self.name}"
+
+
 class Candidate(models.Model):
     id = models.AutoField(primary_key=True)
     obs_id = models.ForeignKey(
@@ -260,6 +273,12 @@ class Rating(models.Model):
     )
     rating = models.IntegerField(blank=True, null=True)
     cand_type = models.CharField(max_length=3, choices=CAND_TYPE_CHOICES, null=True)
+    classification = models.ForeignKey(
+        Classification,
+        on_delete=models.CASCADE,
+        related_name="rating",
+        default=None,
+    )
     date = models.DateTimeField(default=datetime.now, blank=True)
 
 
