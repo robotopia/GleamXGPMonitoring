@@ -220,11 +220,9 @@ def token_create(request):
 @api_view(["POST"])
 @transaction.atomic
 def candidate_update_rating(request, id):
-    logger.debug(request.data)
     candidate = models.Candidate.objects.filter(id=id).first()
     if candidate is None:
         raise ValueError("Candidate not found")
-    logger.debug("candidate obj %s", candidate)
 
     rating = models.Rating.objects.filter(
         candidate=candidate, user=request.user
@@ -236,17 +234,12 @@ def candidate_update_rating(request, id):
             user=request.user,
             rating=None,
         )
-    logger.debug("rating obj %s", rating)
 
-    # rfi = request.data.get('rfi', False)
-    # if rating.rfi != rfi:
-    #     logger.debug('setting rfi %s=>%s', rating.rfi, rfi)
-    #     rating.rfi = rfi
-
-    cand_type = request.data.get("cand_type", None)
-    if cand_type:
-        logger.debug("setting score %s=>%s", rating.cand_type, cand_type)
-        rating.cand_type = cand_type
+    classification = request.data.get("classification", None)
+    if classification:
+        rating.classification = models.Classification.objects.filter(
+            name=classification
+        ).first()
 
     score = request.data.get("rating", None)
     if score:
