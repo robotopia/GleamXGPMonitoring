@@ -74,16 +74,15 @@ class SessionSettingsForm(forms.Form):
     exclude_200 = forms.BooleanField(required=False)
     exclude_215 = forms.BooleanField(required=False)
 
-    project = forms.ChoiceField(
-        choices=tuple(
-            (p.name, p.name + ": " + p.description)
-            for p in models.Project.objects.all()
-        ),
-        required=True,
+    project = forms.ModelChoiceField(
+        queryset=models.Project.objects.all(), to_field_name="name", empty_label=None
     )
 
     def clean(self):
         cleaned_data = super().clean()
+        # replace the project object with it's name
+        # since the project object will cause a "Not JSon serializable" error
+        cleaned_data["project"] = cleaned_data["project"].name
         if (
             cleaned_data.get("filtering") == "all"
             and cleaned_data.get("ordering") != "rand"

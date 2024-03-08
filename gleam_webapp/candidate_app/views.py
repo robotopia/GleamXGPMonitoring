@@ -511,7 +511,7 @@ def session_settings(request):
         if form.is_valid():
             cleaned_data = {**form.cleaned_data}
             request.session["session_settings"] = cleaned_data
-            # print("here", cleaned_data["filtering"])
+            # print("here", cleaned_data)
     else:
         if session_settings != 0:
             # Prefil form with previous session results
@@ -522,12 +522,9 @@ def session_settings(request):
             form = forms.SessionSettingsForm()
     context = {
         "form": form,
-        "order_choices": forms.SESSION_ORDER_CHOICES,
-        "filter_choices": forms.SESSION_FILTER_CHOICES,
-        "project_choices": tuple(
-            (p.name, p.name + ": " + p.description)
-            for p in models.Project.objects.all()
-        ),
+        "order_choices": form.fields["ordering"].choices,
+        "filter_choices": form.fields["filtering"].choices,
+        "project_choices": form.fields["project"].choices,
     }
 
     return render(request, "candidate_app/session_settings.html", context)
