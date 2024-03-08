@@ -417,16 +417,16 @@ def candidate_table(request):
     print(f"asc_dec: {asc_dec}")
 
     # Gather all the cand types and prepare them as kwargs
-    CAND_TYPE_CHOICES = models.CAND_TYPE_CHOICES
+    CAND_TYPE_CHOICES = [c.name for c in models.Classification.objects.all()]
     count_kwargs = {}
     column_type_to_name = {}
     for cand_type_tuple in CAND_TYPE_CHOICES:
-        cand_type_short, cand_type = cand_type_tuple
+        cand_type_short = cand_type_tuple
         count_kwargs[f"{cand_type_short}_count"] = Count(
-            "rating", filter=Q(rating__cand_type=cand_type_short)
+            "rating", filter=Q(rating__classification__name=cand_type_short)
         )
         # Also create a column name
-        column_type_to_name[cand_type_short] = f"N {cand_type}"
+        column_type_to_name[cand_type_short] = cand_type_short
 
     candidates = models.Candidate.objects.all()
     project = "All projects"
@@ -443,7 +443,9 @@ def candidate_table(request):
     # If user only wants to display a single column anotate it and return it's name
     if column_display is not None and column_display != "None":
         candidates = candidates.annotate(
-            selected_count=Count("rating", filter=Q(rating__cand_type=column_display)),
+            selected_count=Count(
+                "rating", filter=Q(rating__classification__name=column_display)
+            ),
         )
         # Filter data to only show candidates with at least one count
         candidates = candidates.filter(selected_count__gte=1)
