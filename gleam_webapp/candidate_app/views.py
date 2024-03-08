@@ -183,7 +183,9 @@ def candidate_rating(request, id, arcmin=2):
         "simbad_result_table": simbad_result_table,
         "atnf_result_table": atnf_result_table,
         "arcmin_search": arcmin,
-        "cand_type_choices": models.CAND_TYPE_CHOICES,
+        "cand_type_choices": tuple(
+            (c.name, c.name) for c in models.Classification.objects.all()
+        ),  # models.CAND_TYPE_CHOICES,
         "voevents": voevents,
     }
     return render(request, "candidate_app/candidate_rating_form.html", context)
