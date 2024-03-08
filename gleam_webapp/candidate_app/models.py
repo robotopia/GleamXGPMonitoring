@@ -272,7 +272,6 @@ class Rating(models.Model):
         default=None,
     )
     rating = models.IntegerField(blank=True, null=True)
-    cand_type = models.CharField(max_length=3, choices=CAND_TYPE_CHOICES, null=True)
     classification = models.ForeignKey(
         Classification,
         on_delete=models.CASCADE,
