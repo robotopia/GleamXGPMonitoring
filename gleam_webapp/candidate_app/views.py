@@ -183,7 +183,9 @@ def candidate_rating(request, id, arcmin=2):
         "simbad_result_table": simbad_result_table,
         "atnf_result_table": atnf_result_table,
         "arcmin_search": arcmin,
-        "cand_type_choices": models.CAND_TYPE_CHOICES,
+        "cand_type_choices": tuple(
+            (c.name, c.name) for c in models.Classification.objects.all()
+        ),  # models.CAND_TYPE_CHOICES,
         "voevents": voevents,
     }
     return render(request, "candidate_app/candidate_rating_form.html", context)
@@ -218,11 +220,9 @@ def token_create(request):
 @api_view(["POST"])
 @transaction.atomic
 def candidate_update_rating(request, id):
-    logger.debug(request.data)
     candidate = models.Candidate.objects.filter(id=id).first()
     if candidate is None:
         raise ValueError("Candidate not found")
-    logger.debug("candidate obj %s", candidate)
 
     rating = models.Rating.objects.filter(
         candidate=candidate, user=request.user
@@ -234,17 +234,12 @@ def candidate_update_rating(request, id):
             user=request.user,
             rating=None,
         )
-    logger.debug("rating obj %s", rating)
 
-    # rfi = request.data.get('rfi', False)
-    # if rating.rfi != rfi:
-    #     logger.debug('setting rfi %s=>%s', rating.rfi, rfi)
-    #     rating.rfi = rfi
-
-    cand_type = request.data.get("cand_type", None)
-    if cand_type:
-        logger.debug("setting score %s=>%s", rating.cand_type, cand_type)
-        rating.cand_type = cand_type
+    classification = request.data.get("classification", None)
+    if classification:
+        rating.classification = models.Classification.objects.filter(
+            name=classification
+        ).first()
 
     score = request.data.get("rating", None)
     if score:
@@ -371,7 +366,7 @@ def candidate_table(request):
     # Check filter form
     if request.method == "POST":
         # create a form instance and populate it with data from the request:
-        form = forms.CanidateFilterForm(request.POST)
+        form = forms.CandidateFilterForm(request.POST)
         # check whether it's valid:
         if form.is_valid():
             column_display = form.cleaned_data["column_display"]
@@ -393,7 +388,7 @@ def candidate_table(request):
     else:
         if candidate_table_session_data != 0:
             # Prefil form with previous session results
-            form = forms.CanidateFilterForm(
+            form = forms.CandidateFilterForm(
                 initial=candidate_table_session_data,
             )
             column_display = candidate_table_session_data["column_display"]
@@ -405,7 +400,7 @@ def candidate_table(request):
             dec_dms = candidate_table_session_data["dec_dms"]
             search_radius_arcmin = candidate_table_session_data["search_radius_arcmin"]
         else:
-            form = forms.CanidateFilterForm()
+            form = forms.CandidateFilterForm()
             column_display = None
             observation_id_filter = None
             rating_cutoff = None
@@ -422,36 +417,37 @@ def candidate_table(request):
     print(f"asc_dec: {asc_dec}")
 
     # Gather all the cand types and prepare them as kwargs
-    CAND_TYPE_CHOICES = models.CAND_TYPE_CHOICES
     count_kwargs = {}
     column_type_to_name = {}
-    for cand_type_tuple in CAND_TYPE_CHOICES:
-        cand_type_short, cand_type = cand_type_tuple
+    for cand_type_tuple in [c.name for c in models.Classification.objects.all()]:
+        cand_type_short = cand_type_tuple
         count_kwargs[f"{cand_type_short}_count"] = Count(
-            "rating", filter=Q(rating__cand_type=cand_type_short)
+            "rating", filter=Q(rating__classification__name=cand_type_short)
         )
         # Also create a column name
-        column_type_to_name[cand_type_short] = f"N {cand_type}"
+        column_type_to_name[cand_type_short] = cand_type_short
 
     candidates = models.Candidate.objects.all()
     project = "All projects"
     if session_settings:
         candidates = candidates.filter(project__name=session_settings["project"])
         project = "Project " + session_settings["project"]
-    # Anontate with counts of different candidate type counts
+    # Annotate with counts of different candidate type counts
     candidates = candidates.annotate(
         num_ratings=Count("rating"),
         avg_rating=Avg("rating__rating"),
         **count_kwargs,
     )
 
-    # If user only wants to display a single column anotate it and return it's name
-    if column_display is not None and column_display != "None":
+    # If user only wants to display a single column annotate it and return it's name
+    if column_display:
         candidates = candidates.annotate(
-            selected_count=Count("rating", filter=Q(rating__cand_type=column_display)),
+            selected_count=Count(
+                "rating", filter=Q(rating__classification__name=column_display)
+            ),
         )
-        # Filter data to only show candidates with at least one count
-        candidates = candidates.filter(selected_count__gte=1)
+        # # Filter data to only show candidates with at least one count
+        # candidates = candidates.filter(selected_count__gte=1)
         selected_column = column_type_to_name[column_display]
     else:
         selected_column = None
@@ -511,7 +507,7 @@ def session_settings(request):
         if form.is_valid():
             cleaned_data = {**form.cleaned_data}
             request.session["session_settings"] = cleaned_data
-            # print("here", cleaned_data["filtering"])
+            # print("here", cleaned_data)
     else:
         if session_settings != 0:
             # Prefil form with previous session results
@@ -522,12 +518,9 @@ def session_settings(request):
             form = forms.SessionSettingsForm()
     context = {
         "form": form,
-        "order_choices": forms.SESSION_ORDER_CHOICES,
-        "filter_choices": forms.SESSION_FILTER_CHOICES,
-        "project_choices": tuple(
-            (p.name, p.name + ": " + p.description)
-            for p in models.Project.objects.all()
-        ),
+        "order_choices": form.fields["ordering"].choices,
+        "filter_choices": form.fields["filtering"].choices,
+        "project_choices": form.fields["project"].choices,
     }
 
     return render(request, "candidate_app/session_settings.html", context)

@@ -2,34 +2,39 @@
 
 {% block content %}
 
-<title>Candidate Rating ID:{{ candidate.id }} </title>
-<h2>Candidate Rating ID:{{ candidate.id }}</h2>
-<h3>From project:{{candidate.project.name}}</h3>
 {% if candidate %}
-<div class="row">
+<title>Rating:{{ candidate.id }} </title>
 
-  <div class="col">
-    <div class="card">
-      <center>
-      {% if candidate.png_path %}
-          <img src="{{candidate.png_path.url}}" alt="Diagnostic Plot for {{candidate.id}}" onClick="window.open(this.src)">
-      {% endif %}
-      {% if candidate.gif_path %}
-        <img src="{{candidate.gif_path.url}}"
-            width="125"
-            alt="Diagnostic GIF for {{candidate.id}}"
-            onClick="window.open(this.src)">
-      {% endif %}
-      </center>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <h2>
+        Rating candidate with ID: {{ candidate.id }} from project: {{candidate.project.name}}</h2>
     </div>
   </div>
 
-  <div class="col-3">
-    <div class="card">
-        <div class="card-content">
+  <div class="row">
+    <div class="col-3">
+      {% if candidate.png_path %}
+          <img src="{{candidate.png_path.url}}" 
+              alt="Diagnostic Plot for {{candidate.id}}" 
+              onClick="window.open(this.src)"
+              class="mw-100">
+      {% endif %}
+    </div>
+    <div class="col-3">
+      {% if candidate.gif_path %}
+        <img src="{{candidate.gif_path.url}}"
+            alt="Diagnostic GIF for {{candidate.id}}"
+            onClick="window.open(this.src)"
+            class="mw-100"
+            >
+      {% endif %}
+    </div>
+
+    <div class="col-3">
             <h3>Candidate:</h3>
             <table>
-              <!-- <tr><td>Location (deg)</td>                      <td>{{ candidate.ra_dec }}, {{ candidate.dec_dec}}</td></tr> -->
               <tr><td>Detection statistic</td> <td>{{ candidate.can_det_stat|floatformat:2 }}</td></tr>
               <tr><td>Peak Flux (Jy)</td>      <td>{{ candidate.can_peak_flux|floatformat:2 }}</td></tr>
               <tr><td>Primary Beam</td>        <td>{{ candidate.can_beam|floatformat:2 }}</td></tr>
@@ -38,106 +43,174 @@
               <tr><td>Radius (deg)</td>        <td>{{ candidate.rad_deg|floatformat:3 }}</td></tr>
               <tr><td>Filter name</td>         <td>{{ candidate.filter.name }}</td></tr>
             </table>
-            <h3>Nearest Known Source:</h3>
+            <h3>Observation:</h3>
             <table>
-              <tr><td>Source name</td>      <td>{{ candidate.nks_name }}</td></tr>
-              <tr><td>Location</td>         <td>{{ candidate.nks_ra_hms }}, {{ candidate.nks_dec_dms }}</td></tr>
-              {% if candidate.can_nks_is_close %}
-                <tr>
+              <tr><td>Observation ID</td>  <td><a href="http://ws.mwatelescope.org/observation/obs/?obs_id={{ candidate.obs_id.observation_id }}" target="_blank">{{ candidate.obs_id.observation_id }}</a></td></tr>
+              <tr><td>Time (UTC)</td>      <td>{{ time }}</td></tr>
+              <tr><td>Frequency (MHz)</td> <td>{{ candidate.obs_id.cent_freq }}</td></tr>
+            </table>
+    </div>
+
+    <div class="col-3">
+          <form action="{% url 'candidate_update_rating' id=candidate.id %}" method="post">
+            {% csrf_token %}
+            <div class="field">
+              <h4>Choose classification:</h4>
+              {% for value, text in cand_type_choices %}
+                {% if value == "T" and not rating %}
+                  <input checked="checked"
+                {% elif value == rating.classification %}
+                  <input checked="checked"
+                {% else %}
+                  <input
+                {% endif %}
+                  class="form-check-input" type="radio" name="classification" id="{{ value }}" value="{{ value }}">
+                <label  class="form-check-label" for="{{ value }}">{{ text }}</label><br>
+              {% endfor %}
+            </div>
+            <div class="field">
+            <h4>Rating from 1(noise) to 5(clear candidate){% if rating %}(currently {{rating.rating}}){% endif %}</h4>
+            <div>
+              {% if rating.rating == 1 %}
+                <input type="submit" class="btn btn-success btn-lg" name="rating" value="1">
               {% else %}
-                <tr class="NegativeTransaction">
+                <input type="submit" class="btn btn-primary btn-lg" name="rating" value="1">
               {% endif %}
-              <td>Separation (arcmin)</td>  <td>{{ sep_arcmin|floatformat:2 }}</td></tr>
-              <tr><td>Flux (Jy)</td>        <td>{{ candidate.nks_flux|floatformat:2 }}</td></tr>
-              <tr><td>Flux ratio</td>       <td>{{ candidate.can_nks_flux_rat|floatformat:2 }}</td></tr>
-            </table>
+              {% if rating.rating == 2 %}
+                <input type="submit" class="btn btn-success btn-lg" name="rating" value="2">
+              {% else %}
+                <input type="submit" class="btn btn-primary btn-lg" name="rating" value="2">
+              {% endif %}
+              {% if rating.rating == 3 %}
+                <input type="submit" class="btn btn-success btn-lg" name="rating" value="3">
+              {% else %}
+                <input type="submit" class="btn btn-primary btn-lg" name="rating" value="3">
+              {% endif %}
+              {% if rating.rating == 4 %}
+                <input type="submit" class="btn btn-success btn-lg" name="rating" value="4">
+              {% else %}
+                <input type="submit" class="btn btn-primary btn-lg" name="rating" value="4">
+              {% endif %}
+              {% if rating.rating == 5 %}
+                <input type="submit" class="btn btn-success btn-lg" name="rating" value="5">
+              {% else %}
+                <input type="submit" class="btn btn-primary btn-lg" name="rating" value="5">
+              {% endif %}
+            </div>
+            </div>
+            <div class="field">
+            <h4>Notes</h4>
+            <textarea rows="5" id="notes" name="notes" placeholder="is it a known source?">{{candidate.notes}}</textarea>
+            </div>
+            <input type="hidden" name="id" value="">
+            <input type="hidden" name="username" value="{{user}}">
+          </form>
+          <button class="btn btn-info" onclick="window.history.go(-1)">Back to previous</button>
+          <a class="btn btn-info" href="/candidate_rating/random/">Skip</a>
+    </div>
+  </div>
+</div>
 
+<div class="row">
+  <div class="col-12 justify-content-center ">
+    <form action="{% url 'candidate_update_catalogue_query' id=candidate.id %}" method="post">
+      {% csrf_token %}
+      <p class="h4">Search nearby within
+        <input id="arcmin" type="text"  name="arcmin" value="{{arcmin_search}}" size="2">
+        arcmin.
+        <input class="btn btn-primary" type="submit" value="Submit">
+      </p>
+    </form>
+  </div>
+</div>
 
-            <h2>Catalogue {{ arcmin_search }} arcmin search:</h3>
-              <form action="{% url 'candidate_update_catalogue_query' id=candidate.id %}" method="post">
-                {% csrf_token %}
-                <label for="arcmin">Refilter with arcmins:</label>
-                <input id="arcmin" type="text"  name="arcmin">
-                <input class="btn btn-primary" type="submit" value="Submit">
-              </form>
+<div class="row">
+  <div class="col"> 
+    <h4>Nearest within this project</h4>
+    <table>
+      <tr><td>Source name</td>      <td>{{ candidate.nks_name }}</td></tr>
+      <tr><td>Location</td>         <td>{{ candidate.nks_ra_hms }}, {{ candidate.nks_dec_dms }}</td></tr>
+      {% if candidate.can_nks_is_close %}
+        <tr>
+      {% else %}
+        <tr class="NegativeTransaction">
+      {% endif %}
+      <td>Sep (arcmin)</td>  <td>{{ sep_arcmin|floatformat:2 }}</td></tr>
+      <tr><td>Flux (Jy)</td>        <td>{{ candidate.nks_flux|floatformat:2 }}</td></tr>
+      <tr><td>Flux ratio</td>       <td>{{ candidate.can_nks_flux_rat|floatformat:2 }}</td></tr>
+    </table>
+  </div>
 
-              <h3>Nearby Candidates:</h3>
-              <table class="fl-table">
-                <!-- <thead> -->
-                <tr>
-                  <th>ID</th>
-                  <th>RA</th>
-                  <th>Dec</th>
-                  <th>Separation (arcmin)</th>
-                </tr>
-                <!-- </thead> -->
-                <!-- Iterate over object_list -->
-                {% for result in nearby_candidates_table %}
-                <!-- Display Objects -->
-                <tr>
-                  <td><a href="/candidate_rating/{{ result.id }}/" style="text-decoration:None">{{ result.id }}</a></td>
-                  <td>{{ result.ra }}</td>
-                  <td>{{ result.dec }}</td>
-                  <td>{{ result.sep|floatformat:2 }}</td>
-                </tr>
-                <!-- If object_list is empty  -->
-                {% empty %}
-                <tr><td>No Sources found</td></tr>
-                {% endfor %}
-              </table>
+  <div class="col">
+    <h4>Nearby Candidates:</h4>
+    <table class="fl-table">
+      <tr>
+        <th>ID</th>
+        <th>RA</th>
+        <th>Dec</th>
+        <th>Sep (arcmin)</th>
+      </tr>
+      {% for result in nearby_candidates_table %}
+      <tr>
+        <td><a href="/candidate_rating/{{ result.id }}/" style="text-decoration:None">{{ result.id }}</a></td>
+        <td>{{ result.ra }}</td>
+        <td>{{ result.dec }}</td>
+        <td>{{ result.sep|floatformat:2 }}</td>
+      </tr>
+      {% empty %}
+      <tr><td>No Sources found</td></tr>
+      {% endfor %}
+    </table>
+  </div>
 
-            <h3>SIMBAD:</h3>
-            <table class="fl-table">
-              <!-- <thead> -->
-              <tr>
-                <th>Name</th>
-                <th>RA</th>
-                <th>Dec</th>
-                <th>Separation (arcmin)</th>
-              </tr>
-              <!-- </thead> -->
-              <!-- Iterate over object_list -->
-              {% for result in simbad_result_table %}
-              <!-- Display Objects -->
-              <tr>
-                <td><a href="https://simbad.cds.unistra.fr/simbad/sim-id?Ident={{ result.search_term }}&NbIdent=1&submit=submit+id" style="text-decoration:None">{{ result.name }}</a></td>
-                <td>{{ result.ra }}</td>
-                <td>{{ result.dec }}</td>
-                <td>{{ result.sep|floatformat:2 }}</td>
-              </tr>
-              <!-- If object_list is empty  -->
-              {% empty %}
-              <tr><td>No Sources found</td></tr>
-              {% endfor %}
-            </table>
+  <div class="col">
+    <h4>SIMBAD:</h4>
+    <table class="fl-table">
+      <tr>
+        <th>Name</th>
+        <th>RA</th>
+        <th>Dec</th>
+        <th>Sep (arcmin)</th>
+      </tr>
+      {% for result in simbad_result_table %}
+      <tr>
+        <td><a href="https://simbad.cds.unistra.fr/simbad/sim-id?Ident={{ result.search_term }}&NbIdent=1&submit=submit+id" style="text-decoration:None">{{ result.name }}</a></td>
+        <td>{{ result.ra }}</td>
+        <td>{{ result.dec }}</td>
+        <td>{{ result.sep|floatformat:2 }}</td>
+      </tr>
+      {% empty %}
+        <tr><td>No Sources found</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="col">
+    <h4>ATNF pulsars:</h4>
+      <table class="fl-table">
+        <tr>
+          <th>Name</th>
+          <th>Period (s)</th>
+          <th>DM (pc / cm^3)</th>
+          <th>S400 (mJy)</th>
+          <th>Sep (arcmin)</th>
+        </tr>
+        {% for result in atnf_result_table %}
+        <tr>
+          <td><a href="https://www.atnf.csiro.au/research/pulsar/psrcat/proc_form.php?version=1.67&startUserDefined=true&c1_val=&c2_val=&c3_val=&c4_val=&sort_attr=jname&sort_order=asc&condition=&pulsar_names={{ result.name|urlize }}&ephemeris=long&submit_ephemeris=Get+Ephemeris&coords_unit=raj%2Fdecj&radius=&coords_1=&coords_2=&style=Long+with+last+digit+error&no_value=*&fsize=3&x_axis=&x_scale=linear&y_axis=&y_scale=linear&state=query" style="text-decoration:None">{{ result.name }}</a></td>
+          <td>{{ result.period }}</td>
+          <td>{{ result.dm }}</td>
+          <td>{{ result.s400 }}</td>
+          <td>{{ result.sep|floatformat:2 }}</td>
+        </tr>
+        {% empty %}
+        <tr><td>No Sources found</td></tr>
+        {% endfor %}
+      </table>
+  </div>
 
-            <h3>ATNF pulsars:</h3>
-            <table class="fl-table">
-              <!-- <thead> -->
-              <tr>
-                <th>Name</th>
-                <th>Period (s)</th>
-                <th>DM (pc / cm^3)</th>
-                <th>S400 (mJy)</th>
-                <th>Separation (arcmin)</th>
-              </tr>
-              <!-- </thead> -->
-              <!-- Iterate over object_list -->
-              {% for result in atnf_result_table %}
-              <!-- Display Objects -->
-              <tr>
-                <td><a href="https://www.atnf.csiro.au/research/pulsar/psrcat/proc_form.php?version=1.67&startUserDefined=true&c1_val=&c2_val=&c3_val=&c4_val=&sort_attr=jname&sort_order=asc&condition=&pulsar_names={{ result.name|urlize }}&ephemeris=long&submit_ephemeris=Get+Ephemeris&coords_unit=raj%2Fdecj&radius=&coords_1=&coords_2=&style=Long+with+last+digit+error&no_value=*&fsize=3&x_axis=&x_scale=linear&y_axis=&y_scale=linear&state=query" style="text-decoration:None">{{ result.name }}</a></td>
-                <td>{{ result.period }}</td>
-                <td>{{ result.dm }}</td>
-                <td>{{ result.s400 }}</td>
-                <td>{{ result.sep|floatformat:2 }}</td>
-              </tr>
-              <!-- If object_list is empty  -->
-              {% empty %}
-              <tr><td>No Sources found</td></tr>
-              {% endfor %}
-            </table>
-
+  <!-- <div class="col-3">
+    <div class="card">
+        <div class="card-content">
             <h3>Transient VOEvents (within one hour):</h3>
             <table class="fl-table">
               <tr>
@@ -163,87 +236,14 @@
                 <td>{{ result.sep|floatformat:2 }}</td>
                 <td><a href="/voevent_view/{{ result.xml }}">View</a></td>
               </tr>
-              <!-- If object_list is empty  -->
               {% empty %}
               <tr><td>No Sources found</td></tr>
               {% endfor %}
             </table>
         </div>
       </div>
-  </div>
+  </div> -->
 
-  <div class="col-2">
-    <div class="card">
-      <div class="card-content">
-        <h3>Observation:</h3>
-        <table>
-          <tr><td>Observation ID</td>  <td><a href="http://ws.mwatelescope.org/observation/obs/?obs_id={{ candidate.obs_id.observation_id }}" target="_blank">{{ candidate.obs_id.observation_id }}</a></td></tr>
-          <tr><td>Time (UTC)</td>      <td>{{ time }}</td></tr>
-          <tr><td>Frequency (MHz)</td> <td>{{ candidate.obs_id.cent_freq }}</td></tr>
-        </table>
-        <h3>Rate Current Candidate:</h3>
-        <form action="{% url 'candidate_update_rating' id=candidate.id %}" method="post">
-          {% csrf_token %}
-          <div class="field">
-          <!-- <label for="rfi">Is RFI?</label>
-          <input type="checkbox"  id='rfi' value='True' name="rfi"><br> -->
-          <h4>Choose candidate type:</h4>
-
-          {% for value, text in cand_type_choices %}
-            {% if value == "T" and not rating %}
-              <input checked="checked"
-            {% elif value == rating.cand_type %}
-              <input checked="checked"
-            {% else %}
-              <input
-            {% endif %}
-              class="form-check-input" type="radio" name="cand_type" id="{{ value }}" value="{{ value }}">
-            <label  class="form-check-label" for="{{ value }}">{{ text }}</label><br>
-          {% endfor %}
-
-          </div>
-          <div class="field">
-          <h4>Rating from 1(noise) to 5(clear candidate){% if rating %}(currently {{rating.rating}}){% endif %}</h4>
-          <div>
-            {% if rating.rating == 1 %}
-              <input type="submit" class="btn btn-success btn-lg" name="rating" value="1">
-            {% else %}
-              <input type="submit" class="btn btn-primary btn-lg" name="rating" value="1">
-            {% endif %}
-            {% if rating.rating == 2 %}
-              <input type="submit" class="btn btn-success btn-lg" name="rating" value="2">
-            {% else %}
-              <input type="submit" class="btn btn-primary btn-lg" name="rating" value="2">
-            {% endif %}
-            {% if rating.rating == 3 %}
-              <input type="submit" class="btn btn-success btn-lg" name="rating" value="3">
-            {% else %}
-              <input type="submit" class="btn btn-primary btn-lg" name="rating" value="3">
-            {% endif %}
-            {% if rating.rating == 4 %}
-              <input type="submit" class="btn btn-success btn-lg" name="rating" value="4">
-            {% else %}
-              <input type="submit" class="btn btn-primary btn-lg" name="rating" value="4">
-            {% endif %}
-            {% if rating.rating == 5 %}
-              <input type="submit" class="btn btn-success btn-lg" name="rating" value="5">
-            {% else %}
-              <input type="submit" class="btn btn-primary btn-lg" name="rating" value="5">
-            {% endif %}
-          </div>
-          </div>
-          <div class="field">
-          <h4>Notes</h4>
-          <textarea rows="5" id="notes" name="notes" placeholder="is it a known source?">{{candidate.notes}}</textarea>
-          </div>
-          <input type="hidden" name="id" value="">
-          <input type="hidden" name="username" value="{{user}}">
-        </form>
-        <button class="btn btn-info" onclick="window.history.go(-1)">Back to previous</button>
-        <a class="btn btn-info" href="/candidate_rating/random/">Skip</a>
-      </div>
-    </div>
-  </div>
 </div>
 {% else %}
 <p>Candidate not Found!</p>

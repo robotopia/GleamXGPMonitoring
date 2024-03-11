@@ -67,7 +67,7 @@
       <th>ID</th>
       <th>Rating(Count)</th>
       <th>Notes</th>
-      {% if form.column_display.value != "None" %}
+      {% if selected_column %}
         <th>{{ selected_column }}</th>
       {% else %}
         {% for key, name in column_names.items %}
@@ -91,7 +91,7 @@
           {% endif %}
         </td>
         <td>{{cand.notes}}</td>
-        {% if form.column_display.value != "None" %}
+        {% if selected_column %}
           <td>{{cand.selected_count}}</td>
         {% else %}
           {% for key, name in column_names.items %}
