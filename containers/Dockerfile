@@ -1,5 +1,5 @@
 # Use the miniconda container
-FROM condaforge/mambaforge:latest as GleamXDev
+FROM condaforge/mambaforge:latest as gleamxdev
 
 LABEL description = "Development web container for GleamXGPMonitoring"
 
@@ -31,7 +31,7 @@ COPY ./requirements.txt .
 # Create environment and activate it
 RUN mamba env update --name base --file environment.yml
 
-FROM  GleamXDev as GleamXProd
+FROM  gleamxdev as gleamxprod
 LABEL description = "Production web container for GleamXGPMonitoring"
 
 # install this app
