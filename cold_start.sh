@@ -5,9 +5,6 @@ cd psrcat
 ./update_db.sh
 cd ..
 
-# build / start the web app
-docker-compose -f docker-compose.yml up --build -d
-
 # apply migrations and add an admin user
 ./migrate.sh
 ./make_admin.sh
