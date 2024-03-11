@@ -366,7 +366,7 @@ def candidate_table(request):
     # Check filter form
     if request.method == "POST":
         # create a form instance and populate it with data from the request:
-        form = forms.CanidateFilterForm(request.POST)
+        form = forms.CandidateFilterForm(request.POST)
         # check whether it's valid:
         if form.is_valid():
             column_display = form.cleaned_data["column_display"]
@@ -388,7 +388,7 @@ def candidate_table(request):
     else:
         if candidate_table_session_data != 0:
             # Prefil form with previous session results
-            form = forms.CanidateFilterForm(
+            form = forms.CandidateFilterForm(
                 initial=candidate_table_session_data,
             )
             column_display = candidate_table_session_data["column_display"]
@@ -400,7 +400,7 @@ def candidate_table(request):
             dec_dms = candidate_table_session_data["dec_dms"]
             search_radius_arcmin = candidate_table_session_data["search_radius_arcmin"]
         else:
-            form = forms.CanidateFilterForm()
+            form = forms.CandidateFilterForm()
             column_display = None
             observation_id_filter = None
             rating_cutoff = None
@@ -417,10 +417,9 @@ def candidate_table(request):
     print(f"asc_dec: {asc_dec}")
 
     # Gather all the cand types and prepare them as kwargs
-    CAND_TYPE_CHOICES = [c.name for c in models.Classification.objects.all()]
     count_kwargs = {}
     column_type_to_name = {}
-    for cand_type_tuple in CAND_TYPE_CHOICES:
+    for cand_type_tuple in [c.name for c in models.Classification.objects.all()]:
         cand_type_short = cand_type_tuple
         count_kwargs[f"{cand_type_short}_count"] = Count(
             "rating", filter=Q(rating__classification__name=cand_type_short)
@@ -433,14 +432,14 @@ def candidate_table(request):
     if session_settings:
         candidates = candidates.filter(project__name=session_settings["project"])
         project = "Project " + session_settings["project"]
-    # Anontate with counts of different candidate type counts
+    # Annotate with counts of different candidate type counts
     candidates = candidates.annotate(
         num_ratings=Count("rating"),
         avg_rating=Avg("rating__rating"),
         **count_kwargs,
     )
 
-    # If user only wants to display a single column anotate it and return it's name
+    # If user only wants to display a single column annotate it and return it's name
     if column_display:
         candidates = candidates.annotate(
             selected_count=Count(

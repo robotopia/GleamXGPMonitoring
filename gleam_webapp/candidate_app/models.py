@@ -113,7 +113,7 @@ class Candidate(models.Model):
     ra_deg = models.FloatField(
         blank=True,
         null=True,
-        verbose_name="Candidate island central Right Acension (deg)",
+        verbose_name="Candidate island central Right Ascension (deg)",
     )
     dec_deg = models.FloatField(
         blank=True, null=True, verbose_name="Candidate island central Declination (deg)"
@@ -121,7 +121,7 @@ class Candidate(models.Model):
     cent_sep_deg = models.FloatField(
         blank=True,
         null=True,
-        verbose_name="Candidate seperation from observation central pointing (deg)",
+        verbose_name="Candidate separation from observation central pointing (deg)",
     )
     rad_pix = models.FloatField(
         blank=True, null=True, verbose_name="Candidate island radius in pixels"
@@ -165,7 +165,7 @@ class Candidate(models.Model):
         verbose_name="Nearest known source y pixel coordinate in observation",
     )
     nks_ra_deg = models.FloatField(
-        blank=True, null=True, verbose_name="Nearest known source Right Acension (deg)"
+        blank=True, null=True, verbose_name="Nearest known source Right Ascension (deg)"
     )
     nks_dec_deg = models.FloatField(
         blank=True, null=True, verbose_name="Nearest known source Declination (deg)"
@@ -179,7 +179,7 @@ class Candidate(models.Model):
     nks_res_dif = models.FloatField(
         blank=True,
         null=True,
-        verbose_name="Nearest known source number of stds above mean residual",
+        verbose_name="Nearest known source number of std above mean residual",
     )
     nks_det_stat = models.FloatField(
         blank=True,
@@ -207,7 +207,7 @@ class Candidate(models.Model):
         max_length=32,
         blank=True,
         null=True,
-        verbose_name="Candidate Right Acension (HH:MM:SS)",
+        verbose_name="Candidate Right Ascension (HH:MM:SS)",
     )
     dec_dms = models.CharField(
         max_length=32,
@@ -219,7 +219,7 @@ class Candidate(models.Model):
         max_length=32,
         blank=True,
         null=True,
-        verbose_name="Nearest known source Right Acension (HH:MM:SS)",
+        verbose_name="Nearest known source Right Ascension (HH:MM:SS)",
     )
     nks_dec_dms = models.CharField(
         max_length=32,
@@ -230,34 +230,6 @@ class Candidate(models.Model):
 
     # def __str__(self):
     #     return f"{self.id}_obs{self.obs_id.observation_id}_{self.filter.name}"
-
-
-T = "T"
-AP = "AP"
-RFI = "RFI"
-SL = "SL"
-A = "A"
-CC = "CC"
-S = "S"
-P = "P"
-AGN = "AGN"
-D = "D"
-BF = "BF"
-O = "O"  # noqa: E741
-CAND_TYPE_CHOICES = (
-    (T, "Transient"),
-    (AP, "Airplane"),
-    (RFI, "RFI"),
-    (SL, "Sidelobe"),
-    (A, "Alias"),
-    (CC, "CHG Centre"),
-    (S, "Scintillation"),
-    (P, "Pulsar"),
-    (AGN, "AGN"),
-    (D, "Drift"),
-    (BF, "Bad Frame"),
-    (O, "Other"),
-)
 
 
 class Rating(models.Model):

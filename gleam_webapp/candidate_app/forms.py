@@ -24,7 +24,7 @@ ORDER_BY_CHOICES = (
 ASC_DEC_CHOICES = (("", "Ascending"), ("-", "Decending"))
 
 
-class CanidateFilterForm(forms.Form):
+class CandidateFilterForm(forms.Form):
     rating_cutoff = forms.FloatField(required=False)
     observation_id = forms.ModelChoiceField(
         models.Observation.objects.all(), empty_label="All observations", required=False
