@@ -45,7 +45,7 @@ class Observation(models.Model):
 class Project(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(
-        verbose_name="Project name", max_length=64, blank=True, null=True
+        verbose_name="Project name", max_length=64, blank=True, null=True, unique=True
     )
     description = models.CharField(
         verbose_name="Description", max_length=256, blank=True, null=True
@@ -71,7 +71,7 @@ class Filter(models.Model):
 class Classification(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(
-        verbose_name="Classification", max_length=64, blank=True, null=True
+        verbose_name="Classification", max_length=64, blank=True, null=True, unique=True
     )
     description = models.CharField(
         verbose_name="Description", max_length=256, blank=True, null=True
