@@ -5,6 +5,7 @@ Running Server
 Checking for errors and inspecting logs
 ---------------------------------------
 nginx errors are in
+
 .. code-block::
 
    tail -f cat /var/log/nginx/error.log
@@ -24,7 +25,8 @@ Start the uwsgi server with
 
 .. code-block::
 
-   uwsgi --ini gleam_webapp_uwsgi.ini
+   cd /home/ubuntu/GleamXGPMonitoring/gleam_webapp
+   uwsgi --ini gleam_webapp.ini
 
 This will run in the background and the following sections describe how to restarting and stopping the server.
 
@@ -70,7 +72,7 @@ Larger updates may need a combination of the following commands
    python manage.py makemigrations
    python manage.py migrate
    # Start server
-   uwsgi --ini gleam_webapp_uwsgi.ini
+   uwsgi --ini gleam_webapp.ini
 
 
 
