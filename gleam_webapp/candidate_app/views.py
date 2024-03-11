@@ -441,14 +441,14 @@ def candidate_table(request):
     )
 
     # If user only wants to display a single column anotate it and return it's name
-    if column_display is not None and column_display != "None":
+    if column_display:
         candidates = candidates.annotate(
             selected_count=Count(
                 "rating", filter=Q(rating__classification__name=column_display)
             ),
         )
-        # Filter data to only show candidates with at least one count
-        candidates = candidates.filter(selected_count__gte=1)
+        # # Filter data to only show candidates with at least one count
+        # candidates = candidates.filter(selected_count__gte=1)
         selected_column = column_type_to_name[column_display]
     else:
         selected_column = None
