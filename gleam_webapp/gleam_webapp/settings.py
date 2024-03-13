@@ -169,7 +169,7 @@ LOGGING = {
     "handlers": {
         "file": {
             "class": "logging.FileHandler",
-            "filename": "logs/webapp.log",
+            "filename": "/home/app/logs/webapp.log",
             "formatter": "verbose",
         },
         "term": {
