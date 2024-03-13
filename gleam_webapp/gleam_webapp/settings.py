@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import os
+import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,7 +28,7 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", None)
 DEBUG = os.environ.get("DEBUG", False)
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
-#ALLOWED_HOSTS = ["127.0.0.1", "localhost", "0.0.0.0", "mwa-image-plane.duckdns.org"]
+# ALLOWED_HOSTS = ["127.0.0.1", "localhost", "0.0.0.0", "mwa-image-plane.duckdns.org"]
 
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
@@ -160,3 +161,37 @@ TEMPLATES = [
         },
     },
 ]
+
+# Setup logging information
+LOGGING = {
+    "version": 1,  # the dictConfig format version
+    "disable_existing_loggers": False,  # retain the default loggers
+    "handlers": {
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": "logs/webapp.log",
+            "formatter": "verbose",
+        },
+        "term": {
+            "class": "logging.StreamHandler",
+            "stream": sys.stdout,
+            "formatter": "simple",
+        },
+    },
+    "formatters": {
+        "verbose": {
+            "format": "{name} {levelname} {asctime} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{asctime} {levelname} {message}",
+            "style": "{",
+        },
+    },
+    "loggers": {
+        "": {  # this is for ALL loggers
+            "level": os.getenv("DJANGO_LOG_LEVEL", "WARNING"),
+            "handlers": ["file", "term"],
+        },
+    },
+}
