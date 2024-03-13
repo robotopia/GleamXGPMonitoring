@@ -3,3 +3,4 @@
 .env.prod.db
 env/*
 *.json
+*.log
