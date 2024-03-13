@@ -13,5 +13,12 @@ cd ..
 ./enable_q3c.sh
 
 # # load fixtures
-# docker-compose exec web python gleam_webapp/manage.py loaddata auth.json
-# docker-compose exec web python gleam_webapp/manage.py loaddata app.json
+for fixture in observation.json \
+               project.json \
+               filter.json \
+               classification.json \
+               candidate.json
+do 
+    echo "Lading fixture ${fixture}"
+    docker-compose exec web python manage.py loaddata ${fixture}
+done
