@@ -5,11 +5,17 @@ services:
     build:
       context: .
       dockerfile: ./containers/Dockerfile
-      target: GleamXProd
-    command: gunicorn gleam_webapp.wsgi:application --bind 0.0.0.0:8000
+      target: gleamxprod
+    command: >
+      gunicorn gleam_webapp.wsgi:application 
+        --bind 0.0.0.0:8000 
+        --error-logfile /home/app/logs/gunicorn_error.log 
+        --access-logfile /home/app/logs/gunicorn_access.log
+
     volumes:
-      - ./:/home/app/web/
       - static_volume:/home/app/web/staticfiles
+      - ./logs:/home/app/logs
+      - ./psrcat:/home/app/web/psrcat
     expose:
       - 8000
     env_file:
@@ -18,18 +24,21 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "localhost:8000/login", "--silent"]
+      test: ["CMD", "curl", "localhost:8000", "--silent"]
       interval: 30s
       timeout: 30s
       retries: 3
       start_period: 30s
 
   db:
-    image: postgres:15
+    build:
+      context: ./containers/
+      dockerfile: db.Dockerfile
+      target: postgres-q3c
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
-      - ./.env.prod.db
+      - ./.env.dev.db
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
       interval: 30s
@@ -42,7 +51,7 @@ services:
     volumes:
       - static_volume:/home/app/web/staticfiles
     ports:
-      - 1337:80
+      - 80:80
     depends_on:
       - web
 
