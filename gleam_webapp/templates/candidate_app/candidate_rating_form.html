@@ -12,7 +12,7 @@
 
         mydiv.innerHTML = "<p>Loading SIMBAD search data ...</p>";
 
-        const response = await fetch('/simbad_table/', {
+        const response = await fetch('/cone_search_simbad/', {
           method:'POST',
           headers: {
               'X-CSRFToken': '{{csrf_token }}',
@@ -214,25 +214,6 @@
     <div id="nearestlocator">
       <p>Loading ... </p>
     </div>
-    <!-- <h4>Nearby Candidates:</h4>
-    <table class="fl-table">
-      <tr>
-        <th>ID</th>
-        <th>RA</th>
-        <th>Dec</th>
-        <th>Sep (arcmin)</th>
-      </tr>
-      {% for result in nearby_candidates_table %}
-      <tr>
-        <td><a href="/candidate_rating/{{ result.id }}/" style="text-decoration:None">{{ result.id }}</a></td>
-        <td>{{ result.ra }}</td>
-        <td>{{ result.dec }}</td>
-        <td>{{ result.sep|floatformat:2 }}</td>
-      </tr>
-      {% empty %}
-      <tr><td>No Sources found</td></tr>
-      {% endfor %}
-    </table> -->
   </div>
 
   <div class="col">

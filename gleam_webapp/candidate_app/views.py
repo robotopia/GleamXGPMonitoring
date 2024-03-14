@@ -42,7 +42,7 @@ def home_page(request):
     return render(request, "candidate_app/home_page.html")
 
 
-def get_simbad(request):  # , ra_deg, dec_deg, dist_arcmin):
+def cone_search_simbad(request):  # , ra_deg, dec_deg, dist_arcmin):
     ra_deg = 0
     dec_deg = 0
     dist_arcmin = 2
@@ -50,13 +50,14 @@ def get_simbad(request):  # , ra_deg, dec_deg, dist_arcmin):
         data = json.loads(request.body.decode())
         ra_deg = data.get("ra_deg", 0)
         dec_deg = data.get("dec_deg", 0)
-        dist_arcmin = data.get("dist_arcmin", 1)
+        dist_arcmin = float(data.get("dist_arcmin", 1))
+
+    # limit query distance or we get very long timeouts
+    dist_arcmin = min(dist_arcmin, 60)
 
     coord = SkyCoord(ra_deg, dec_deg, unit=(units.deg, units.deg), frame="icrs")
     # Perform simbad query
-    raw_result_table = Simbad.query_region(
-        coord, radius=float(dist_arcmin) * units.arcmin
-    )
+    raw_result_table = Simbad.query_region(coord, radius=dist_arcmin * units.arcmin)
     simbad_result_table = []
     # Reformat the result into the format we want
     if raw_result_table:
@@ -93,12 +94,16 @@ def cone_search(request):
         exclude = data.get("exclude_id", None)
         project = data.get("project", None)
 
-        # coord = SkyCoord(ra_deg, dec_deg, unit=(units.deg, units.deg), frame="icrs")
-
         # Find nearby candidates
         table = models.Candidate.objects
+
+        # Restrict project if given
         if project:
             table = table.filter(project__name=project)
+
+        # if we are given a candidate ID then exclude it from the results
+        if exclude:
+            table = table.exclude(id=exclude)
 
         table = (
             table.filter(
@@ -112,19 +117,18 @@ def cone_search(request):
                     )
                 )
             )
-            .annotate(
+            .annotate(  # do the distance calcs in the db
                 sep=Q3CDist(
                     ra1=F("ra_deg"),
                     dec1=F("dec_deg"),
                     ra2=ra_deg,
                     dec2=dec_deg,
                 )
-                * 60
+                * 60  # arcsec -> degrees
             )
             .order_by("sep")
         )
-        if exclude:
-            table = table.exclude(id=exclude)
+
         table = table.values()
     else:
         table = []
@@ -133,6 +137,10 @@ def cone_search(request):
         "candidate_app/cone_search_table.html",
         context={"table": table},
     )
+
+
+def cone_search_pulsars(request):
+    return
 
 
 @login_required
