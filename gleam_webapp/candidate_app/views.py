@@ -140,7 +140,57 @@ def cone_search(request):
 
 
 def cone_search_pulsars(request):
-    return
+    if request.method == "POST":
+        data = json.loads(request.body.decode())
+        ra_hms = data.get("ra_hms", "00:00:00")
+        dec_dms = data.get("dec_dms", "00:00:00")
+        dist_arcmin = float(data.get("dist_arcmin", 1))
+        # Perform atnf query
+        atnf_query = psrqpy.QueryATNF(
+            loadfromdb=psrqpy.CACHEDIR + "/psrcat.db",
+            coord1=ra_hms,
+            coord2=dec_dms,
+            radius=dist_arcmin / 60,
+            params=["PSRJ", "NAME", "P0", "DM", "S400", "RAJ", "DECJ"],
+        ).pandas
+        table = []
+
+        # Reformat the result into the format we want
+        if atnf_query is not None:
+            cand_coord = SkyCoord(ra=ra_hms, dec=dec_dms, unit=(units.hour, units.deg))
+            for _, pulsar in atnf_query.iterrows():
+                # check for psrqpy missing data
+                if "PSRJ" in pulsar.keys():
+                    name = pulsar["PSRJ"]
+                elif "NAME" in pulsar.keys():
+                    name = pulsar["NAME"]
+                else:
+                    name = None
+                atnf_coord = SkyCoord(
+                    pulsar["RAJ"],
+                    pulsar["DECJ"],
+                    unit=(units.hour, units.deg),
+                    frame="icrs",
+                )
+                sep = cand_coord.separation(atnf_coord).arcminute
+                table.append(
+                    {
+                        "name": name,
+                        "period": pulsar["P0"],
+                        "dm": pulsar["DM"],
+                        "s400": pulsar["S400"],
+                        "sep": sep,
+                    }
+                )
+
+    else:
+        table = []
+
+    return render(
+        request,
+        "candidate_app/atnf_pulsar_table.html",
+        context={"table": table},
+    )
 
 
 @login_required

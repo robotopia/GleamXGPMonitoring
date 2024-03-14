@@ -62,8 +62,36 @@
     }
   }
 
+  async function getPulsars(){
+    try{
+        let mydiv = document.getElementById('pulsarlocator');
+        let arcmin = document.getElementById('arcmin').value
+
+        console.log(mydiv);
+        console.log(`Searching within ${arcmin} arcmin of {{candidate.ra_deg}} {{candidate.dec_deg}}`);
+
+        mydiv.innerHTML = "<p>Finding nearby candiates ...</p>";
+
+        const response = await fetch('/cone_search_pulsars/', {
+          method:'POST',
+          headers: {'X-CSRFToken': '{{csrf_token }}'},
+          body: JSON.stringify({
+            ra_deg: '{{ candidate.ra_hms }}',
+            dec_deg: '{{ candidate.dec_dms }}',
+            dist_arcmin: arcmin,
+          })
+        });
+        const data = await response.text();
+        console.log(data);
+        mydiv.innerHTML = data;
+    }
+    catch(error){
+        console.log(error);
+    }
+  }
   document.addEventListener('DOMContentLoaded', getSimbad)
   document.addEventListener('DOMContentLoaded', getNearest)
+  document.addEventListener('DOMContentLoaded', getPulsars)
 
 
 </script>
@@ -223,7 +251,10 @@
   </div>
 
   <div class="col">
-    <h4>ATNF pulsars:</h4>
+    <div id="pulsarlocator">
+      <p>Loading ... </p>
+    </div>
+    <!-- <h4>ATNF pulsars:</h4>
       <table class="fl-table">
         <tr>
           <th>Name</th>
@@ -243,7 +274,7 @@
         {% empty %}
         <tr><td>No Sources found</td></tr>
         {% endfor %}
-      </table>
+      </table> -->
   </div>
 
   <!-- <div class="col-3">
