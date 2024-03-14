@@ -100,24 +100,28 @@ def cone_search(request):
         if project:
             table = table.filter(project__name=project)
 
-        table = table.filter(
-            Q(
-                Q3CRadialQuery(
-                    center_ra=ra_deg,
-                    center_dec=dec_deg,
-                    ra_col="ra_deg",
-                    dec_col="dec_deg",
-                    radius=float(dist_arcmin),  # / 60.0,
+        table = (
+            table.filter(
+                Q(
+                    Q3CRadialQuery(
+                        center_ra=ra_deg,
+                        center_dec=dec_deg,
+                        ra_col="ra_deg",
+                        dec_col="dec_deg",
+                        radius=float(dist_arcmin) / 60.0,
+                    )
                 )
             )
-        ).annotate(
-            sep=Q3CDist(
-                ra1=F("ra_deg"),
-                dec1=F("dec_deg"),
-                ra2=ra_deg,
-                dec2=dec_deg,
+            .annotate(
+                sep=Q3CDist(
+                    ra1=F("ra_deg"),
+                    dec1=F("dec_deg"),
+                    ra2=ra_deg,
+                    dec2=dec_deg,
+                )
+                * 60
             )
-            / 60
+            .order_by("sep")
         )
         if exclude:
             table = table.exclude(id=exclude)
