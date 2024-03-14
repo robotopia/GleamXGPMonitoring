@@ -16,12 +16,12 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Avg, Count, Q
+from django.db.models import Avg, Count, Q, F
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
-from django_q3c.expressions import Q3CRadialQuery
+from django_q3c.expressions import Q3CRadialQuery, Q3CDist
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
@@ -59,7 +59,7 @@ def get_simbad(request):  # , ra_deg, dec_deg, dist_arcmin):
     )
     simbad_result_table = []
     # Reformat the result into the format we want
-    if raw_result_table is not None:
+    if raw_result_table:
         for result in raw_result_table:
             search_term = result["MAIN_ID"].replace("+", "%2B").replace(" ", "+")
             simbad_coord = SkyCoord(
@@ -84,6 +84,53 @@ def get_simbad(request):  # , ra_deg, dec_deg, dist_arcmin):
     )
 
 
+def cone_search(request):
+    if request.method == "POST":
+        data = json.loads(request.body.decode())
+        ra_deg = data.get("ra_deg", 0)
+        dec_deg = data.get("dec_deg", 0)
+        dist_arcmin = data.get("dist_arcmin", 1)
+        exclude = data.get("exclude_id", None)
+        project = data.get("project", None)
+
+        # coord = SkyCoord(ra_deg, dec_deg, unit=(units.deg, units.deg), frame="icrs")
+
+        # Find nearby candidates
+        table = models.Candidate.objects
+        if project:
+            table = table.filter(project__name=project)
+
+        table = table.filter(
+            Q(
+                Q3CRadialQuery(
+                    center_ra=ra_deg,
+                    center_dec=dec_deg,
+                    ra_col="ra_deg",
+                    dec_col="dec_deg",
+                    radius=float(dist_arcmin),  # / 60.0,
+                )
+            )
+        ).annotate(
+            sep=Q3CDist(
+                ra1=F("ra_deg"),
+                dec1=F("dec_deg"),
+                ra2=ra_deg,
+                dec2=dec_deg,
+            )
+            / 60
+        )
+        if exclude:
+            table = table.exclude(id=exclude)
+        table = table.values()
+    else:
+        table = []
+    return render(
+        request,
+        "candidate_app/cone_search_table.html",
+        context={"table": table},
+    )
+
+
 @login_required
 def candidate_rating(request, id, arcmin=2):
     candidate = get_object_or_404(models.Candidate, id=id)
@@ -102,67 +149,6 @@ def candidate_rating(request, id, arcmin=2):
         sep_arcmin = None
     else:
         sep_arcmin = candidate.nks_sep_deg * 60
-
-    # cand_coord = SkyCoord(
-    #     candidate.ra_deg, candidate.dec_deg, unit=(units.deg, units.deg), frame="icrs"
-    # )
-
-    # # Find nearby candidates
-    # nearby_candidates = models.Candidate.objects.filter(
-    #     Q(
-    #         Q3CRadialQuery(
-    #             center_ra=candidate.ra_deg,
-    #             center_dec=candidate.dec_deg,
-    #             ra_col="ra_deg",
-    #             dec_col="dec_deg",
-    #             radius=sep_arcmin / 60.0,
-    #         )
-    #     )
-    # ).exclude(id=candidate.id)
-    # nearby_candidates_table = []
-    # for nearby_cand in nearby_candidates:
-    #     # Calculate seperation
-    #     nearby_coord = SkyCoord(
-    #         nearby_cand.ra_deg,
-    #         nearby_cand.dec_deg,
-    #         unit=(units.deg, units.deg),
-    #         frame="icrs",
-    #     )
-    #     sep = cand_coord.separation(nearby_coord).arcminute
-    #     nearby_candidates_table.append(
-    #         {
-    #             "id": nearby_cand.id,
-    #             "ra": nearby_cand.ra_hms,
-    #             "dec": nearby_cand.dec_dms,
-    #             "sep": sep,
-    #         }
-    #     )
-    nearby_candidates_table = []
-
-    # # Perform simbad query
-    # raw_result_table = Simbad.query_region(
-    #     cand_coord, radius=float(arcmin) * units.arcmin
-    # )
-    # simbad_result_table = []
-    # # Reformat the result into the format we want
-    # if raw_result_table is not None:
-    #     for result in raw_result_table:
-    #         search_term = result["MAIN_ID"].replace("+", "%2B").replace(" ", "+")
-    #         simbad_coord = SkyCoord(
-    #             result["RA"], result["DEC"], unit=(units.hour, units.deg), frame="icrs"
-    #         )
-    #         ra = simbad_coord.ra.to_string(unit=units.hour, sep=":")[:11]
-    #         dec = simbad_coord.dec.to_string(unit=units.deg, sep=":")[:11]
-    #         sep = cand_coord.separation(simbad_coord).arcminute
-    #         simbad_result_table.append(
-    #             {
-    #                 "name": result["MAIN_ID"],
-    #                 "search_term": search_term,
-    #                 "ra": ra,
-    #                 "dec": dec,
-    #                 "sep": sep,
-    #             }
-    #         )
 
     # # Perform atnf query
     # atnf_query = psrqpy.QueryATNF(
@@ -223,7 +209,7 @@ def candidate_rating(request, id, arcmin=2):
         "rating": rating,
         "time": time,
         "sep_arcmin": sep_arcmin,
-        "nearby_candidates_table": nearby_candidates_table,
+        # "nearby_candidates_table": nearby_candidates_table,
         # "simbad_result_table": simbad_result_table,
         "atnf_result_table": atnf_result_table,
         "arcmin_search": arcmin,

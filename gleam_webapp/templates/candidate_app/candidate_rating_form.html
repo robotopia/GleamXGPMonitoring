@@ -3,36 +3,69 @@
 {% block head %}
 <script>
   async function getSimbad(){
-  try{
-      let mydiv = document.getElementById('simbadlocator');
-      let arcmin = document.getElementById('arcmin').value
+    try{
+        let mydiv = document.getElementById('simbadlocator');
+        let arcmin = document.getElementById('arcmin').value
 
-      console.log(mydiv);
-      console.log(`Searching within ${arcmin} arcmin of {{candidate.ra_deg}} {{candidate.dec_deg}}`);
+        console.log(mydiv);
+        console.log(`Searching within ${arcmin} arcmin of {{candidate.ra_deg}} {{candidate.dec_deg}}`);
 
-      mydiv.innerHTML = "<p>Loading SIMBAD search data ...</p>";
+        mydiv.innerHTML = "<p>Loading SIMBAD search data ...</p>";
 
-      const response = await fetch('/simbad_table/', {
-        method:'POST',
-        headers: {
-            'X-CSRFToken': '{{csrf_token }}',
-        },
-        body: JSON.stringify({
-          ra_deg:{{ candidate.ra_deg }},
-          dec_deg: {{ candidate.dec_deg }},
-          dist_arcmin: arcmin
-        })
-      });
-      const data = await response.text();
-      console.log(data);
-      mydiv.innerHTML = data;
+        const response = await fetch('/simbad_table/', {
+          method:'POST',
+          headers: {
+              'X-CSRFToken': '{{csrf_token }}',
+          },
+          body: JSON.stringify({
+            ra_deg:{{ candidate.ra_deg }},
+            dec_deg: {{ candidate.dec_deg }},
+            dist_arcmin: arcmin
+          })
+        });
+        const data = await response.text();
+        console.log(data);
+        mydiv.innerHTML = data;
+    }
+    catch(error){
+        console.log(error);
+    }
   }
-  catch(error){
-      console.log(error);
+
+  async function getNearest(){
+    try{
+        let mydiv = document.getElementById('nearestlocator');
+        let arcmin = document.getElementById('arcmin').value
+
+        console.log(mydiv);
+        console.log(`Searching within ${arcmin} arcmin of {{candidate.ra_deg}} {{candidate.dec_deg}}`);
+
+        mydiv.innerHTML = "<p>Finding nearby candiates ...</p>";
+
+        const response = await fetch('/cone_search/', {
+          method:'POST',
+          headers: {'X-CSRFToken': '{{csrf_token }}'},
+          body: JSON.stringify({
+            ra_deg: {{ candidate.ra_deg }},
+            dec_deg: {{ candidate.dec_deg }},
+            dist_arcmin: arcmin,
+            exclude_id: {{ candidate.id }},
+            project: '{{ candidate.project }}'
+          })
+        });
+        const data = await response.text();
+        console.log(data);
+        mydiv.innerHTML = data;
+    }
+    catch(error){
+        console.log(error);
+    }
   }
-  
-  }
+
   document.addEventListener('DOMContentLoaded', getSimbad)
+  document.addEventListener('DOMContentLoaded', getNearest)
+
+
 </script>
 {% endblock head  %}
 
@@ -178,7 +211,10 @@
   </div>
 
   <div class="col">
-    <h4>Nearby Candidates:</h4>
+    <div id="nearestlocator">
+      <p>Loading ... </p>
+    </div>
+    <!-- <h4>Nearby Candidates:</h4>
     <table class="fl-table">
       <tr>
         <th>ID</th>
@@ -196,7 +232,7 @@
       {% empty %}
       <tr><td>No Sources found</td></tr>
       {% endfor %}
-    </table>
+    </table> -->
   </div>
 
   <div class="col">
