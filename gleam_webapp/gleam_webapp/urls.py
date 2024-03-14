@@ -51,6 +51,11 @@ urlpatterns = [
         "download_page/",
         TemplateView.as_view(template_name="candidate_app/download_page.html"),
     ),
+    path(
+        "simbad_table/",
+        views.get_simbad,
+        name="simbad_table",
+    ),
 ]
 
 # allow media files to be linked and viewed directly

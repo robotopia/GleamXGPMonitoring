@@ -1,5 +1,6 @@
 # from mwa_trigger.parse_xml import parsed_VOEvent
 import csv
+import json
 import logging
 import random
 from datetime import datetime, timedelta
@@ -41,6 +42,48 @@ def home_page(request):
     return render(request, "candidate_app/home_page.html")
 
 
+def get_simbad(request):  # , ra_deg, dec_deg, dist_arcmin):
+    ra_deg = 0
+    dec_deg = 0
+    dist_arcmin = 2
+    if request.method == "POST":
+        data = json.loads(request.body.decode())
+        ra_deg = data.get("ra_deg", 0)
+        dec_deg = data.get("dec_deg", 0)
+        dist_arcmin = data.get("dist_arcmin", 1)
+
+    coord = SkyCoord(ra_deg, dec_deg, unit=(units.deg, units.deg), frame="icrs")
+    # Perform simbad query
+    raw_result_table = Simbad.query_region(
+        coord, radius=float(dist_arcmin) * units.arcmin
+    )
+    simbad_result_table = []
+    # Reformat the result into the format we want
+    if raw_result_table is not None:
+        for result in raw_result_table:
+            search_term = result["MAIN_ID"].replace("+", "%2B").replace(" ", "+")
+            simbad_coord = SkyCoord(
+                result["RA"], result["DEC"], unit=(units.hour, units.deg), frame="icrs"
+            )
+            ra = simbad_coord.ra.to_string(unit=units.hour, sep=":")[:11]
+            dec = simbad_coord.dec.to_string(unit=units.deg, sep=":")[:11]
+            sep = coord.separation(simbad_coord).arcminute
+            simbad_result_table.append(
+                {
+                    "name": result["MAIN_ID"],
+                    "search_term": search_term,
+                    "ra": ra,
+                    "dec": dec,
+                    "sep": sep,
+                }
+            )
+    return render(
+        request,
+        "candidate_app/simbad_table.html",
+        context={"simbad_result_table": simbad_result_table},
+    )
+
+
 @login_required
 def candidate_rating(request, id, arcmin=2):
     candidate = get_object_or_404(models.Candidate, id=id)
@@ -60,101 +103,103 @@ def candidate_rating(request, id, arcmin=2):
     else:
         sep_arcmin = candidate.nks_sep_deg * 60
 
-    cand_coord = SkyCoord(
-        candidate.ra_deg, candidate.dec_deg, unit=(units.deg, units.deg), frame="icrs"
-    )
+    # cand_coord = SkyCoord(
+    #     candidate.ra_deg, candidate.dec_deg, unit=(units.deg, units.deg), frame="icrs"
+    # )
 
-    # Find nearby candidates
-    nearby_candidates = models.Candidate.objects.filter(
-        Q(
-            Q3CRadialQuery(
-                center_ra=candidate.ra_deg,
-                center_dec=candidate.dec_deg,
-                ra_col="ra_deg",
-                dec_col="dec_deg",
-                radius=sep_arcmin / 60.0,
-            )
-        )
-    ).exclude(id=candidate.id)
+    # # Find nearby candidates
+    # nearby_candidates = models.Candidate.objects.filter(
+    #     Q(
+    #         Q3CRadialQuery(
+    #             center_ra=candidate.ra_deg,
+    #             center_dec=candidate.dec_deg,
+    #             ra_col="ra_deg",
+    #             dec_col="dec_deg",
+    #             radius=sep_arcmin / 60.0,
+    #         )
+    #     )
+    # ).exclude(id=candidate.id)
+    # nearby_candidates_table = []
+    # for nearby_cand in nearby_candidates:
+    #     # Calculate seperation
+    #     nearby_coord = SkyCoord(
+    #         nearby_cand.ra_deg,
+    #         nearby_cand.dec_deg,
+    #         unit=(units.deg, units.deg),
+    #         frame="icrs",
+    #     )
+    #     sep = cand_coord.separation(nearby_coord).arcminute
+    #     nearby_candidates_table.append(
+    #         {
+    #             "id": nearby_cand.id,
+    #             "ra": nearby_cand.ra_hms,
+    #             "dec": nearby_cand.dec_dms,
+    #             "sep": sep,
+    #         }
+    #     )
     nearby_candidates_table = []
-    for nearby_cand in nearby_candidates:
-        # Calculate seperation
-        nearby_coord = SkyCoord(
-            nearby_cand.ra_deg,
-            nearby_cand.dec_deg,
-            unit=(units.deg, units.deg),
-            frame="icrs",
-        )
-        sep = cand_coord.separation(nearby_coord).arcminute
-        nearby_candidates_table.append(
-            {
-                "id": nearby_cand.id,
-                "ra": nearby_cand.ra_hms,
-                "dec": nearby_cand.dec_dms,
-                "sep": sep,
-            }
-        )
 
-    # Perform simbad query
-    raw_result_table = Simbad.query_region(
-        cand_coord, radius=float(arcmin) * units.arcmin
-    )
-    simbad_result_table = []
-    # Reformat the result into the format we want
-    if raw_result_table is not None:
-        for result in raw_result_table:
-            search_term = result["MAIN_ID"].replace("+", "%2B").replace(" ", "+")
-            simbad_coord = SkyCoord(
-                result["RA"], result["DEC"], unit=(units.hour, units.deg), frame="icrs"
-            )
-            ra = simbad_coord.ra.to_string(unit=units.hour, sep=":")[:11]
-            dec = simbad_coord.dec.to_string(unit=units.deg, sep=":")[:11]
-            sep = cand_coord.separation(simbad_coord).arcminute
-            simbad_result_table.append(
-                {
-                    "name": result["MAIN_ID"],
-                    "search_term": search_term,
-                    "ra": ra,
-                    "dec": dec,
-                    "sep": sep,
-                }
-            )
+    # # Perform simbad query
+    # raw_result_table = Simbad.query_region(
+    #     cand_coord, radius=float(arcmin) * units.arcmin
+    # )
+    # simbad_result_table = []
+    # # Reformat the result into the format we want
+    # if raw_result_table is not None:
+    #     for result in raw_result_table:
+    #         search_term = result["MAIN_ID"].replace("+", "%2B").replace(" ", "+")
+    #         simbad_coord = SkyCoord(
+    #             result["RA"], result["DEC"], unit=(units.hour, units.deg), frame="icrs"
+    #         )
+    #         ra = simbad_coord.ra.to_string(unit=units.hour, sep=":")[:11]
+    #         dec = simbad_coord.dec.to_string(unit=units.deg, sep=":")[:11]
+    #         sep = cand_coord.separation(simbad_coord).arcminute
+    #         simbad_result_table.append(
+    #             {
+    #                 "name": result["MAIN_ID"],
+    #                 "search_term": search_term,
+    #                 "ra": ra,
+    #                 "dec": dec,
+    #                 "sep": sep,
+    #             }
+    #         )
 
-    # Perform atnf query
-    atnf_query = psrqpy.QueryATNF(
-        loadfromdb=psrqpy.CACHEDIR + "/psrcat.db",
-        coord1=candidate.ra_hms,
-        coord2=candidate.dec_dms,
-        radius=float(arcmin) / 60,
-        params=["PSRJ", "NAME", "P0", "DM", "S400", "RAJ", "DECJ"],
-    ).pandas
+    # # Perform atnf query
+    # atnf_query = psrqpy.QueryATNF(
+    #     loadfromdb=psrqpy.CACHEDIR + "/psrcat.db",
+    #     coord1=candidate.ra_hms,
+    #     coord2=candidate.dec_dms,
+    #     radius=float(arcmin) / 60,
+    #     params=["PSRJ", "NAME", "P0", "DM", "S400", "RAJ", "DECJ"],
+    # ).pandas
+    # atnf_result_table = []
+    # # Reformat the result into the format we want
+    # if atnf_query is not None:
+    #     for _, pulsar in atnf_query.iterrows():
+    #         # check for psrqpy missing data
+    #         if "PSRJ" in pulsar.keys():
+    #             name = pulsar["PSRJ"]
+    #         elif "NAME" in pulsar.keys():
+    #             name = pulsar["NAME"]
+    #         else:
+    #             name = None
+    #         atnf_coord = SkyCoord(
+    #             pulsar["RAJ"],
+    #             pulsar["DECJ"],
+    #             unit=(units.hour, units.deg),
+    #             frame="icrs",
+    #         )
+    #         sep = cand_coord.separation(atnf_coord).arcminute
+    #         atnf_result_table.append(
+    #             {
+    #                 "name": name,
+    #                 "period": pulsar["P0"],
+    #                 "dm": pulsar["DM"],
+    #                 "s400": pulsar["S400"],
+    #                 "sep": sep,
+    #             }
+    #         )
     atnf_result_table = []
-    # Reformat the result into the format we want
-    if atnf_query is not None:
-        for _, pulsar in atnf_query.iterrows():
-            # check for psrqpy missing data
-            if "PSRJ" in pulsar.keys():
-                name = pulsar["PSRJ"]
-            elif "NAME" in pulsar.keys():
-                name = pulsar["NAME"]
-            else:
-                name = None
-            atnf_coord = SkyCoord(
-                pulsar["RAJ"],
-                pulsar["DECJ"],
-                unit=(units.hour, units.deg),
-                frame="icrs",
-            )
-            sep = cand_coord.separation(atnf_coord).arcminute
-            atnf_result_table.append(
-                {
-                    "name": name,
-                    "period": pulsar["P0"],
-                    "dm": pulsar["DM"],
-                    "s400": pulsar["S400"],
-                    "sep": sep,
-                }
-            )
 
     # Perform voevent database query
     # https://voeventdbremote.readthedocs.io/en/latest/notebooks/00_quickstart.html
@@ -171,7 +216,6 @@ def candidate_rating(request, id, arcmin=2):
     #     # FilterKeys.authored_until: time.tt.datetime + timedelta(days=1),
     #     FilterKeys.cone: cone,
     # }
-
     voevents = []
 
     context = {
@@ -180,7 +224,7 @@ def candidate_rating(request, id, arcmin=2):
         "time": time,
         "sep_arcmin": sep_arcmin,
         "nearby_candidates_table": nearby_candidates_table,
-        "simbad_result_table": simbad_result_table,
+        # "simbad_result_table": simbad_result_table,
         "atnf_result_table": atnf_result_table,
         "arcmin_search": arcmin,
         "cand_type_choices": tuple(
