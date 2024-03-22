@@ -256,3 +256,24 @@ class Rating(models.Model):
 class xml_ivorns(models.Model):
     id = models.AutoField(primary_key=True)
     ivorn = models.CharField(max_length=128, unique=True)
+
+
+class ATNFPulsar(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    name = models.CharField(
+        verbose_name="Pulsar Name", max_length=32, blank=False, unique=True
+    )
+    decj = models.FloatField(verbose_name="Declination epoch (J2000, deg)")
+    raj = models.FloatField(verbose_name="Right Ascension epoch (J2000, deg)")
+    DM = models.FloatField(
+        verbose_name="Dispersion Measure (cm^-3 pc)", blank=True, null=True
+    )
+    p0 = models.FloatField(
+        verbose_name="Barycentric period of the pulsar (s)", blank=True, null=True
+    )
+    s400 = models.FloatField(
+        verbose_name="Mean flux density at 400 MHz (mJy)", blank=True, null=True
+    )
+
+    def __str__(self):
+        return f"{self.name}"

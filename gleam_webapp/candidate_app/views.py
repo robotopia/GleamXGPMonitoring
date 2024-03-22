@@ -15,12 +15,12 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Avg, Count, Q
+from django.db.models import Avg, Count, Q, F
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
-from django_q3c.expressions import Q3CRadialQuery
+from django_q3c.expressions import Q3CRadialQuery, Q3CDist
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
@@ -121,40 +121,30 @@ def candidate_rating(request, id, arcmin=2):
             )
 
     # Perform atnf query
-    atnf_query = psrqpy.QueryATNF(
-        loadfromdb=psrqpy.CACHEDIR + "/psrcat.db",
-        coord1=candidate.ra_hms,
-        coord2=candidate.dec_dms,
-        radius=float(arcmin) / 60,
-        params=["PSRJ", "NAME", "P0", "DM", "S400", "RAJ", "DECJ"],
-    ).pandas
-    atnf_result_table = []
-    # Reformat the result into the format we want
-    if atnf_query is not None:
-        for _, pulsar in atnf_query.iterrows():
-            # check for psrqpy missing data
-            if "PSRJ" in pulsar.keys():
-                name = pulsar["PSRJ"]
-            elif "NAME" in pulsar.keys():
-                name = pulsar["NAME"]
-            else:
-                name = None
-            atnf_coord = SkyCoord(
-                pulsar["RAJ"],
-                pulsar["DECJ"],
-                unit=(units.hour, units.deg),
-                frame="icrs",
+    atnf_table = (
+        models.ATNFPulsar.objects.filter(
+            Q(
+                Q3CRadialQuery(
+                    center_ra=candidate.ra_deg,
+                    center_dec=candidate.dec_deg,
+                    ra_col="raj",
+                    dec_col="decj",
+                    radius=sep_arcmin / 60.0,
+                )
             )
-            sep = cand_coord.separation(atnf_coord).arcminute
-            atnf_result_table.append(
-                {
-                    "name": name,
-                    "period": pulsar["P0"],
-                    "dm": pulsar["DM"],
-                    "s400": pulsar["S400"],
-                    "sep": sep,
-                }
+        )
+        .annotate(  # do the distance calcs in the db
+            sep=Q3CDist(
+                ra1=F("raj"),
+                dec1=F("decj"),
+                ra2=candidate.ra_deg,
+                dec2=candidate.ra_deg,
             )
+            * 60  # arcsec -> degrees
+        )
+        .order_by("sep")
+        .values()
+    )
 
     # Perform voevent database query
     # https://voeventdbremote.readthedocs.io/en/latest/notebooks/00_quickstart.html
@@ -181,7 +171,7 @@ def candidate_rating(request, id, arcmin=2):
         "sep_arcmin": sep_arcmin,
         "nearby_candidates_table": nearby_candidates_table,
         "simbad_result_table": simbad_result_table,
-        "atnf_result_table": atnf_result_table,
+        "atnf_result_table": atnf_table,
         "arcmin_search": arcmin,
         "cand_type_choices": tuple(
             (c.name, c.name) for c in models.Classification.objects.all()
