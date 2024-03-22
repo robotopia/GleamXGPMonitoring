@@ -142,8 +142,9 @@ def cone_search(request):
 def cone_search_pulsars(request):
     if request.method == "POST":
         data = json.loads(request.body.decode())
-        ra_deg = data.get("ra_deg", None)
-        dec_deg = data.get("dec_deg", None)
+        print(data)
+        ra_deg = float(data.get("ra_deg", 0))
+        dec_deg = float(data.get("dec_deg", 0))
         dist_arcmin = float(data.get("dist_arcmin", 1))
         # Perform atnf query
         table = (
