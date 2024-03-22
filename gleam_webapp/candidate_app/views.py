@@ -142,46 +142,34 @@ def cone_search(request):
 def cone_search_pulsars(request):
     if request.method == "POST":
         data = json.loads(request.body.decode())
-        ra_hms = data.get("ra_hms", "00:00:00")
-        dec_dms = data.get("dec_dms", "00:00:00")
+        ra_deg = data.get("ra_deg", None)
+        dec_deg = data.get("dec_deg", None)
         dist_arcmin = float(data.get("dist_arcmin", 1))
         # Perform atnf query
-        atnf_query = psrqpy.QueryATNF(
-            loadfromdb=psrqpy.CACHEDIR + "/psrcat.db",
-            coord1=ra_hms,
-            coord2=dec_dms,
-            radius=dist_arcmin / 60,
-            params=["PSRJ", "NAME", "P0", "DM", "S400", "RAJ", "DECJ"],
-        ).pandas
-        table = []
-
-        # Reformat the result into the format we want
-        if atnf_query is not None:
-            cand_coord = SkyCoord(ra=ra_hms, dec=dec_dms, unit=(units.hour, units.deg))
-            for _, pulsar in atnf_query.iterrows():
-                # check for psrqpy missing data
-                if "PSRJ" in pulsar.keys():
-                    name = pulsar["PSRJ"]
-                elif "NAME" in pulsar.keys():
-                    name = pulsar["NAME"]
-                else:
-                    name = None
-                atnf_coord = SkyCoord(
-                    pulsar["RAJ"],
-                    pulsar["DECJ"],
-                    unit=(units.hour, units.deg),
-                    frame="icrs",
+        table = (
+            models.ATNFPulsar.objects.filter(
+                Q(
+                    Q3CRadialQuery(
+                        center_ra=ra_deg,
+                        center_dec=dec_deg,
+                        ra_col="raj",
+                        dec_col="decj",
+                        radius=dist_arcmin / 60.0,
+                    )
                 )
-                sep = cand_coord.separation(atnf_coord).arcminute
-                table.append(
-                    {
-                        "name": name,
-                        "period": pulsar["P0"],
-                        "dm": pulsar["DM"],
-                        "s400": pulsar["S400"],
-                        "sep": sep,
-                    }
+            )
+            .annotate(  # do the distance calcs in the db
+                sep=Q3CDist(
+                    ra1=F("raj"),
+                    dec1=F("decj"),
+                    ra2=ra_deg,
+                    dec2=dec_deg,
                 )
+                * 60  # arcsec -> degrees
+            )
+            .order_by("sep")
+            .values()
+        )
 
     else:
         table = []
@@ -212,43 +200,6 @@ def candidate_rating(request, id, arcmin=2):
     else:
         sep_arcmin = candidate.nks_sep_deg * 60
 
-    # # Perform atnf query
-    # atnf_query = psrqpy.QueryATNF(
-    #     loadfromdb=psrqpy.CACHEDIR + "/psrcat.db",
-    #     coord1=candidate.ra_hms,
-    #     coord2=candidate.dec_dms,
-    #     radius=float(arcmin) / 60,
-    #     params=["PSRJ", "NAME", "P0", "DM", "S400", "RAJ", "DECJ"],
-    # ).pandas
-    # atnf_result_table = []
-    # # Reformat the result into the format we want
-    # if atnf_query is not None:
-    #     for _, pulsar in atnf_query.iterrows():
-    #         # check for psrqpy missing data
-    #         if "PSRJ" in pulsar.keys():
-    #             name = pulsar["PSRJ"]
-    #         elif "NAME" in pulsar.keys():
-    #             name = pulsar["NAME"]
-    #         else:
-    #             name = None
-    #         atnf_coord = SkyCoord(
-    #             pulsar["RAJ"],
-    #             pulsar["DECJ"],
-    #             unit=(units.hour, units.deg),
-    #             frame="icrs",
-    #         )
-    #         sep = cand_coord.separation(atnf_coord).arcminute
-    #         atnf_result_table.append(
-    #             {
-    #                 "name": name,
-    #                 "period": pulsar["P0"],
-    #                 "dm": pulsar["DM"],
-    #                 "s400": pulsar["S400"],
-    #                 "sep": sep,
-    #             }
-    #         )
-    atnf_result_table = []
-
     # Perform voevent database query
     # https://voeventdbremote.readthedocs.io/en/latest/notebooks/00_quickstart.html
     # conesearch skycoord and angle error
@@ -271,13 +222,10 @@ def candidate_rating(request, id, arcmin=2):
         "rating": rating,
         "time": time,
         "sep_arcmin": sep_arcmin,
-        # "nearby_candidates_table": nearby_candidates_table,
-        # "simbad_result_table": simbad_result_table,
-        "atnf_result_table": atnf_result_table,
         "arcmin_search": arcmin,
         "cand_type_choices": tuple(
             (c.name, c.name) for c in models.Classification.objects.all()
-        ),  # models.CAND_TYPE_CHOICES,
+        ),
         "voevents": voevents,
     }
     return render(request, "candidate_app/candidate_rating_form.html", context)

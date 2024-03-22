@@ -8,11 +8,6 @@ django-rest-auth==0.9.5
 git+https://dev.aao.org.au/paul.hancock/django-q3c.git
 # django-q3c==0.2  # for now use my fork above
 gunicorn==21.2.0
-psrqpy==1.2.7
 psycopg2-binary==2.9.9
 voevent-parse==1.0.3
 voeventdb.remote==1.1.0
-
-# matplotlib==3.5.2
-# TODO: remove this dependency as it's rather bulky and we only use one file!
-# mwa_trigger @ git+https://github.com/ADACS-Australia/mwa_trigger.git
