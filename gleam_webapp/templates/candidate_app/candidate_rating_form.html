@@ -26,8 +26,7 @@
         const data = await response.text();
         console.log(data);
         mydiv.innerHTML = data;
-    }
-    catch(error){
+    }catch(error){
         console.log(error);
     }
   }
@@ -214,15 +213,11 @@
 
 <div class="row">
   <div class="col-12 justify-content-center ">
-    <!-- <form action="{% url 'candidate_update_catalogue_query' id=candidate.id %}" method="post"> -->
-      {% csrf_token %}
-      <p class="h4">Search nearby within
-        <input id="arcmin" type="text"  name="arcmin" value="{{arcmin_search}}" size="2">
-        arcmin.
-        <button class="btn btn-primary" onclick="getAll()">Search</button>
-        <!-- <input class="btn btn-primary" type="submit" value="Submit"> -->
-      </p>
-    <!-- </form> -->
+    <p class="h4">Search nearby within
+      <input id="arcmin" type="text"  name="arcmin" value="{{arcmin_search}}" size="2">
+      arcmin
+      <button class="btn btn-primary" onclick="getAll()">Search</button>
+    </p>
   </div>
 </div>
 
