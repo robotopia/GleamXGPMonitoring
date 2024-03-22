@@ -1,5 +1,6 @@
 # from mwa_trigger.parse_xml import parsed_VOEvent
 import csv
+import json
 import logging
 import random
 from datetime import datetime, timedelta
@@ -41,6 +42,146 @@ def home_page(request):
     return render(request, "candidate_app/home_page.html")
 
 
+def cone_search_simbad(request):  # , ra_deg, dec_deg, dist_arcmin):
+    ra_deg = 0
+    dec_deg = 0
+    dist_arcmin = 2
+    if request.method == "POST":
+        data = json.loads(request.body.decode())
+        ra_deg = data.get("ra_deg", 0)
+        dec_deg = data.get("dec_deg", 0)
+        dist_arcmin = float(data.get("dist_arcmin", 1))
+
+    # limit query distance or we get very long timeouts
+    dist_arcmin = min(dist_arcmin, 60)
+
+    coord = SkyCoord(ra_deg, dec_deg, unit=(units.deg, units.deg), frame="icrs")
+    # Perform simbad query
+    raw_result_table = Simbad.query_region(coord, radius=dist_arcmin * units.arcmin)
+    simbad_result_table = []
+    # Reformat the result into the format we want
+    if raw_result_table:
+        for result in raw_result_table:
+            search_term = result["MAIN_ID"].replace("+", "%2B").replace(" ", "+")
+            simbad_coord = SkyCoord(
+                result["RA"], result["DEC"], unit=(units.hour, units.deg), frame="icrs"
+            )
+            ra = simbad_coord.ra.to_string(unit=units.hour, sep=":")[:11]
+            dec = simbad_coord.dec.to_string(unit=units.deg, sep=":")[:11]
+            sep = coord.separation(simbad_coord).arcminute
+            simbad_result_table.append(
+                {
+                    "name": result["MAIN_ID"],
+                    "search_term": search_term,
+                    "ra": ra,
+                    "dec": dec,
+                    "sep": sep,
+                }
+            )
+    return render(
+        request,
+        "candidate_app/simbad_table.html",
+        context={"simbad_result_table": simbad_result_table},
+    )
+
+
+def cone_search(request):
+    if request.method == "POST":
+        data = json.loads(request.body.decode())
+        ra_deg = data.get("ra_deg", 0)
+        dec_deg = data.get("dec_deg", 0)
+        dist_arcmin = data.get("dist_arcmin", 1)
+        exclude = data.get("exclude_id", None)
+        project = data.get("project", None)
+
+        # Find nearby candidates
+        table = models.Candidate.objects
+
+        # Restrict project if given
+        if project:
+            table = table.filter(project__name=project)
+
+        # if we are given a candidate ID then exclude it from the results
+        if exclude:
+            table = table.exclude(id=exclude)
+
+        table = (
+            table.filter(
+                Q(
+                    Q3CRadialQuery(
+                        center_ra=ra_deg,
+                        center_dec=dec_deg,
+                        ra_col="ra_deg",
+                        dec_col="dec_deg",
+                        radius=float(dist_arcmin) / 60.0,
+                    )
+                )
+            )
+            .annotate(  # do the distance calcs in the db
+                sep=Q3CDist(
+                    ra1=F("ra_deg"),
+                    dec1=F("dec_deg"),
+                    ra2=ra_deg,
+                    dec2=dec_deg,
+                )
+                * 60  # arcsec -> degrees
+            )
+            .order_by("sep")
+        )
+
+        table = table.values()
+    else:
+        table = []
+    return render(
+        request,
+        "candidate_app/cone_search_table.html",
+        context={"table": table},
+    )
+
+
+def cone_search_pulsars(request):
+    if request.method == "POST":
+        data = json.loads(request.body.decode())
+        print(data)
+        ra_deg = float(data.get("ra_deg", 0))
+        dec_deg = float(data.get("dec_deg", 0))
+        dist_arcmin = float(data.get("dist_arcmin", 1))
+        # Perform atnf query
+        table = (
+            models.ATNFPulsar.objects.filter(
+                Q(
+                    Q3CRadialQuery(
+                        center_ra=ra_deg,
+                        center_dec=dec_deg,
+                        ra_col="raj",
+                        dec_col="decj",
+                        radius=dist_arcmin / 60.0,
+                    )
+                )
+            )
+            .annotate(  # do the distance calcs in the db
+                sep=Q3CDist(
+                    ra1=F("raj"),
+                    dec1=F("decj"),
+                    ra2=ra_deg,
+                    dec2=dec_deg,
+                )
+                * 60  # arcsec -> degrees
+            )
+            .order_by("sep")
+            .values()
+        )
+
+    else:
+        table = []
+
+    return render(
+        request,
+        "candidate_app/atnf_pulsar_table.html",
+        context={"table": table},
+    )
+
+
 @login_required
 def candidate_rating(request, id, arcmin=2):
     candidate = get_object_or_404(models.Candidate, id=id)
@@ -60,92 +201,6 @@ def candidate_rating(request, id, arcmin=2):
     else:
         sep_arcmin = candidate.nks_sep_deg * 60
 
-    cand_coord = SkyCoord(
-        candidate.ra_deg, candidate.dec_deg, unit=(units.deg, units.deg), frame="icrs"
-    )
-
-    # Find nearby candidates
-    nearby_candidates = models.Candidate.objects.filter(
-        Q(
-            Q3CRadialQuery(
-                center_ra=candidate.ra_deg,
-                center_dec=candidate.dec_deg,
-                ra_col="ra_deg",
-                dec_col="dec_deg",
-                radius=sep_arcmin / 60.0,
-            )
-        )
-    ).exclude(id=candidate.id)
-    nearby_candidates_table = []
-    for nearby_cand in nearby_candidates:
-        # Calculate seperation
-        nearby_coord = SkyCoord(
-            nearby_cand.ra_deg,
-            nearby_cand.dec_deg,
-            unit=(units.deg, units.deg),
-            frame="icrs",
-        )
-        sep = cand_coord.separation(nearby_coord).arcminute
-        nearby_candidates_table.append(
-            {
-                "id": nearby_cand.id,
-                "ra": nearby_cand.ra_hms,
-                "dec": nearby_cand.dec_dms,
-                "sep": sep,
-            }
-        )
-
-    # Perform simbad query
-    raw_result_table = Simbad.query_region(
-        cand_coord, radius=float(arcmin) * units.arcmin
-    )
-    simbad_result_table = []
-    # Reformat the result into the format we want
-    if raw_result_table is not None:
-        for result in raw_result_table:
-            search_term = result["MAIN_ID"].replace("+", "%2B").replace(" ", "+")
-            simbad_coord = SkyCoord(
-                result["RA"], result["DEC"], unit=(units.hour, units.deg), frame="icrs"
-            )
-            ra = simbad_coord.ra.to_string(unit=units.hour, sep=":")[:11]
-            dec = simbad_coord.dec.to_string(unit=units.deg, sep=":")[:11]
-            sep = cand_coord.separation(simbad_coord).arcminute
-            simbad_result_table.append(
-                {
-                    "name": result["MAIN_ID"],
-                    "search_term": search_term,
-                    "ra": ra,
-                    "dec": dec,
-                    "sep": sep,
-                }
-            )
-
-    # Perform atnf query
-    atnf_table = (
-        models.ATNFPulsar.objects.filter(
-            Q(
-                Q3CRadialQuery(
-                    center_ra=candidate.ra_deg,
-                    center_dec=candidate.dec_deg,
-                    ra_col="raj",
-                    dec_col="decj",
-                    radius=sep_arcmin / 60.0,
-                )
-            )
-        )
-        .annotate(  # do the distance calcs in the db
-            sep=Q3CDist(
-                ra1=F("raj"),
-                dec1=F("decj"),
-                ra2=candidate.ra_deg,
-                dec2=candidate.ra_deg,
-            )
-            * 60  # arcsec -> degrees
-        )
-        .order_by("sep")
-        .values()
-    )
-
     # Perform voevent database query
     # https://voeventdbremote.readthedocs.io/en/latest/notebooks/00_quickstart.html
     # conesearch skycoord and angle error
@@ -161,7 +216,6 @@ def candidate_rating(request, id, arcmin=2):
     #     # FilterKeys.authored_until: time.tt.datetime + timedelta(days=1),
     #     FilterKeys.cone: cone,
     # }
-
     voevents = []
 
     context = {
@@ -169,13 +223,10 @@ def candidate_rating(request, id, arcmin=2):
         "rating": rating,
         "time": time,
         "sep_arcmin": sep_arcmin,
-        "nearby_candidates_table": nearby_candidates_table,
-        "simbad_result_table": simbad_result_table,
-        "atnf_result_table": atnf_table,
         "arcmin_search": arcmin,
         "cand_type_choices": tuple(
             (c.name, c.name) for c in models.Classification.objects.all()
-        ),  # models.CAND_TYPE_CHOICES,
+        ),
         "voevents": voevents,
     }
     return render(request, "candidate_app/candidate_rating_form.html", context)

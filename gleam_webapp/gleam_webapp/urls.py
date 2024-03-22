@@ -51,6 +51,9 @@ urlpatterns = [
         "download_page/",
         TemplateView.as_view(template_name="candidate_app/download_page.html"),
     ),
+    path("cone_search_simbad/", views.cone_search_simbad, name="cone_search_simbad"),
+    path("cone_search_pulsars/", views.cone_search_pulsars, name="cone_search_pulsars"),
+    path("cone_search/", views.cone_search, name="cone_search"),
 ]
 
 # allow media files to be linked and viewed directly
