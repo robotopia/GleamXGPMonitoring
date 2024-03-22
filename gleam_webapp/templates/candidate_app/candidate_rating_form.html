@@ -56,8 +56,7 @@
         const data = await response.text();
         console.log(data);
         mydiv.innerHTML = data;
-    }
-    catch(error){
+    }catch(error){
         console.log(error);
     }
   }
@@ -76,23 +75,28 @@
           method:'POST',
           headers: {'X-CSRFToken': '{{csrf_token }}'},
           body: JSON.stringify({
-            ra_deg: '{{ candidate.ra_hms }}',
-            dec_deg: '{{ candidate.dec_dms }}',
+            ra_deg: '{{ candidate.ra_deg }}',
+            dec_deg: '{{ candidate.dec_deg }}',
             dist_arcmin: arcmin,
           })
         });
         const data = await response.text();
         console.log(data);
         mydiv.innerHTML = data;
-    }
-    catch(error){
+    }catch(error){
         console.log(error);
     }
   }
-  document.addEventListener('DOMContentLoaded', getSimbad)
-  document.addEventListener('DOMContentLoaded', getNearest)
-  document.addEventListener('DOMContentLoaded', getPulsars)
-
+  async function getAll(){
+    try{
+      getSimbad();
+      getNearest();
+      getPulsars();
+    }catch(error){
+      console.log(error);
+    }
+  }
+  document.addEventListener('DOMContentLoaded', getAll)
 
 </script>
 {% endblock head  %}
@@ -210,14 +214,15 @@
 
 <div class="row">
   <div class="col-12 justify-content-center ">
-    <form action="{% url 'candidate_update_catalogue_query' id=candidate.id %}" method="post">
+    <!-- <form action="{% url 'candidate_update_catalogue_query' id=candidate.id %}" method="post"> -->
       {% csrf_token %}
       <p class="h4">Search nearby within
         <input id="arcmin" type="text"  name="arcmin" value="{{arcmin_search}}" size="2">
         arcmin.
-        <input class="btn btn-primary" type="submit" value="Submit">
+        <button class="btn btn-primary" onclick="getAll()">Search</button>
+        <!-- <input class="btn btn-primary" type="submit" value="Submit"> -->
       </p>
-    </form>
+    <!-- </form> -->
   </div>
 </div>
 
