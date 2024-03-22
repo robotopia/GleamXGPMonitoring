@@ -15,7 +15,6 @@ services:
     volumes:
       - static_volume:/home/app/web/staticfiles
       - ./logs:/home/app/logs
-      - ./psrcat:/home/app/web/psrcat
     expose:
       - 8000
     env_file:
