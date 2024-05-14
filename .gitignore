@@ -1,5 +1,6 @@
-gleam_webapp/db.sqlite3
-gleam_webapp/candidate_app/migrations/
-gleam_webapp/gleam_webapp/__pycache__/
-gleam_webapp/candidate_app/__pycache__/
-gleam_webapp/media
+*.pyc
+.env.prod
+.env.prod.db
+env/*
+*.json
+*.log

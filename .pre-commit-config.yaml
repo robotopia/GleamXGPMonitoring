@@ -1,0 +1,26 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.1.1
+    hooks:
+      - id: black
+        args: [--verbose, --diff, --check, --color]
+        exclude: (/migrations/|settings*.py|env)
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        additional_dependencies: [flake8-bugbear]
+        args:
+          [
+            --max-line-length=88,
+            --require-plugins=flake8-bugbear,
+            "--extend-ignore=E121,E123,E126,E226,E24,E704,W503,W504,E203,E501",
+            "--select=C,E,F,W,B,B950",
+          ]
+        exclude: (/migrations/|settings*.py|docs)
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v2.7.1
+    hooks:
+      - id: prettier
+        additional_dependencies:
+          - prettier@3.0.0

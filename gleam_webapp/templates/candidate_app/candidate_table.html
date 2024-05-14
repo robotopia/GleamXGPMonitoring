@@ -6,6 +6,7 @@
 
 <title>Candidate Ratings Table</title>
 <h1>Candidate Ratings Table</h1>
+<h2>For {{ project_name }} (<a href="/session_settings/">change</a>)</h2>
 <div class="col-6" style="width:90%; margin: 0 auto; padding-bottom: 20px;">
   <h2>Filter Candidate Ratings:</h2>
   <form method="post">
@@ -57,13 +58,16 @@
     </div>
   </form>
 </div>
+
+<p><a href="/download_data/candidate/"   class="btn btn-primary btn-lg" tabindex="-1" role="button" aria-disabled="true">Download All Candidates</a></p>
+
   {% if page_obj %}
   <table class="fl-table">
     <thead>
       <th>ID</th>
       <th>Rating(Count)</th>
       <th>Notes</th>
-      {% if form.column_display.value != "None" %}
+      {% if selected_column %}
         <th>{{ selected_column }}</th>
       {% else %}
         {% for key, name in column_names.items %}
@@ -87,7 +91,7 @@
           {% endif %}
         </td>
         <td>{{cand.notes}}</td>
-        {% if form.column_display.value != "None" %}
+        {% if selected_column %}
           <td>{{cand.selected_count}}</td>
         {% else %}
           {% for key, name in column_names.items %}
