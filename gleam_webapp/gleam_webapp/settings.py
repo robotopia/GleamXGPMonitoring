@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "candidate_app",
-    # "django_extensions",  # has been deprecated since Django 2.
 ]
 
 MIDDLEWARE = [
