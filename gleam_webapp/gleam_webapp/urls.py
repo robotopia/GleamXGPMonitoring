@@ -43,6 +43,9 @@ urlpatterns = [
         name="candidate_update_catalogue_query",
     ),
     path("candidate_table/", views.candidate_table),
+    path(
+        "candidate_table2/", views.CandidateListView.as_view(), name="candidate_table"
+    ),
     path("survey_status/", views.survey_status),
     path("voevent_view/<int:id>/", views.voevent_view, name="voevent_view"),
     path("session_settings/", views.session_settings),

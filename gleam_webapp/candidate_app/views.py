@@ -5,7 +5,6 @@ import logging
 import random
 from datetime import datetime, timedelta
 
-import psrqpy
 import voeventdb.remote.apiv1 as apiv1
 import voeventparse
 from astropy import units
@@ -22,6 +21,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django_q3c.expressions import Q3CRadialQuery, Q3CDist
+from django_tables2 import SingleTableView
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
@@ -30,12 +30,30 @@ from .utils import download_fits
 
 # from voeventdb.remote.apiv1 import FilterKeys, OrderValues
 
-from . import forms, models, serializers
-
-# reset the cache dir
-psrqpy.CACHEDIR = "/home/app/web/psrcat/psrcat_tar/"
+from . import forms, models, serializers, tables, filters
 
 logger = logging.getLogger(__name__)
+
+
+class CandidateListView(SingleTableView):
+    model = models.Candidate
+    table_class = tables.CandidateTable
+    template_name = "candidate_app/candidate_list.html"
+    paginate_by = 50
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.annotate(
+            rating_count=Count("rating"),
+            rating_average=Avg("rating__rating"),
+        )
+        self.filterset = filters.CandidateFilter(self.request.GET, queryset=queryset)
+        return self.filterset.qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["filterset"] = self.filterset
+        return context
 
 
 def home_page(request):
