@@ -1,18 +1,23 @@
-Welcome to MWA Image Plane Transient Classifier's documentation!
-================================================================
+Welcome to the documentation for the MWA Image Plane Transient Classifier
+=========================================================================
 
 The following is a sections describe how to use, install and maintain the web application.
 
-.. toctree::
-   :maxdepth: 4
-   :caption: Web Uses:
+.. toctree:: 
+   :maxdepth: 2
+   :caption: For Users:
 
-   data_download
+   Home
+   requirements
+   quick_start
+   HowTo
+   Architecture
+   databases
+   ConfiguringNimbus
 
-.. toctree::
-   :maxdepth: 4
-   :caption: Web Application:
+.. toctree:: 
+   :maxdepth: 2
+   :caption: For Developers:
 
-   database_installation
-   webapp_installation
-   running_server
+   UpdateDocumentation
+   Testing
