@@ -1,6 +1,7 @@
 from django.http import HttpResponse
-from astropy.io import fits
+from astropy.table import Table
 import numpy as np
+import io
 
 
 def FITSTableType(val):
@@ -22,29 +23,23 @@ def FITSTableType(val):
 
 def download_fits(request, queryset, table):
 
-    opts = queryset.model._meta
+    obsids = []
+    rating_counts = []
+    for c in queryset:
+        obsids.append(c.obs_id.observation_id)
+        rating_counts.append(c.rating_count)
+        print(c.obs_id, c.rating_count)
 
-    response = HttpResponse(content_type="application/octet-stream")
+    print("making table")
+    data = Table([obsids, rating_counts])
+
+    print(data)
+    memfile = io.BytesIO()
+    data.write(memfile, format="fits")
+
+    print("forming response")
+    response = HttpResponse(memfile.getvalue(), content_type="application/fits")
     # force download.
     response["Content-Disposition"] = f'attachment; filename="{table}.fits"'
-
-    cols = []
-    for name in [field.name for field in opts.fields]:
-        # Cause error columns to always be floats even when they are set to -1
-        if name.startswith("err_"):
-            fmt = "E"
-        else:
-            fmt = FITSTableType(getattr(queryset.first(), name))
-        cols.append(
-            fits.Column(
-                name=name,
-                format=fmt,
-                array=[a[0] for a in queryset.all().values_list(name)],
-            )
-        )
-
-    cols = fits.ColDefs(cols)
-    tbhdu = fits.BinTableHDU.from_columns(cols)
-    tbhdu.writeto(response)
 
     return response

@@ -76,17 +76,20 @@ class CandidateCSVExportView(FilteredCandidateQuerysetMixin, SingleTableView):
         # Get the filtered queryset
         filtered_qs = self.get_filtered_queryset()
 
-        # Create the HttpResponse object with the appropriate CSV header.
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = 'attachment; filename="candidates.csv"'
+        # Download fits instead of csv - currently broken
+        response = download_fits(request, filtered_qs, "Candidates")
 
-        writer = csv.writer(response)
-        # Write the header row
-        writer.writerow(["ObsID", "Rating Count", "RA", "DEC"])
+        # # Create the HttpResponse object with the appropriate CSV header.
+        # response = HttpResponse(content_type="text/csv")
+        # response["Content-Disposition"] = 'attachment; filename="candidates.csv"'
 
-        # Write data rows
-        for c in filtered_qs:
-            writer.writerow([c.obs_id, c.rating_count, c.ra_hms, c.dec_dms])
+        # writer = csv.writer(response)
+        # # Write the header row
+        # writer.writerow(["ObsID", "Rating Count", "RA", "DEC"])
+
+        # # Write data rows
+        # for c in filtered_qs:
+        #     writer.writerow([c.obs_id, c.rating_count, c.ra_hms, c.dec_dms])
 
         return response
 
