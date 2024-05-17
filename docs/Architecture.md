@@ -141,6 +141,8 @@ There are no configurations required for this container.
      This includes background images, banners, icons, `.css` and `.js` files.
      Using this volume means that nginx will serve the static files rather than gunicorn which results in snappier load times, especially if there are a lot of concurrent users of the app.
 
+(development-deployment)=
+
 ## Development deployment
 
 The development environment is a simplified version of the production environment and is intended to be run and accessed only from your local machine.

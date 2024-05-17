@@ -10,7 +10,6 @@ The following is a sections describe how to use, install and maintain the web ap
    Home
    requirements
    quick_start
-   HowTo
    Architecture
    databases
    ConfiguringNimbus
