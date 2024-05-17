@@ -21,3 +21,4 @@ The following is a sections describe how to use, install and maintain the web ap
 
    UpdateDocumentation
    Testing
+   ManageDockerContainers
