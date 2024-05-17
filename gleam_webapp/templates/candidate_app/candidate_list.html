@@ -8,13 +8,12 @@
 <h1>Candidate Ratings Table</h1>
 <h2>For {{ project_name }} (<a href="/session_settings/">change</a>)</h2>
 
-<a href="{% url 'candidate-csv-export' %}?{{ request.GET.urlencode }}" class="btn btn-secondary">Download CSV</a>
-
 <div class="col-6" style="width:90%; margin: 0 auto; padding-bottom: 20px;">
 
         <form method="get">
             {{ filterset.form.as_p }}
             <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="{% url 'candidate-csv-export' %}?{{ request.GET.urlencode }}" class="btn btn-secondary">Download CSV</a>
         </form>
         {% render_table table %}
 </div>
