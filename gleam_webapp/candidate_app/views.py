@@ -42,7 +42,12 @@ class CandidateListView(SingleTableView):
     paginate_by = 50
 
     def get_queryset(self):
+        session_settings = self.request.session.get("session_settings", 0)
+        # candidate_table_session_data = self.request.session.get("current_filter_data", 0)
+
         queryset = super().get_queryset()
+        if session_settings:
+            queryset = queryset.filter(project__name=session_settings["project"])
         queryset = queryset.annotate(
             rating_count=Count("rating"),
         )
@@ -50,8 +55,14 @@ class CandidateListView(SingleTableView):
         return self.filterset.qs
 
     def get_context_data(self, **kwargs):
+        session_settings = self.request.session.get("session_settings", 0)
+
         context = super().get_context_data(**kwargs)
         context["filterset"] = self.filterset
+        if session_settings:
+            context["project_name"] = session_settings["project"]
+        else:
+            context["project_name"] = "all projects"
         return context
 
 
