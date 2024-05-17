@@ -7,11 +7,11 @@ The following is a sections describe how to use, install and maintain the web ap
    :maxdepth: 2
    :caption: For Users:
 
-   Home
    requirements
    quick_start
    Architecture
    databases
+   AddUsers
    ConfiguringNimbus
 
 .. toctree:: 
