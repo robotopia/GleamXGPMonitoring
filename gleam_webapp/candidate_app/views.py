@@ -35,24 +35,29 @@ from . import forms, models, serializers, tables, filters
 logger = logging.getLogger(__name__)
 
 
-class CandidateListView(SingleTableView):
+class FilteredCandidateQuerysetMixin:
+
+    def get_filtered_queryset(self):
+        queryset = models.Candidate.objects.all()
+
+        session_settings = self.request.session.get("session_settings", None)
+        if session_settings:
+            queryset = queryset.filter(project__name=session_settings["project"])
+
+        queryset = queryset.annotate(rating_count=Count("rating"))
+
+        self.filterset = filters.CandidateFilter(self.request.GET, queryset=queryset)
+        return self.filterset.qs
+
+
+class CandidateListView(FilteredCandidateQuerysetMixin, SingleTableView):
     model = models.Candidate
     table_class = tables.CandidateTable
     template_name = "candidate_app/candidate_list.html"
     paginate_by = 50
 
     def get_queryset(self):
-        session_settings = self.request.session.get("session_settings", 0)
-        # candidate_table_session_data = self.request.session.get("current_filter_data", 0)
-
-        queryset = super().get_queryset()
-        if session_settings:
-            queryset = queryset.filter(project__name=session_settings["project"])
-        queryset = queryset.annotate(
-            rating_count=Count("rating"),
-        )
-        self.filterset = filters.CandidateFilter(self.request.GET, queryset=queryset)
-        return self.filterset.qs
+        return self.get_filtered_queryset()
 
     def get_context_data(self, **kwargs):
         session_settings = self.request.session.get("session_settings", 0)
@@ -64,6 +69,26 @@ class CandidateListView(SingleTableView):
         else:
             context["project_name"] = "all projects"
         return context
+
+
+class CandidateCSVExportView(FilteredCandidateQuerysetMixin, SingleTableView):
+    def get(self, request, *args, **kwargs):
+        # Get the filtered queryset
+        filtered_qs = self.get_filtered_queryset()
+
+        # Create the HttpResponse object with the appropriate CSV header.
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = 'attachment; filename="candidates.csv"'
+
+        writer = csv.writer(response)
+        # Write the header row
+        writer.writerow(["ObsID", "Rating Count", "RA", "DEC"])
+
+        # Write data rows
+        for c in filtered_qs:
+            writer.writerow([c.obs_id, c.rating_count, c.ra_hms, c.dec_dms])
+
+        return response
 
 
 def home_page(request):

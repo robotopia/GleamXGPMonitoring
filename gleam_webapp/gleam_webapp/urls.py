@@ -46,6 +46,11 @@ urlpatterns = [
     path(
         "candidate_table2/", views.CandidateListView.as_view(), name="candidate_table"
     ),
+    path(
+        "candidates/export/",
+        views.CandidateCSVExportView.as_view(),
+        name="candidate-csv-export",
+    ),
     path("survey_status/", views.survey_status),
     path("voevent_view/<int:id>/", views.voevent_view, name="voevent_view"),
     path("session_settings/", views.session_settings),
