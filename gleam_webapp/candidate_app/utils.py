@@ -22,6 +22,11 @@ def FITSTableType(val):
 
 
 def download_fits(request, queryset, table):
+    # Use the following to get all the column names
+    print(
+        [a.name for a in queryset.model._meta.fields]
+        + [a for a in queryset.query.annotations.keys()]
+    )
 
     obsids = []
     rating_counts = []
@@ -33,7 +38,6 @@ def download_fits(request, queryset, table):
     print("making table")
     data = Table([obsids, rating_counts])
 
-    print(data)
     memfile = io.BytesIO()
     data.write(memfile, format="fits")
 
