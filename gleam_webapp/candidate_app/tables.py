@@ -10,7 +10,6 @@ class ImageColumn(tables.Column):
 
 class CandidateTable(tables.Table):
     rating_count = tables.Column()
-    average_rating = tables.Column()
     png_path = ImageColumn()
 
     class Meta:

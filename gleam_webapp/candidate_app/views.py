@@ -45,7 +45,6 @@ class CandidateListView(SingleTableView):
         queryset = super().get_queryset()
         queryset = queryset.annotate(
             rating_count=Count("rating"),
-            rating_average=Avg("rating__rating"),
         )
         self.filterset = filters.CandidateFilter(self.request.GET, queryset=queryset)
         return self.filterset.qs
