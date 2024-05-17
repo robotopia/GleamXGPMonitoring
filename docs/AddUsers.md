@@ -4,7 +4,7 @@
 
 Navigate to the admin page at `<site url>/admin`.
 If you are not logged in, then you’l be prompted to login.
-A default admin account is created during the deployment process see [this page](Architecture.md#architecturedescription) for details including the default admin user/pass.
+A default admin account is created during the deployment process see [this page](Architecture.md) for details including the default admin user/pass.
 You should see an admin page with the following section:
 
 ![Admin Auth Section](figures/AdminAuthSection.png)

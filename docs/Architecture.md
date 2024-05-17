@@ -1,3 +1,5 @@
+(architecturedescription)=
+
 # Architecture description
 
 ## Introduction
@@ -15,6 +17,8 @@ host machine:
 
 See [install instructions](https://docs.docker.com/compose/install/)
 for docker and docker-compose.
+
+(production-deployment)=
 
 ## Production deployment
 
@@ -65,7 +69,7 @@ This container is built using the Dockerfile in the root of the repository, and 
 The environment variables that are used to control the setup of this container and the operation of the code within are either in the `.env.prod` file or within the `docker-compose.yml` file.
 
 When deployed in production this container will use gunicorn to serve the web app within the container but is not accessible outside of the internal network.
-The [nginx](##nginx) container provides external access to this network.
+The [nginx](#nginx) container provides external access to this network.
 
 A health check has been configured for this container and the container is considered unhealthy if the login page of the web app becomes inaccessible.
 
@@ -105,6 +109,8 @@ is considered unhealthy if the database fails a ready check
    - This file should **not** be committed to the git repo.
 3. `docker-compose.prod.yml`
    - An orchestration plan which determines which containers are run and how they are linked together.
+
+(nginx)=
 
 ### Nginx
 
