@@ -11,6 +11,8 @@ class ImageColumn(tables.Column):
 class CandidateTable(tables.Table):
     rating_count = tables.Column()
     png_path = ImageColumn()
+    ra_hms = tables.Column(order_by=("ra_deg",))
+    dec_dms = tables.Column(order_by=("dec_deg",))
 
     class Meta:
         model = Candidate
