@@ -22,28 +22,26 @@ def FITSTableType(val):
 
 
 def download_fits(request, queryset, table):
-    # Use the following to get all the column names
-    print(
-        [a.name for a in queryset.model._meta.fields]
-        + [a for a in queryset.query.annotations.keys()]
-    )
 
-    obsids = []
-    rating_counts = []
-    for c in queryset:
-        obsids.append(c.obs_id.observation_id)
-        rating_counts.append(c.rating_count)
-        print(c.obs_id, c.rating_count)
+    # Extract all the column names from the model, plus any additional
+    # columns we created using annotations
+    colnames = [a.name for a in queryset.model._meta.fields] + [
+        a for a in queryset.query.annotations.keys()
+    ]
 
-    print("making table")
-    data = Table([obsids, rating_counts])
+    # Extract the values for the columns, converting None->np.nan
+    columns = {a: [] for a in colnames}
+    for item in queryset.values(*colnames):
+        for c in colnames:
+            val = item[c]
+            columns[c].append(val if val is not None else np.nan)
 
+    # make a table, and write it to memory for downloading.
+    data = Table(columns)
     memfile = io.BytesIO()
     data.write(memfile, format="fits")
 
-    print("forming response")
     response = HttpResponse(memfile.getvalue(), content_type="application/fits")
-    # force download.
     response["Content-Disposition"] = f'attachment; filename="{table}.fits"'
 
     return response
