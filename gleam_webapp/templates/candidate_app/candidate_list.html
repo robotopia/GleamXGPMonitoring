@@ -13,7 +13,7 @@
         <form method="get">
             {{ filterset.form.as_p }}
             <button type="submit" class="btn btn-primary">Filter</button>
-            <a href="{% url 'candidate-csv-export' %}?{{ request.GET.urlencode }}" class="btn btn-secondary">Download CSV</a>
+            <a href="{% url 'candidate-fits-export' %}?{{ request.GET.urlencode }}" class="btn btn-secondary">Download CSV</a>
         </form>
         <div class="table-responsive ">
             {% render_table table %}

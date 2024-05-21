@@ -71,26 +71,12 @@ class CandidateListView(FilteredCandidateQuerysetMixin, SingleTableView):
         return context
 
 
-class CandidateCSVExportView(FilteredCandidateQuerysetMixin, SingleTableView):
+class CandidateFITSExportView(FilteredCandidateQuerysetMixin, SingleTableView):
     def get(self, request, *args, **kwargs):
         # Get the filtered queryset
         filtered_qs = self.get_filtered_queryset()
-
-        # Download fits instead of csv - currently broken
+        # Download fits
         response = download_fits(request, filtered_qs, "Candidates")
-
-        # # Create the HttpResponse object with the appropriate CSV header.
-        # response = HttpResponse(content_type="text/csv")
-        # response["Content-Disposition"] = 'attachment; filename="candidates.csv"'
-
-        # writer = csv.writer(response)
-        # # Write the header row
-        # writer.writerow(["ObsID", "Rating Count", "RA", "DEC"])
-
-        # # Write data rows
-        # for c in filtered_qs:
-        #     writer.writerow([c.obs_id, c.rating_count, c.ra_hms, c.dec_dms])
-
         return response
 
 
