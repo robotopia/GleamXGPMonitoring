@@ -10,9 +10,12 @@ class ImageColumn(tables.Column):
 
 class CandidateTable(tables.Table):
     rating_count = tables.Column()
-    png_path = ImageColumn()
-    ra_hms = tables.Column(order_by=("ra_deg",))
-    dec_dms = tables.Column(order_by=("dec_deg",))
+    png_path = ImageColumn(verbose_name="Preview")
+    ra_hms = tables.Column(order_by=("ra_deg",), verbose_name="RA")
+    dec_dms = tables.Column(order_by=("dec_deg",), verbose_name="DEC")
+    obs_id = tables.Column(verbose_name="OBSID")
+    can_fluence = tables.Column(verbose_name="Fluence (Jy.s)")
+    can_det_stat = tables.Column(verbose_name="Detection Stat")
 
     class Meta:
         model = Candidate
@@ -28,5 +31,7 @@ class CandidateTable(tables.Table):
             "ra_hms",
             "dec_dms",
             "obs_id",
+            "can_fluence",
+            "can_det_stat",
             "png_path",
         )
