@@ -16,7 +16,11 @@ class CandidateTable(tables.Table):
 
     class Meta:
         model = Candidate
-        template_name = "django_tables2/bootstrap.html"
+        attrs = {
+            "class": "table table-hover table-striped",
+            "thead": {"class": "table-secondary"},
+        }
+        template_name = "candidate_app/table.html"
         fields = (
             "id",
             "rating_count",
@@ -26,4 +30,3 @@ class CandidateTable(tables.Table):
             "obs_id",
             "png_path",
         )
-        order_by = ("id",)

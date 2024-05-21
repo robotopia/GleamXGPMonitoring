@@ -1,20 +1,23 @@
 {% extends 'candidate_app/header.html' %}
-{% load render_table from django_tables2 %}
-{% load utils %}
+{% load django_tables2 %}
 
 {% block content %}
 
-<title>Candidate Ratings Table</title>
-<h1>Candidate Ratings Table</h1>
-<h2>For {{ project_name }} (<a href="/session_settings/">change</a>)</h2>
-
-<div class="col-6" style="width:90%; margin: 0 auto; padding-bottom: 20px;">
+<div class="text-center ">
+    <title>Candidate Ratings Table</title>
+    <h1>Candidate Ratings Table</h1>
+    <h2>For {{ project_name }} (<a href="/session_settings/">change</a>)</h2>
+</div>
+<div style="width:90%; margin: 0 auto; padding-bottom: 20px;">
 
         <form method="get">
             {{ filterset.form.as_p }}
             <button type="submit" class="btn btn-primary">Filter</button>
             <a href="{% url 'candidate-csv-export' %}?{{ request.GET.urlencode }}" class="btn btn-secondary">Download CSV</a>
         </form>
-        {% render_table table %}
+        <div class="table-responsive ">
+            {% render_table table %}
+        </div>
+        {% include "candidate_app/pagination.html" %}
 </div>
 {% endblock content %}
