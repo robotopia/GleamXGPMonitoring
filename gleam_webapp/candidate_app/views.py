@@ -8,14 +8,13 @@ from datetime import datetime, timedelta
 import voeventdb.remote.apiv1 as apiv1
 import voeventparse
 from astropy import units
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astroquery.simbad import Simbad
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Avg, Count, Q, F
+from django.db.models import Count, Q, F
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -437,144 +436,6 @@ def candidate_random(request):
     elif session_settings["ordering"] == "faint":
         candidate = next_cands.order_by("can_peak_flux").first()
     return redirect(reverse("candidate_rating", args=(candidate.id,)))
-
-
-def candidate_table(request):
-
-    # Get session data to keep filters when changing page
-    session_settings = request.session.get("session_settings", 0)
-    candidate_table_session_data = request.session.get("current_filter_data", 0)
-    print(candidate_table_session_data)
-
-    # Check filter form
-    if request.method == "POST":
-        # create a form instance and populate it with data from the request:
-        form = forms.CandidateFilterForm(request.POST)
-        # check whether it's valid:
-        if form.is_valid():
-            column_display = form.cleaned_data["column_display"]
-            if form.cleaned_data["observation_id"] is None:
-                observation_id_filter = None
-            else:
-                observation_id_filter = form.cleaned_data[
-                    "observation_id"
-                ].observation_id
-            rating_cutoff = form.cleaned_data["rating_cutoff"]
-            order_by = form.cleaned_data["order_by"]
-            asc_dec = form.cleaned_data["asc_dec"]
-            cleaned_data = {**form.cleaned_data}
-            cleaned_data["observation_id"] = observation_id_filter
-            request.session["current_filter_data"] = cleaned_data
-            ra_hms = form.cleaned_data["ra_hms"]
-            dec_dms = form.cleaned_data["dec_dms"]
-            search_radius_arcmin = form.cleaned_data["search_radius_arcmin"]
-    else:
-        if candidate_table_session_data != 0:
-            # Prefil form with previous session results
-            form = forms.CandidateFilterForm(
-                initial=candidate_table_session_data,
-            )
-            column_display = candidate_table_session_data["column_display"]
-            observation_id_filter = candidate_table_session_data["observation_id"]
-            rating_cutoff = candidate_table_session_data["rating_cutoff"]
-            order_by = candidate_table_session_data["order_by"]
-            asc_dec = candidate_table_session_data["asc_dec"]
-            ra_hms = candidate_table_session_data["ra_hms"]
-            dec_dms = candidate_table_session_data["dec_dms"]
-            search_radius_arcmin = candidate_table_session_data["search_radius_arcmin"]
-        else:
-            form = forms.CandidateFilterForm()
-            column_display = None
-            observation_id_filter = None
-            rating_cutoff = None
-            order_by = "avg_rating"
-            asc_dec = "-"
-            ra_hms = None
-            dec_dms = None
-            search_radius_arcmin = 2
-
-    print(f"column_display: {column_display}")
-    print(f"observation_id_filter: {observation_id_filter}")
-    print(f"rating_cutoff: {rating_cutoff}")
-    print(f"order_by: {order_by}")
-    print(f"asc_dec: {asc_dec}")
-
-    # Gather all the cand types and prepare them as kwargs
-    count_kwargs = {}
-    column_type_to_name = {}
-    for cand_type_tuple in [c.name for c in models.Classification.objects.all()]:
-        cand_type_short = cand_type_tuple
-        count_kwargs[f"{cand_type_short}_count"] = Count(
-            "rating", filter=Q(rating__classification__name=cand_type_short)
-        )
-        # Also create a column name
-        column_type_to_name[cand_type_short] = cand_type_short
-
-    candidates = models.Candidate.objects.all()
-    project = "All projects"
-    if session_settings:
-        candidates = candidates.filter(project__name=session_settings["project"])
-        project = "Project " + session_settings["project"]
-    # Annotate with counts of different candidate type counts
-    candidates = candidates.annotate(
-        num_ratings=Count("rating"),
-        avg_rating=Avg("rating__rating"),
-        **count_kwargs,
-    )
-
-    # If user only wants to display a single column annotate it and return it's name
-    if column_display:
-        candidates = candidates.annotate(
-            selected_count=Count(
-                "rating", filter=Q(rating__classification__name=column_display)
-            ),
-        )
-        # # Filter data to only show candidates with at least one count
-        # candidates = candidates.filter(selected_count__gte=1)
-        selected_column = column_type_to_name[column_display]
-    else:
-        selected_column = None
-
-    # Ratings filter
-    if rating_cutoff is not None:
-        candidates = candidates.filter(avg_rating__gte=rating_cutoff)
-
-    # Obsid filter
-    if observation_id_filter is not None:
-        candidates = candidates.filter(obs_id__observation_id=observation_id_filter)
-
-    # Order by the column the user clicked or by avg_rating by default
-    candidates = candidates.order_by(asc_dec + order_by, "-avg_rating")
-
-    # Filter by position
-    if not (None in (ra_hms, dec_dms) or ra_hms == "" or dec_dms == ""):
-        ra_deg = Angle(ra_hms, unit=units.hour).deg
-        dec_deg = Angle(dec_dms, unit=units.deg).deg
-        candidates = candidates.filter(
-            Q(
-                Q3CRadialQuery(
-                    center_ra=ra_deg,
-                    center_dec=dec_deg,
-                    ra_col="ra_deg",
-                    dec_col="dec_deg",
-                    radius=search_radius_arcmin / 60.0,
-                )
-            )
-        )
-
-    # Paginate
-    paginator = Paginator(candidates, 25)
-    page_number = request.GET.get("page", 1)
-    page_obj = paginator.get_page(page_number)
-
-    content = {
-        "page_obj": page_obj,
-        "form": form,
-        "selected_column": selected_column,
-        "column_names": column_type_to_name,
-        "project_name": project,
-    }
-    return render(request, "candidate_app/candidate_table.html", content)
 
 
 def session_settings(request):
