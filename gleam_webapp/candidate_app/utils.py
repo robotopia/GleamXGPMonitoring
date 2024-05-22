@@ -4,23 +4,6 @@ import numpy as np
 import io
 
 
-def FITSTableType(val):
-    """
-    Return the FITSTable type corresponding to each named parameter in obj
-    """
-    if isinstance(val, bool):
-        types = "L"
-    elif isinstance(val, (int, np.int64, np.int32)):
-        types = "J"
-    elif isinstance(val, (float, np.float64, np.float32)):
-        types = "E"
-    elif isinstance(val, str):
-        types = "{0}A".format(len(val))
-    else:
-        types = "5A"
-    return types
-
-
 def download_fits(request, queryset, table):
 
     # Extract all the column names from the model, plus any additional
