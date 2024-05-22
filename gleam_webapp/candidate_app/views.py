@@ -53,7 +53,7 @@ class CandidateListView(FilteredCandidateQuerysetMixin, SingleTableView):
     model = models.Candidate
     table_class = tables.CandidateTable
     template_name = "candidate_app/candidate_list.html"
-    paginate_by = 50
+    paginate_by = 15
 
     def get_queryset(self):
         return self.get_filtered_queryset()
