@@ -18,7 +18,7 @@ class CandidateTable(tables.Table):
     can_det_stat = tables.Column(verbose_name="Detection Stat")
     metadata_link = tables.LinkColumn(
         "candidate_metadata",
-        text="View Meta",
+        text=lambda record: "View Meta" if hasattr(record, "metadata") else "",
         args=[tables.A("pk")],
         verbose_name="Metadata",
     )
