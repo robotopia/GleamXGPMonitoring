@@ -1,0 +1,24 @@
+{% extends 'candidate_app/header.html' %}
+{% load django_tables2 %}
+
+{% block content %}
+
+<div class="text-center ">
+    <title>Candidate Ratings Table</title>
+    <h1>Candidate Ratings Table</h1>
+    <h2>For {{ project_name }} (<a href="/session_settings/">change</a>)</h2>
+</div>
+<div style="width:90%; margin: 0 auto; padding-bottom: 20px;">
+
+        <form method="get">
+            {{ filterset.form.as_p }}
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="{% url 'candidate_table' %}" class="btn btn-warning">Clear filter</a>
+            <a href="{% url 'candidate_fits_export' %}?{{ request.GET.urlencode }}" class="btn btn-success">Download FITS table</a>
+        </form>
+        <div class="table-responsive ">
+            {% render_table table %}
+        </div>
+        {% include "candidate_app/pagination.html" %}
+</div>
+{% endblock content %}

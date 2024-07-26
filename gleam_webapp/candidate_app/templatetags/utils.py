@@ -31,3 +31,10 @@ def get_type_count(dictionary, key):
     # And edited for attributes
     # Grab the count got the key type but changing the attributes to a dictionary
     return dictionary.__dict__.get(key + "_count")
+
+
+@register.filter
+def get_type(value):
+    # From https://stackoverflow.com/a/73181484
+    """It returns variable type as a pure string name"""
+    return type(value).__name__
