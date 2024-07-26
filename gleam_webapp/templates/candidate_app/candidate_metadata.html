@@ -4,7 +4,7 @@
 {% block content %}
     <title>Item Metadata</title>
 
-    <h1>Metadata for {{ meta.candidate }}</h1>
-    <p>{{ meta.text }}</p>
+    <h1>Metadata for {{ item.candidate }}</h1>
+    <p>{{ item.text }}</p>
     <a href="{% url 'candidate_table' %}">Back to Candidate Ratings Table</a>
 {% endblock content %}

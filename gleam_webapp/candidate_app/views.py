@@ -346,7 +346,7 @@ def candidate_update_rating(request, id):
 
 def candidate_metadata_view(request, pk):
     item = get_object_or_404(models.Metadata, pk=pk)
-    return render(request, "candidate_metadata.html", {"item": item})
+    return render(request, "candidate_app/candidate_metadata.html", {"item": item})
 
 
 @login_required
