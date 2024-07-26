@@ -15,7 +15,7 @@ class MetadataSerializer(serializers.ModelSerializer):
 
 
 class CandidateSerializer(serializers.ModelSerializer):
-    metadata = serializers.CharField(source="metadata.text")
+    metadata = serializers.CharField(source="metadata.text", required=False)
     project = serializers.CharField(source="project.name")
 
     class Meta:
