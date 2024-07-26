@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 SYSTEM_ENV = os.environ.get("SYSTEM_ENV", None)
 if SYSTEM_ENV == "DEVELOPMENT":
-    BASE_URL = "http://127.0.0.1:8000"
+    BASE_URL = "http://0.0.0.0"
 else:
     BASE_URL = "https://mwa-image-plane.duckdns.org"
 
@@ -40,7 +40,7 @@ def getmeta(servicetype="metadata", service="obs", params=None):
     """
 
     # Append the service name to this base URL, eg 'con', 'obs', etc.
-    BASEURL = "http://ws.mwatelescope.org/"
+    MWA_URL = "http://ws.mwatelescope.org/"
 
     if params:
         # Turn the dictionary into a string with encoded 'name=value' pairs
@@ -50,7 +50,7 @@ def getmeta(servicetype="metadata", service="obs", params=None):
 
     try:
         result = json.load(
-            urllib.request.urlopen(BASEURL + servicetype + "/" + service + "?" + data)
+            urllib.request.urlopen(MWA_URL + servicetype + "/" + service + "?" + data)
         )
     except urllib.error.HTTPError as err:
         logger.error(

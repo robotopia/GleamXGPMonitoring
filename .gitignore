@@ -4,3 +4,4 @@
 env/*
 *.json
 *.log
+gleam_webapp/media/

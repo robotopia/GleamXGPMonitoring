@@ -16,6 +16,12 @@ class CandidateTable(tables.Table):
     obs_id = tables.Column(verbose_name="OBSID")
     can_fluence = tables.Column(verbose_name="Fluence (Jy.s)")
     can_det_stat = tables.Column(verbose_name="Detection Stat")
+    metadata_link = tables.LinkColumn(
+        "candidate_metadata",
+        text=lambda record: "View Meta" if hasattr(record, "metadata") else "",
+        args=[tables.A("pk")],
+        verbose_name="Metadata",
+    )
 
     class Meta:
         model = Candidate
@@ -34,4 +40,5 @@ class CandidateTable(tables.Table):
             "can_fluence",
             "can_det_stat",
             "png_path",
+            "metadata_link",
         )

@@ -344,6 +344,11 @@ def candidate_update_rating(request, id):
     return redirect(reverse("candidate_random"))
 
 
+def candidate_metadata_view(request, pk):
+    item = get_object_or_404(models.Metadata, pk=pk)
+    return render(request, "candidate_app/candidate_metadata.html", {"item": item})
+
+
 @login_required
 @api_view(["POST"])
 @transaction.atomic
@@ -492,12 +497,8 @@ def observation_create(request):
 def candidate_create(request):
     # Get or create filter
     filter_name = request.data.get("filter_id")
-    if models.Filter.objects.filter(name=filter_name).exists():
-        filter = models.Filter.objects.filter(name=filter_name).first()
-    else:
-        filter = models.Filter.objects.create(name=filter_name)
+    filter = models.Filter.objects.get_or_create(name=filter_name)[0]
     request.data["filter"] = filter.id
-
     cand = serializers.CandidateSerializer(data=request.data)
     png_file = request.data.get("png")
     gif_file = request.data.get("gif")
@@ -510,7 +511,6 @@ def candidate_create(request):
             return Response("Missing gif file", status=status.HTTP_400_BAD_REQUEST)
         cand.save(png_path=png_file, gif_path=gif_file, filter=filter)
         return Response(cand.data, status=status.HTTP_201_CREATED)
-    logger.debug(request.data)
     logger.error(cand.errors)
     return Response(cand.errors, status=status.HTTP_400_BAD_REQUEST)
 
