@@ -344,6 +344,11 @@ def candidate_update_rating(request, id):
     return redirect(reverse("candidate_random"))
 
 
+def candidate_metadata_view(request, pk):
+    item = get_object_or_404(models.Metadata, pk=pk)
+    return render(request, "candidate_metadata.html", {"item": item})
+
+
 @login_required
 @api_view(["POST"])
 @transaction.atomic
