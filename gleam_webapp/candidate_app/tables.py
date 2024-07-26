@@ -23,6 +23,8 @@ class CandidateTable(tables.Table):
         verbose_name="Metadata",
     )
 
+    sep = tables.Column(verbose_name="Sep")
+
     class Meta:
         model = Candidate
         attrs = {
