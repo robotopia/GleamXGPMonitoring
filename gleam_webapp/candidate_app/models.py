@@ -290,3 +290,17 @@ class ATNFPulsar(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+
+
+class Association(models.Model):
+    candidate = models.OneToOneField(
+        Candidate,
+        on_delete=models.CASCADE,
+        related_name="associated",
+        primary_key=True,
+    )
+    pulsar = models.ForeignKey(
+        ATNFPulsar,
+        on_delete=models.CASCADE,
+        related_name="associated",
+    )

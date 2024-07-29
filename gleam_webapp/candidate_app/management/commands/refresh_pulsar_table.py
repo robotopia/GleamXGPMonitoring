@@ -32,12 +32,14 @@ class Command(BaseCommand):
         db_dict = {}
         for ln in psrdb:
             line = ln.decode()
-            if line.startswith("@-"):
-                print(db_dict[name])
+            if line.startswith("#"):
+                continue
+            elif line.startswith("@-"):
                 dec, ra, lat, long, pos = None, None, None, None, None
                 name = None
             elif "PSRJ" in line:
                 name = line.split()[1]
+                print(name)
                 db_dict[name] = {}
             elif "DECJ" in line:
                 dec = line.split()[1]
@@ -63,16 +65,22 @@ class Command(BaseCommand):
 
             if pos is not None:
                 db_dict[name]["raj"] = pos.ra.degree
-                db_dict[name]["decj"] = pos.ra.degree
+                db_dict[name]["decj"] = pos.dec.degree
 
         with transaction.atomic():
-            ATNFPulsar.objects.all().delete()
+            # ATNFPulsar.objects.all().delete()
             for rec in db_dict.keys():
-                psr = ATNFPulsar()
-                psr.name = rec
-                psr.raj = db_dict[rec]["raj"]
-                psr.decj = db_dict[rec]["decj"]
-                psr.DM = db_dict[rec].get("dm", None)
-                psr.p0 = db_dict[rec].get("p0", None)
-                psr.s400 = db_dict[rec].get("s400", None)
-                psr.save()
+                (obj, created) = ATNFPulsar.objects.update_or_create(
+                    name=rec,
+                    defaults={
+                        "raj": db_dict[rec]["raj"],
+                        "decj": db_dict[rec]["decj"],
+                        "DM": db_dict[rec].get("dm", None),
+                        "p0": db_dict[rec].get("p0", None),
+                        "s400": db_dict[rec].get("s400", None),
+                    },
+                )
+                if created:
+                    print(f"Created {obj}")
+                else:
+                    print(f"Updated {obj}")

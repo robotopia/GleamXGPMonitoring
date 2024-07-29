@@ -1,6 +1,7 @@
 <h4>ATNF pulsars:</h4>
 <table class="fl-table">
   <tr>
+    <th></th>
     <th>Name</th>
     <th>Period (s)</th>
     <th>DM (pc / cm^3)</th>
@@ -9,6 +10,12 @@
   </tr>
   {% for result in table %}
   <tr>
+    <td> {% if candidate.associated.pulsar.id == result.id %}
+         <a href="javascript:disassociate({{result.id}})" class="btn btn-danger">-</a>
+         {% else %}
+         <a href ="javascript:associate({{result.id}})" class="btn btn-success">+</a>
+         {% endif %}
+    </td>
     <td><a href="https://www.atnf.csiro.au/research/pulsar/psrcat/proc_form.php?version=1.67&startUserDefined=true&c1_val=&c2_val=&c3_val=&c4_val=&sort_attr=jname&sort_order=asc&condition=&pulsar_names={{ result.name|urlize }}&ephemeris=long&submit_ephemeris=Get+Ephemeris&coords_unit=raj%2Fdecj&radius=&coords_1=&coords_2=&style=Long+with+last+digit+error&no_value=*&fsize=3&x_axis=&x_scale=linear&y_axis=&y_scale=linear&state=query" style="text-decoration:None">{{ result.name }}</a></td>
     <td>{{ result.period }}</td>
     <td>{{ result.dm }}</td>
@@ -16,6 +23,6 @@
     <td>{{ result.sep|floatformat:2 }}</td>
   </tr>
   {% empty %}
-  <tr><td>No Sources found</td></tr>
+  <tr><td colspan="6">No Sources found</td></tr>
   {% endfor %}
 </table>
