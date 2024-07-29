@@ -148,6 +148,13 @@
               <tr><td>Observation ID</td>  <td><a href="http://ws.mwatelescope.org/observation/obs/?obs_id={{ candidate.obs_id.observation_id }}" target="_blank">{{ candidate.obs_id.observation_id }}</a></td></tr>
               <tr><td>Time (UTC)</td>      <td>{{ time }}</td></tr>
               <tr><td>Frequency (MHz)</td> <td>{{ candidate.obs_id.cent_freq }}</td></tr>
+              <tr>
+                <td>Rate all of this obs</td>
+                <td>
+                  <input type="checkbox" name="observation" value="{{candidate.obs_id.observation_id}}">
+                  <span title="Overrides candidates selected from the 'Nearby Candidates' table">(N.B)</span>
+                </td>
+              </tr>
             </table>
     </div>
 
