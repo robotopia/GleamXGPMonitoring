@@ -181,6 +181,8 @@ def cone_search(request):
 
 
 def cone_search_pulsars(request):
+    table = []
+    candidate = []
     if request.method == "POST":
         data = json.loads(request.body.decode())
         print(data)
@@ -212,14 +214,15 @@ def cone_search_pulsars(request):
             .order_by("sep")
             .values()
         )
-
-    else:
-        table = []
+        if data.get("candidate"):
+            candidate = models.Candidate.objects.filter(
+                id=int(data.get("candidate"))
+            ).first()
 
     return render(
         request,
         "candidate_app/atnf_pulsar_table.html",
-        context={"table": table},
+        context={"table": table, "candidate": candidate},
     )
 
 
