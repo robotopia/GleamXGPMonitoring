@@ -72,11 +72,13 @@ class Command(BaseCommand):
             for rec in db_dict.keys():
                 (obj, created) = ATNFPulsar.objects.update_or_create(
                     name=rec,
-                    raj=db_dict[rec]["raj"],
-                    decj=db_dict[rec]["decj"],
-                    DM=db_dict[rec].get("dm", None),
-                    p0=db_dict[rec].get("p0", None),
-                    s400=db_dict[rec].get("s400", None),
+                    defaults={
+                        "raj": db_dict[rec]["raj"],
+                        "decj": db_dict[rec]["decj"],
+                        "DM": db_dict[rec].get("dm", None),
+                        "p0": db_dict[rec].get("p0", None),
+                        "s400": db_dict[rec].get("s400", None),
+                    },
                 )
                 if created:
                     print(f"Created {obj}")
