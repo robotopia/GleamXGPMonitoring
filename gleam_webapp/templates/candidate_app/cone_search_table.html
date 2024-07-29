@@ -1,6 +1,5 @@
   <div class="col">
     <h4>Nearby Candidates:</h4>
-    <form id="nearby_form">
       <table class="fl-table">
         <tr>
           <th></th>
@@ -11,7 +10,7 @@
         </tr>
         {% for result in table %}
         <tr>
-          <td><input type="checkbox" name="src_{{result.id}}" value="src_{{result.id}}"></td>
+          <td><input type="checkbox" name="src_{{result.id}}" value="{{result.id}}"></td>
           <td><a href="/candidate_rating/{{ result.id }}/" style="text-decoration:None">{{ result.id }}</a></td>
           <td>{{ result.ra_hms }}</td>
           <td>{{ result.dec_dms }}</td>
@@ -21,5 +20,4 @@
           <tr><td>No Sources found</td></tr>
         {% endfor %}
       </table>
-    </form>
   </div>

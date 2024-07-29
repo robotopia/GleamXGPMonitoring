@@ -105,6 +105,7 @@
 {% if candidate %}
 <title>Rating:{{ candidate.id }} </title>
 
+<form action="{% url 'candidate_update_rating' id=candidate.id %}" method="post">
 <div class="container-fluid">
   <div class="row">
     <div class="col-12">
@@ -112,7 +113,6 @@
         Rating candidate with ID: {{ candidate.id }} from project: {{candidate.project.name}}</h2>
     </div>
   </div>
-
   <div class="row">
     <div class="col-3">
       {% if candidate.png_path %}
@@ -152,7 +152,7 @@
     </div>
 
     <div class="col-3">
-          <form action="{% url 'candidate_update_rating' id=candidate.id %}" method="post">
+          <!-- <form action="{% url 'candidate_update_rating' id=candidate.id %}" method="post"> -->
             {% csrf_token %}
             <div class="field">
               <h4>Choose classification:</h4>
@@ -204,7 +204,7 @@
             </div>
             <input type="hidden" name="id" value="">
             <input type="hidden" name="username" value="{{user}}">
-          </form>
+          <!-- </form> -->
           <button class="btn btn-info" onclick="window.history.go(-1)">Back to previous</button>
           <a class="btn btn-info" href="/candidate_rating/random/">Skip</a>
     </div>
@@ -256,8 +256,8 @@
       <p>Loading ... </p>
     </div>
   </div>
-
 </div>
+</form>
 {% else %}
 <p>Candidate not Found!</p>
 {% endif %}
