@@ -285,19 +285,27 @@ def token_create(request):
 @transaction.atomic
 def candidate_update_rating(request, id):
 
-    # Figure out which source id's should be rated
-    ids_to_apply = [id]
-    # Additional source id's are provided in the request.data if the user
-    # has checked the boxes in the "nearby candidates" table
-    # add them to the list if they are present
-    for src in request.data:
-        if src.startswith("src_"):
-            ids_to_apply.extend(int(request.data.get(src)))
+    candidates = []
+    if request.data.get("observation", None):
+        # Apply the rating to ALL CANDIATES with this obsid
+        candidates = models.Candidate.objects.filter(
+            obs_id=int(request.data.get("observation"))
+        )
+    else:
+        # Figure out which source id's should be rated
+        ids_to_apply = [id]
+        # Additional source id's are provided in the request.data if the user
+        # has checked the boxes in the "nearby candidates" table
+        # add them to the list if they are present
+        for src in request.data:
+            if src.startswith("src_"):
+                ids_to_apply.append(int(request.data.get(src)))
+        candidates = models.Candidate.objects.filter(id__in=ids_to_apply)
 
-    for id in ids_to_apply:
-        candidate = models.Candidate.objects.filter(id=id).first()
-        if candidate is None:
-            raise ValueError("Candidate not found")
+    if not candidates:
+        raise ValueError("Candidate not found")
+
+    for candidate in candidates:  # id in ids_to_apply:
 
         rating = models.Rating.objects.filter(
             candidate=candidate, user=request.user
