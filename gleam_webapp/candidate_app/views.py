@@ -242,23 +242,6 @@ def candidate_rating(request, id, arcmin=2):
     else:
         sep_arcmin = candidate.nks_sep_deg * 60
 
-    # Perform voevent database query
-    # https://voeventdbremote.readthedocs.io/en/latest/notebooks/00_quickstart.html
-    # conesearch skycoord and angle error
-    # cand_err = Angle(arcmin, unit=units.arcmin)
-    # cand_err = Angle(5,  unit=units.deg)
-    # cone = (cand_coord, cand_err)
-
-    # my_filters = {
-    #     FilterKeys.role: "observation",
-    #     FilterKeys.authored_since: time.tt.datetime - timedelta(hours=1),
-    #     FilterKeys.authored_until: time.tt.datetime + timedelta(hours=1),
-    #     # FilterKeys.authored_since: time.tt.datetime - timedelta(days=1),
-    #     # FilterKeys.authored_until: time.tt.datetime + timedelta(days=1),
-    #     FilterKeys.cone: cone,
-    # }
-    voevents = []
-
     context = {
         "candidate": candidate,
         "rating": rating,
@@ -268,7 +251,6 @@ def candidate_rating(request, id, arcmin=2):
         "cand_type_choices": tuple(
             (c.name, c.name) for c in models.Classification.objects.all()
         ),
-        "voevents": voevents,
     }
     return render(request, "candidate_app/candidate_rating_form.html", context)
 
