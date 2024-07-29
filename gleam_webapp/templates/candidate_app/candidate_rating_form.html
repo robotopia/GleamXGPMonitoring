@@ -105,6 +105,7 @@
 {% if candidate %}
 <title>Rating:{{ candidate.id }} </title>
 
+<form action="{% url 'candidate_update_rating' id=candidate.id %}" method="post">
 <div class="container-fluid">
   <div class="row">
     <div class="col-12">
@@ -112,7 +113,6 @@
         Rating candidate with ID: {{ candidate.id }} from project: {{candidate.project.name}}</h2>
     </div>
   </div>
-
   <div class="row">
     <div class="col-3">
       {% if candidate.png_path %}
@@ -148,11 +148,18 @@
               <tr><td>Observation ID</td>  <td><a href="http://ws.mwatelescope.org/observation/obs/?obs_id={{ candidate.obs_id.observation_id }}" target="_blank">{{ candidate.obs_id.observation_id }}</a></td></tr>
               <tr><td>Time (UTC)</td>      <td>{{ time }}</td></tr>
               <tr><td>Frequency (MHz)</td> <td>{{ candidate.obs_id.cent_freq }}</td></tr>
+              <tr>
+                <td>Rate all of this obs</td>
+                <td>
+                  <input type="checkbox" name="observation" value="{{candidate.obs_id.observation_id}}">
+                  <span title="Overrides candidates selected from the 'Nearby Candidates' table">(N.B)</span>
+                </td>
+              </tr>
             </table>
     </div>
 
     <div class="col-3">
-          <form action="{% url 'candidate_update_rating' id=candidate.id %}" method="post">
+          <!-- <form action="{% url 'candidate_update_rating' id=candidate.id %}" method="post"> -->
             {% csrf_token %}
             <div class="field">
               <h4>Choose classification:</h4>
@@ -204,7 +211,7 @@
             </div>
             <input type="hidden" name="id" value="">
             <input type="hidden" name="username" value="{{user}}">
-          </form>
+          <!-- </form> -->
           <button class="btn btn-info" onclick="window.history.go(-1)">Back to previous</button>
           <a class="btn btn-info" href="/candidate_rating/random/">Skip</a>
     </div>
@@ -256,8 +263,8 @@
       <p>Loading ... </p>
     </div>
   </div>
-
 </div>
+</form>
 {% else %}
 <p>Candidate not Found!</p>
 {% endif %}
