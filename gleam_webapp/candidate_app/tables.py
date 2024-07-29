@@ -9,6 +9,10 @@ class ImageColumn(tables.Column):
 
 
 class CandidateTable(tables.Table):
+    id = tables.LinkColumn(
+        "candidate_rating",
+        args=[tables.A("pk")],
+    )
     rating_count = tables.Column()
     png_path = ImageColumn(verbose_name="Preview", orderable=False)
     ra_hms = tables.Column(order_by=("ra_deg",), verbose_name="RA")
