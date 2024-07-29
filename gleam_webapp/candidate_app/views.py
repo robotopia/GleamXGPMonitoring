@@ -284,43 +284,54 @@ def token_create(request):
 @api_view(["POST"])
 @transaction.atomic
 def candidate_update_rating(request, id):
-    candidate = models.Candidate.objects.filter(id=id).first()
-    if candidate is None:
-        raise ValueError("Candidate not found")
 
-    rating = models.Rating.objects.filter(
-        candidate=candidate, user=request.user
-    ).first()
-    if rating is None:
-        # User hasn't made a rating of this cand so make one
-        rating = models.Rating(
-            candidate=candidate,
-            user=request.user,
-            rating=None,
-        )
+    # Figure out which source id's should be rated
+    ids_to_apply = [id]
+    # Additional source id's are provided in the request.data if the user
+    # has checked the boxes in the "nearby candidates" table
+    # add them to the list if they are present
+    for src in request.data:
+        if src.startswith("src_"):
+            ids_to_apply.extend(int(request.data.get(src)))
 
-    classification = request.data.get("classification", None)
-    if classification:
-        rating.classification = models.Classification.objects.filter(
-            name=classification
+    for id in ids_to_apply:
+        candidate = models.Candidate.objects.filter(id=id).first()
+        if candidate is None:
+            raise ValueError("Candidate not found")
+
+        rating = models.Rating.objects.filter(
+            candidate=candidate, user=request.user
         ).first()
+        if rating is None:
+            # User hasn't made a rating of this cand so make one
+            rating = models.Rating(
+                candidate=candidate,
+                user=request.user,
+                rating=None,
+            )
 
-    score = request.data.get("rating", None)
-    if score:
-        logger.debug("setting score %s=>%s", rating.rating, score)
-        rating.rating = score
+        classification = request.data.get("classification", None)
+        if classification:
+            rating.classification = models.Classification.objects.filter(
+                name=classification
+            ).first()
 
-    # Update time
-    rating.date = datetime.now(tz=timezone.utc)
+        score = request.data.get("rating", None)
+        if score:
+            logger.debug("setting score %s=>%s", rating.rating, score)
+            rating.rating = score
 
-    rating.save()
+        # Update time
+        rating.date = datetime.now(tz=timezone.utc)
 
-    # Update candidate notes
-    notes = request.data.get("notes", "")
-    if candidate.notes != notes:
-        logger.debug("setting notes %s=>%s", candidate.notes, notes)
-        candidate.notes = notes
-    candidate.save()
+        rating.save()
+
+        # Update candidate notes
+        notes = request.data.get("notes", "")
+        if candidate.notes != notes:
+            logger.debug("setting notes %s=>%s", candidate.notes, notes)
+            candidate.notes = notes
+        candidate.save()
 
     # Redirects to a random next candidate
     return redirect(reverse("candidate_random"))
