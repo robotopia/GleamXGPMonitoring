@@ -223,7 +223,7 @@
 
 <div class="row">
   <div class="col"> 
-    <h4>Nearest within this project</h4>
+    <h4>Nearest known source</h4>
     <table>
       <tr><td>Source name</td>      <td>{{ candidate.nks_name }}</td></tr>
       <tr><td>Location</td>         <td>{{ candidate.nks_ra_hms }}, {{ candidate.nks_dec_dms }}</td></tr>
@@ -236,7 +236,7 @@
       <tr><td>Flux (Jy)</td>        <td>{{ candidate.nks_flux|floatformat:2 }}</td></tr>
       <tr><td>Flux ratio</td>       <td>{{ candidate.can_nks_flux_rat|floatformat:2 }}</td></tr>
     </table>
-    <a class="btn btn-primary" href="{% url 'candidate_table' %}?ra_deg={{ candidate.ra_deg }}&dec_deg={{ candidate.dec_deg }}&radius={{arcmin_search}}">Search within this project</a>
+    <a class="btn btn-info" href="{% url 'candidate_table' %}?ra_deg={{ candidate.ra_deg }}&dec_deg={{ candidate.dec_deg }}&radius={{arcmin_search}}">More within this project</a>
   </div>
 
   <div class="col">
