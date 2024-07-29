@@ -345,6 +345,27 @@ def candidate_update_rating(request, id):
     return redirect(reverse("candidate_random"))
 
 
+@login_required
+@api_view(["GET"])
+@transaction.atomic
+def associate_candidate_pulsar(request):
+    if not (request.GET.get("src") and request.GET.get("pulsar")):
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    candidate = models.Candidate.objects.filter(id=int(request.GET.get("src"))).first()
+    pulsar = models.ATNFPulsar.objects.filter(id=int(request.GET.get("pulsar"))).first()
+
+    if request.GET.get("delete"):
+        assoc = models.Association.objects.filter(candidate=candidate).first()
+        if assoc:
+            assoc.delete()
+    else:
+        assoc = models.Association.objects.get_or_create(
+            candidate=candidate, defaults={"pulsar": pulsar}
+        )
+    return Response(status=status.HTTP_200_OK)
+
+
 def candidate_metadata_view(request, pk):
     item = get_object_or_404(models.Metadata, pk=pk)
     return render(request, "candidate_app/candidate_metadata.html", {"item": item})
