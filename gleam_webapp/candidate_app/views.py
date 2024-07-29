@@ -363,7 +363,7 @@ def associate_candidate_pulsar(request):
         if assoc:
             assoc.delete()
     else:
-        assoc = models.Association.objects.get_or_create(
+        assoc = models.Association.objects.update_or_create(
             candidate=candidate, defaults={"pulsar": pulsar}
         )
     return Response(status=status.HTTP_200_OK)
