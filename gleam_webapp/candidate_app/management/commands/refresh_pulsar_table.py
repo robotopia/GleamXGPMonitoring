@@ -65,7 +65,7 @@ class Command(BaseCommand):
 
             if pos is not None:
                 db_dict[name]["raj"] = pos.ra.degree
-                db_dict[name]["decj"] = pos.ra.degree
+                db_dict[name]["decj"] = pos.dec.degree
 
         with transaction.atomic():
             # ATNFPulsar.objects.all().delete()
