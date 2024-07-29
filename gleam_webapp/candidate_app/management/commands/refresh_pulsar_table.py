@@ -32,7 +32,9 @@ class Command(BaseCommand):
         db_dict = {}
         for ln in psrdb:
             line = ln.decode()
-            if line.startswith("@-"):
+            if line.startswith("#"):
+                continue
+            elif line.startswith("@-"):
                 print(db_dict[name])
                 dec, ra, lat, long, pos = None, None, None, None, None
                 name = None
