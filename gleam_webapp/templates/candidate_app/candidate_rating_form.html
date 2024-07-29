@@ -223,7 +223,7 @@
 
 <div class="row">
   <div class="col"> 
-    <h4>Nearest within this project</h4>
+    <h4>Nearest known source</h4>
     <table>
       <tr><td>Source name</td>      <td>{{ candidate.nks_name }}</td></tr>
       <tr><td>Location</td>         <td>{{ candidate.nks_ra_hms }}, {{ candidate.nks_dec_dms }}</td></tr>
@@ -236,6 +236,7 @@
       <tr><td>Flux (Jy)</td>        <td>{{ candidate.nks_flux|floatformat:2 }}</td></tr>
       <tr><td>Flux ratio</td>       <td>{{ candidate.can_nks_flux_rat|floatformat:2 }}</td></tr>
     </table>
+    <a class="btn btn-info" href="{% url 'candidate_table' %}?ra_deg={{ candidate.ra_deg }}&dec_deg={{ candidate.dec_deg }}&radius={{arcmin_search}}">More within this project</a>
   </div>
 
   <div class="col">
@@ -254,64 +255,7 @@
     <div id="pulsarlocator">
       <p>Loading ... </p>
     </div>
-    <!-- <h4>ATNF pulsars:</h4>
-      <table class="fl-table">
-        <tr>
-          <th>Name</th>
-          <th>Period (s)</th>
-          <th>DM (pc / cm^3)</th>
-          <th>S400 (mJy)</th>
-          <th>Sep (arcmin)</th>
-        </tr>
-        {% for result in atnf_result_table %}
-        <tr>
-          <td><a href="https://www.atnf.csiro.au/research/pulsar/psrcat/proc_form.php?version=1.67&startUserDefined=true&c1_val=&c2_val=&c3_val=&c4_val=&sort_attr=jname&sort_order=asc&condition=&pulsar_names={{ result.name|urlize }}&ephemeris=long&submit_ephemeris=Get+Ephemeris&coords_unit=raj%2Fdecj&radius=&coords_1=&coords_2=&style=Long+with+last+digit+error&no_value=*&fsize=3&x_axis=&x_scale=linear&y_axis=&y_scale=linear&state=query" style="text-decoration:None">{{ result.name }}</a></td>
-          <td>{{ result.period }}</td>
-          <td>{{ result.dm }}</td>
-          <td>{{ result.s400 }}</td>
-          <td>{{ result.sep|floatformat:2 }}</td>
-        </tr>
-        {% empty %}
-        <tr><td>No Sources found</td></tr>
-        {% endfor %}
-      </table> -->
   </div>
-
-  <!-- <div class="col-3">
-    <div class="card">
-        <div class="card-content">
-            <h3>Transient VOEvents (within one hour):</h3>
-            <table class="fl-table">
-              <tr>
-                <th>Event type</th>
-                <th>Event source</th>
-                <th>ID</th>
-                <th>RA</th>
-                <th>Dec</th>
-                <th>Separation (arcmin)</th>
-                <th>XML file</th>
-              </tr>
-              {% for result in voevents %}
-                {% if object.ignored %}
-                  <tr class="grey-tr">
-                {% else %}
-                  <tr>
-                {% endif %}
-                <td>{% if resultsource_type is not None %} {{ result.source_type }}  {% endif %}</td>
-                <td>{{ result.telescope }} {{ result.event_type }}</td>
-                <td>{{ result.trig_id }}</td>
-                <td>{{ result.ra }}</td>
-                <td>{{ result.dec }}</td>
-                <td>{{ result.sep|floatformat:2 }}</td>
-                <td><a href="/voevent_view/{{ result.xml }}">View</a></td>
-              </tr>
-              {% empty %}
-              <tr><td>No Sources found</td></tr>
-              {% endfor %}
-            </table>
-        </div>
-      </div>
-  </div> -->
 
 </div>
 {% else %}
