@@ -11,7 +11,7 @@
         {% for result in table %}
         <tr>
           <td><input type="checkbox" name="src_{{result.id}}" value="{{result.id}}"></td>
-          <td><a href="{% url candidate_rating %}/{{ result.id }}/" style="text-decoration:None">{{ result.id }}</a></td>
+          <td><a href="{% url 'candidate_rating' id=result.id %}" style="text-decoration:None">{{ result.id }}</a></td>
           <td>{{ result.ra_hms }}</td>
           <td>{{ result.dec_dms }}</td>
           <td>{{ result.sep|floatformat:2 }}</td>
