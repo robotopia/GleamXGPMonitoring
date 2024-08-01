@@ -9,11 +9,10 @@ The following is a sections describe how to use, install and maintain the web ap
 
    requirements
    quick_start
-   UserGuide
    Architecture
    databases
-   AddUsers
    ConfiguringNimbus
+   AdminTasks
 
 .. toctree:: 
    :maxdepth: 2
