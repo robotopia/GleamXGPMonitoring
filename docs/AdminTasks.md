@@ -17,6 +17,10 @@ On the left pane you should see three sections:
 Each of the rows correspond to a model in the database.
 The groups represent the different 'apps' that are installed.
 
+While it is possible to create/view/update/delete any object within the database from the admin page, it is impractical to do so for most of the models.
+The models for which the admin page should be used are: Users, Projects, Classifications, and Filters.
+These are described below.
+
 (addusers)=
 
 ## Add new users to the app
@@ -36,7 +40,7 @@ Click on the “Save” button and you’ll be then taken to a page that lets yo
 By default all users are given permissions of just “Active” which means they can log into the web app and navigate the html pages.
 If you want someone to be able to admin the site (e.g. log into the admin pages), then you’ll have to set their permissions to include “Staff Status”.
 
-(addproject)=
+(manageproject)=
 
 ## Managing projects
 
@@ -67,6 +71,24 @@ You can delete a project from this page using the red Delete button.
 **NB**: Each candidate has a reference to a project when it is uploaded, if you delete a project then all candidates associated with that project will be deleted (which will also cause the related ratings to be deleted).
 This is an efficient way of deleting a lot of candidates and ratings at once which might be exactly what you want, but maybe not so be careful with red buttons.
 
-(addcategory)=
+(manageclassification)=
 
-## Creating classification categories
+## Managing classification categories
+
+The list of classifications that can be applied to candidate ratings is dynamic.
+All the classifications are stored in their own table which can be edited from this interface.
+Classifications are simple items much like Projects mentioned above.
+Adding and editing them is done in the same way.
+
+**NB**: Each rating has a classification associated with it.
+If you delete a classification then all the ratings which linked to this classification will also be deleted.
+
+(managefilter)=
+
+## Managing filters
+
+Each candidate has an associated filter.
+Filters can be managed in the same way as Classfications and Projects.
+
+**NB**: Each Candidate has a Filter associated with it.
+If you delete a Filter then all the Candidates which linked to this Fitler will also be deleted.
