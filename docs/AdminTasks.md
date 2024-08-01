@@ -23,7 +23,7 @@ These are described below.
 
 (addusers)=
 
-## Add new users to the app
+## Managing users
 
 Navigate to the admin page at `<site url>/admin`.
 If you are not logged in, then you’l be prompted to login.
@@ -39,6 +39,14 @@ On this page you’ll be asked to give a username and password for the new user.
 Click on the “Save” button and you’ll be then taken to a page that lets you edit the profile of that user.
 By default all users are given permissions of just “Active” which means they can log into the web app and navigate the html pages.
 If you want someone to be able to admin the site (e.g. log into the admin pages), then you’ll have to set their permissions to include “Staff Status”.
+
+All the information in the "Personal info" tab is optional and not used in any part of the web app.
+It's probably best to keep this empty.
+
+In the "Permissions" tab, you can ignore all the Groups and User permissions, as these attributes are not used in the web app.
+
+**NB**: If you delete a user, all their ratings will be deleted as well.
+Any data that was uploaded by a user will be kept.
 
 (manageproject)=
 
