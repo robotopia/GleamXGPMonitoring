@@ -1,12 +1,10 @@
 # User Guide
 
-## Pages
-
-### Home
+## Home
 
 This page is intentionally blank.
 
-### Survey Status
+## Survey Status
 
 ![Survey Status](figures/SurveyStatusPage.png)
 
@@ -15,7 +13,7 @@ Since observations are not associated with projects (see [Session Settings](#ses
 The blue download button allows users to download all the observation data as a FITS table.
 The downloaded data contains all the fields associated with the [observation model](databases).
 
-### Candidate Table
+## Candidate Table
 
 ![Candidate Ratings Table](figures/CandidateRatingsTable.png)
 
@@ -30,7 +28,7 @@ If you want all data from a given project, be sure to press the "clear filter" b
 
 Clicking on the candidate Id will take you to the corresponding candidate rating page.
 
-### Candidate Rating
+## Candidate Rating
 
 This page is the core of the MWA Image Plane Transient Classifier app.
 The primary purpose of this page is to give an expert user the ability to see a lot of relevant information about a given `candidate` so that they can provide a `rating`.
@@ -72,10 +70,26 @@ Clicking on the green `+` button next to a `pulsar` will cause it to be associat
 Each `candidate` can have at most one `pulsar` `association`.
 If a `pulsar` is already associated with the current `candidate` then you will instead see a red `-` button which, when pressed, undo the association.
 
-### Session Settings
+## Session Settings
 
-### Download Data
+When you are navigating the website not all of the data will be shown in all of the pages.
+The session settings page lets you control which subset of the data you'd like to see, and how.
+The following can be chosen:
 
-### Manage Tokens
+- Project:
+  - All of the available projects are listed here.
+  - You have to select a project before any candidates will be shown on other pages.
+- Candidate ordering:
+  - This determines which candidate is selected when you go to the [candidate rating](#candidate-rating) page
+- Candidate filtering: ranking
+  - TBC unclear what this is for or how it's used.
+- Candidate filtering: observing frequency
+  - The checkboxes here allow you select only candidates which are observed at a given frequency.
+  - You can select multiple frequencies.
+  - Selecting none means that all frequencies will be shown.
 
-### Change Password
+## Download Data
+
+## Manage Tokens
+
+## Change Password
