@@ -32,6 +32,46 @@ Clicking on the candidate Id will take you to the corresponding candidate rating
 
 ### Candidate Rating
 
+This page is the core of the MWA Image Plane Transient Classifier app.
+The primary purpose of this page is to give an expert user the ability to see a lot of relevant information about a given `candidate` so that they can provide a `rating`.
+The ratings page allows users to apply a `classification`, a confidence `rating`, and some notes.
+
+In the upper section of the page you'll see the following panels:
+
+- A summary diagnostic image
+- An animation of the image location over time
+- Details on the `candidate` including the associated `pulsar` (if there is one)
+- Details of the `observation` from which this `candidate` comes
+- A `classification` panel
+
+![Candidate Ratings Upper](figures/CandidateRatingUpper.png)
+
+To rate a candidate:
+
+1. Choose a `classification` (optional)
+2. Write/edit notes (optional)
+3. Choose a confidence in your `rating` (1-5)
+
+Pressing one of the rating buttons will submit your `rating` and move on to another `candidate` within the same project.
+
+The lower section of the page shows what other `candidate`s, sources (from [Simbad](https://simbad.u-strasbg.fr/simbad/sim-fid)), and `pulsar`s are nearby.
+The default operation is to provide a search within 2 acrmin of the current `candidate`, however you can change this using the text box and pressing the search button.
+
+![Candidate Ratings Lower](figures/CandidateRatingLower.png)
+
+The blue button titled "More within this project" will take you to the candidate table.
+
+The Nearby candidates table shows all the candidates from the current project that are nearby.
+Clicking on the blue ID will take you to the candidate ranking page for that candidate.
+Selecting the checkbox next to the candidate will mean that whatever `classification`, `rating` and notes you apply to the current candidate will also be applied to the checked candidates from this table.
+
+The Simbad table shows links to the nearby candidates.
+
+The ATNF pulsars table shows all the pulsars that are near to this source.
+Clicking on the green `+` button next to a `pulsar` will cause it to be associated with the current `candidate`.
+Each `candidate` can have at most one `pulsar` `association`.
+If a `pulsar` is already associated with the current `candidate` then you will instead see a red `-` button which, when pressed, undo the association.
+
 ### Session Settings
 
 ### Download Data
