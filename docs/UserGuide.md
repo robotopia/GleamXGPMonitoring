@@ -90,6 +90,22 @@ The following can be chosen:
 
 ## Download Data
 
+You can download filtered data from the [candidate table](#candidate-table) page.
+The links on this page allow you to download an unfiltered table of data for:
+
+- Ratings
+- Candidates
+- Observations
+- Filters
+- Users
+
+The tables are downloaded in FITS format.
+
 ## Manage Tokens
 
+When uploading data to the web app using the provided script, you will need an authentication token (instead of username and password).
+This page allows you to see your authentication token, and create one if you don't have one.
+
 ## Change Password
+
+This page allows a user to reset their password.
