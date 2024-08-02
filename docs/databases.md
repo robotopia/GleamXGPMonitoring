@@ -1,13 +1,15 @@
 # Databases Description
 
 The MWA image plane transients app uses a PostgreSQL database with the following tables (which Django refers to as models).
-These models are defined in `gleam_webapp/candidate_app/models.py`:
+These models are defined in `gleam_webapp/candidate_app/models.py`.
+
+For a more detailed ERD see [this image](figures/DB_ERD.svg).
 
 ## Observation
 
 Fields defined:
 
-- observation_id
+- observation_id (required, primary key)
 - obsname
 - starttime
 - stoptime
@@ -27,34 +29,34 @@ Fields defined:
 
 Fields defined:
 
-- id
-- name
+- id (required, primary key)
+- name (must be unique)
 - description
 
 ## Filter
 
 Fields defined:
 
-- id
-- name
+- id (required, primary key)
+- name (must be unique)
 - description
 
 ## Classification
 
 Fields defined:
 
-- id
-- name
+- id (required, primary key)
+- name (must be unique)
 - description
 
 ## Candidate
 
 Fields defined:
 
-- id
-- obs_id
-- filter
-- project
+- id (required, primary key)
+- obs_id (references observation.observation_id)
+- filter (references filter.id)
+- project (references project.id)
 - png_path
 - gif_path
 - notes
@@ -91,33 +93,33 @@ Fields defined:
 
 ## Metadata
 
-- candidate
+- candidate (references candidate)
 - text
 
 ## Rating:
 
 Fields defined:
 
-- id
-- candidate
-- user
+- id (required, primary key)
+- candidate (references candidate)
+- user (references user in auth db)
 - rating
-- classification
+- classification (references classification)
 - date
 
 ## ATNFPulsar
 
 Fields defined:
 
-- id
-- name
-- decj
-- raj
+- id (required, primary key)
+- name (unique)
+- decj (required)
+- raj (required)
 - DM
 - p0
 - s400
 
 ## Association
 
-- candidate
-- pulsar
+- candidate (references candidate, primary_key)
+- pulsar (references pulsar)
