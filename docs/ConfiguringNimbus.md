@@ -1,4 +1,4 @@
-# Allowing external web access from at Nimbus instance
+# Allowing external web access from a Nimbus instance
 
 Once you have a nimbus instance, you need to allow access from the web so that you can see your web app.
 To do this you should look go to the admin page for your project.
