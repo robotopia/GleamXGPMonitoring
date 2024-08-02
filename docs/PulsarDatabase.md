@@ -1,6 +1,6 @@
 # Updating the Pulsar database
 
-To make queries for pulsars faster, the [ATNF pulsar catalogue](https://www.atnf.csiro.au/research/pulsar/psrcat/) has been duplicated within the GleamXGPMonitoring app.
+To make queries for pulsars faster, the [ATNF pulsar catalogue](https://www.atnf.csiro.au/research/pulsar/psrcat/) has been duplicated within the MWA Image Plane Transient Classifier app.
 The Pulsar model has the following fields:
 
 - name
@@ -13,7 +13,7 @@ The Pulsar model has the following fields:
 The `name` is unique across all Pulsars, and every pulsar has at least an raj/decj.
 Other fields are filled if they are present in the ATNF pulsar catalogue.
 
-Since the pulsar catalogue is periodically updated, a script has been created that will automate the process of retrieving the updated catalogue, and updating the Pulsar table within the GleamXGPMonitoring app.
+Since the pulsar catalogue is periodically updated, a script has been created that will automate the process of retrieving the updated catalogue, and updating the Pulsar table within the MWA Image Plane Transient Classifier app.
 
 To run the script, you need to ssh into the machine that is running the app and then run the following:
 
