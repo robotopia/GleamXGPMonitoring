@@ -15,6 +15,7 @@ The following is a sections describe how to install, use, and maintain the web a
    quick_start
    ConfiguringNimbus
    UserGuide
+   UploadData
    Architecture
    databases
    AdminTasks
