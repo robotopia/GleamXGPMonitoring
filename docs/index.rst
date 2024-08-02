@@ -13,9 +13,10 @@ The following is a sections describe how to install, use, and maintain the web a
 
    requirements
    quick_start
+   ConfiguringNimbus
+   UserGuide
    Architecture
    databases
-   ConfiguringNimbus
    AdminTasks
    PulsarDatabase
 
