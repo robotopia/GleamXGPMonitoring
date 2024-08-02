@@ -84,9 +84,8 @@ The following can be chosen:
 - Candidate filtering: ranking
   - TBC unclear what this is for or how it's used.
 - Candidate filtering: observing frequency
-  - The checkboxes here allow you select only candidates which are observed at a given frequency.
+  - The checkboxes here allow you exclude candidates which are observed at a given frequency.
   - You can select multiple frequencies.
-  - Selecting none means that all frequencies will be shown.
 
 ## Download Data
 
