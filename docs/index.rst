@@ -13,6 +13,7 @@ The following is a sections describe how to use, install and maintain the web ap
    databases
    ConfiguringNimbus
    AdminTasks
+   PulsarDatabase
 
 .. toctree:: 
    :maxdepth: 2
