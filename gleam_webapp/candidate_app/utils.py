@@ -1,7 +1,11 @@
 from django.http import HttpResponse
 from astropy.table import Table
+from datetime import datetime
 import numpy as np
 import io
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def download_fits(request, queryset, table):
@@ -21,6 +25,12 @@ def download_fits(request, queryset, table):
 
     # make a table, and write it to memory for downloading.
     data = Table(columns)
+
+    # conver datetime columns into strings
+    for c in data.colnames:
+        if data[c].dtype == datetime:
+            data[c] = data[c].astype(str)
+
     memfile = io.BytesIO()
     data.write(memfile, format="fits")
 
