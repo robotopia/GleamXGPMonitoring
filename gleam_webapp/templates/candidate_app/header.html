@@ -43,6 +43,11 @@
             <span class="navbar-text active">
               {{ user.username }}
             </span>
+            {% if user.is_staff %}
+              <span class="navbar-text">
+                <a class="nav-link" href="/admin/">Admin</a>
+              </span>
+            {% endif %}
             <span class="navbar-text">
               <a class="nav-link" href="/token_manage/">Manage Tokens</a>
             </span>
@@ -53,12 +58,12 @@
               <a class="nav-link" href="{% url 'logout' %}">Log Out</a>
             </span>
           {% else %}
-          <span class="navbar-text active">
-            You are not logged in
-          </span>
-          <span class="navbar-text">
-            <a class="nav-link" href="{% url 'login' %}">Log In</a>
-          </span>
+            <span class="navbar-text active">
+              You are not logged in
+            </span>
+            <span class="navbar-text">
+              <a class="nav-link" href="{% url 'login' %}">Log In</a>
+            </span>
           {% endif %}
 
         <!-- </ul> -->
