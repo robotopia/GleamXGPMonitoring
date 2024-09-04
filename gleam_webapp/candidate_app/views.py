@@ -579,15 +579,20 @@ def download_data(request, table):
     if table == "user":
         from django.contrib.auth import get_user_model
 
-        this_model = get_user_model()
+        this_model = get_user_model().objects.all()
     elif table == "rating":
-        this_model = models.Rating
+        this_model = models.Rating.objects.annotate(
+            username=F("user__username"),
+            classificationname=F("classification__name"),
+        )
     elif table == "candidate":
-        this_model = models.Candidate
+        this_model = models.Candidate.objects.annotate(
+            filter_name=F("filter__name"), project_name=F("project__name")
+        )
     elif table == "observation":
-        this_model = models.Observation
+        this_model = models.Observation.objects.all()
     elif table == "filter":
-        this_model = models.Filter
-    response = download_fits(request, this_model.objects.all(), table)
+        this_model = models.Filter.objects.all()
+    response = download_fits(request, this_model, table)
     # response = download_csv(request, this_model.objects.all(), table)
     return response
