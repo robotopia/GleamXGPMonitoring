@@ -3,6 +3,8 @@ from django.db.models import Q, F
 from .models import Candidate
 from django_q3c.expressions import Q3CRadialQuery, Q3CDist
 
+from astropy.coordinates import SkyCoord
+import astropy.units as u
 import logging
 
 logger = logging.getLogger(__name__)
@@ -17,14 +19,14 @@ class CandidateFilter(django_filters.FilterSet):
         field_name="obs_id__observation_id",
         label="OBSID",
     )
-    ra_deg = django_filters.NumberFilter(
+    ra_deg = django_filters.CharFilter(
         field_name="ra_deg",
-        label="RA (degrees)",
+        label="RA (deg or hms)",
         method="no_filter",
     )
-    dec_deg = django_filters.NumberFilter(
+    dec_deg = django_filters.CharFilter(
         field_name="dec_deg",
-        label="DEC (degrees)",
+        label="DEC (deg or dms)",
         method="no_filter",
     )
     radius = django_filters.NumberFilter(
@@ -46,7 +48,7 @@ class CandidateFilter(django_filters.FilterSet):
         return qs
 
     def filter_by_cone_search(self, queryset, name, value):
-        logger.warning(f"QS size is {queryset.count()}")
+        # logger.warning(f"QS size is {queryset.count()}")
 
         if not value:
             return queryset
@@ -56,8 +58,26 @@ class CandidateFilter(django_filters.FilterSet):
 
         if (len(ra_center) == 0) or (len(dec_center) == 0):
             return queryset
-        ra_center = float(ra_center)
-        dec_center = float(dec_center)
+
+        try:
+            ra_center = float(ra_center)
+            dec_center = float(dec_center)
+        except ValueError as e:
+            if "convert string" in str(e):
+                # User may have submitted RA/DEC in HMS/DMS
+                try:
+                    coord = SkyCoord(
+                        ra_center, dec_center, unit=(u.hourangle, u.deg), frame="fk5"
+                    )
+                    ra_center = coord.ra.degree
+                    dec_center = coord.dec.degree
+                except ValueError:
+                    logger.warning("CAUGHT ERROR setting ra/dec to zero")
+                    ra_center = 0
+                    dec_center = 0
+            else:
+                raise e
+
         radius = float(value) / 60.0  # arcmin
 
         logger.warning(f"ra {ra_center}, dec {dec_center}, radius {radius}")
