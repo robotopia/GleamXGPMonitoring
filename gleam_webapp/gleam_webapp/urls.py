@@ -60,7 +60,7 @@ urlpatterns = [
     ),
     path("survey_status/", views.survey_status),
     path("voevent_view/<int:id>/", views.voevent_view, name="voevent_view"),
-    path("session_settings/", views.session_settings),
+    path("session_settings/", views.session_settings, name="session_settings"),
     path("download_data/<str:table>/", views.download_data),
     path(
         "download_page/",

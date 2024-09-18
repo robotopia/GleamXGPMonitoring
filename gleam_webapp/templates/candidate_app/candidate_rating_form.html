@@ -132,7 +132,7 @@
           <img src="{{candidate.png_path.url}}" 
               alt="Diagnostic Plot for {{candidate.id}}" 
               onClick="window.open(this.src)"
-              class="img-fluid">
+              class="img-fluid" style='cursor:zoom-in;'>
       {% endif %}
     </div>
     <div class="col-3">
@@ -140,7 +140,7 @@
         <img src="{{candidate.gif_path.url}}"
             alt="Diagnostic GIF for {{candidate.id}}"
             onClick="window.open(this.src)"
-            class="img-fluid" style='width:100%'>
+            class="img-fluid" style='width:100%; cursor:zoom-in;'>
       {% endif %}
     </div>
 
@@ -158,15 +158,14 @@
             </table>
             <h3>Observation:</h3>
             <table>
-              <tr><td>Observation ID</td>  <td><a href="http://ws.mwatelescope.org/observation/obs/?obs_id={{ candidate.obs_id.observation_id }}" target="_blank">{{ candidate.obs_id.observation_id }}</a></td></tr>
+              <tr><td>Observation ID</td>  <td><a href="http://ws.mwatelescope.org/observation/obs/?obs_id={{ candidate.obs_id.observation_id }}" target="_blank">{{ candidate.obs_id.observation_id }} <i class="fa-solid fa-arrow-up-right-from-square"></i></a></td></tr>
               <tr><td>Time (UTC)</td>      <td>{{ time }}</td></tr>
               <tr><td>Frequency (MHz)</td> <td>{{ candidate.obs_id.cent_freq }}</td></tr>
               <tr>
                 <td>Rate all of this obs</td>
                 <td>
                   <input type="checkbox" name="observation" value="{{candidate.obs_id.observation_id}}">
-                  <span title="Overrides candidates selected from the 'Nearby Candidates' table">(N.B)</span>
-                </td>
+                  <abbr title="Overrides candidates selected from the 'Nearby Candidates' table"> (note)</abbr>
               </tr>
             </table>
     </div>
@@ -176,20 +175,16 @@
             {% csrf_token %}
             <div class="field">
               <h4>Choose classification:</h4>
-              {% for value, text in cand_type_choices %}
-                {% if value == "T" and not rating %}
-                  <input checked="checked"
-                {% elif value == rating.classification %}
-                  <input checked="checked"
-                {% else %}
-                  <input
-                {% endif %}
-                  class="form-check-input" type="radio" name="classification" id="{{ value }}" value="{{ value }}">
-                <label  class="form-check-label" for="{{ value }}">{{ text }}</label><br>
-              {% endfor %}
+              <div class="btn-group-vertical" role="group" aria-label="Choose classification">
+                {% for value, text in cand_type_choices %}
+                  <input type="radio" class="btn-check" name="classification" id="{{value}}" value="{{value}}" autocomplete="off" 
+                  {% if value == "T" and not rating %} checked {% endif %} required>
+                <label class="btn btn-outline-primary" for="{{value}}">{{value}}</label>
+                {% endfor %}
+              </div>
             </div>
             <div class="field">
-            <h4>Rating from 1(noise) to 5(clear candidate){% if rating %}(currently {{rating.rating}}){% endif %}</h4>
+            <h4>Rating confidence {% if rating %}(currently {{rating.rating}}){% endif %}</h4>
             <div>
               {% if rating.rating == 1 %}
                 <input type="submit" class="btn btn-success btn-lg" name="rating" value="1">
@@ -219,7 +214,7 @@
             </div>
             </div>
             <div class="field">
-            <h4>Notes</h4>
+            <h4>Notes for this candidate (all users)</h4>
             <textarea rows="5" id="notes" name="notes" placeholder="is it a known source?">{{candidate.notes}}</textarea>
             </div>
             <input type="hidden" name="id" value="">

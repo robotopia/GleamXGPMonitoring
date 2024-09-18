@@ -20,7 +20,7 @@
         {% for acc in obs %}
         <tr>
           <td>{{ acc.obsname }}</td>
-          <td><a href="http://ws.mwatelescope.org/observation/obs/?obs_id={{ acc.observation_id }}" target="_blank">{{ acc.observation_id }}</a></td>
+          <td><a href="http://ws.mwatelescope.org/observation/obs/?obs_id={{ acc.observation_id }}" target="_blank">{{ acc.observation_id }}  <i class="fa-solid fa-arrow-up-right-from-square"></i></a></td>
           <td>{{ acc.rated_candidates }}/{{ acc.candidates }}</td>
           <td>{{ acc.ra_tile_hms }}</td>
           <td>{{ acc.dec_tile_dms }}</td>
