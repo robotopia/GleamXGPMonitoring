@@ -5,7 +5,7 @@ from django.utils.html import format_html
 
 class ImageColumn(tables.Column):
     def render(self, value):
-        return format_html('<img src="/media/{}" width="250" height="250"/>', value)
+        return format_html('<img src="/media/{}" width="auto" height="200" onClick="window.open(this.src);" style="cursor:zoom-in;"/>', value)
 
 
 class CandidateTable(tables.Table):
