@@ -474,6 +474,10 @@ def candidate_table(request):
         candidates = candidates.filter(project__name=session_settings["project"])
         project = "Project " + session_settings["project"]
     # Annotate with counts of different candidate type counts
+    print("-------------")
+    count_kwargs = {k.replace(" ", "_").replace("/", "_"): v for k, v in count_kwargs.items()}
+    print(count_kwargs.keys())
+    print("-------------")
     candidates = candidates.annotate(
         num_ratings=Count("rating"),
         avg_rating=Avg("rating__rating"),
