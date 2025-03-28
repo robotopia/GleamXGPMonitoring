@@ -142,7 +142,7 @@ def cone_search(request):
 def cone_search_pulsars(request):
     if request.method == "POST":
         data = json.loads(request.body.decode())
-        print(data)
+        #print(data)
         ra_deg = float(data.get("ra_deg", 0))
         dec_deg = float(data.get("dec_deg", 0))
         dist_arcmin = float(data.get("dist_arcmin", 1))
@@ -402,7 +402,7 @@ def candidate_table(request):
     # Get session data to keep filters when changing page
     session_settings = request.session.get("session_settings", 0)
     candidate_table_session_data = request.session.get("current_filter_data", 0)
-    print(candidate_table_session_data)
+    #print(candidate_table_session_data)
 
     # Check filter form
     if request.method == "POST":
@@ -451,11 +451,13 @@ def candidate_table(request):
             dec_dms = None
             search_radius_arcmin = 2
 
+    '''
     print(f"column_display: {column_display}")
     print(f"observation_id_filter: {observation_id_filter}")
     print(f"rating_cutoff: {rating_cutoff}")
     print(f"order_by: {order_by}")
     print(f"asc_dec: {asc_dec}")
+    '''
 
     # Gather all the cand types and prepare them as kwargs
     count_kwargs = {}
@@ -474,10 +476,7 @@ def candidate_table(request):
         candidates = candidates.filter(project__name=session_settings["project"])
         project = "Project " + session_settings["project"]
     # Annotate with counts of different candidate type counts
-    print("-------------")
-    count_kwargs = {k.replace(" ", "_").replace("/", "_"): v for k, v in count_kwargs.items()}
-    print(count_kwargs.keys())
-    print("-------------")
+    count_kwargs = {k.replace(" ", "_").replace("/", "_"): v for k, v in count_kwargs.items()} # For some reason, it now complains about spaces and slashes
     candidates = candidates.annotate(
         num_ratings=Count("rating"),
         avg_rating=Avg("rating__rating"),
