@@ -42,10 +42,25 @@ urlpatterns = [
         views.candidate_update_catalogue_query,
         name="candidate_update_catalogue_query",
     ),
-    path("candidate_table/", views.candidate_table),
+    path("candidate_table/", views.CandidateListView.as_view(), name="candidate_table"),
+    path(
+        "candidates/export/",
+        views.CandidateFITSExportView.as_view(),
+        name="candidate_fits_export",
+    ),
+    path(
+        "candidates/metadata/<int:pk>/",
+        views.candidate_metadata_view,
+        name="candidate_metadata",
+    ),
+    path(
+        "candidate_associate_pulsar/",
+        views.associate_candidate_pulsar,
+        name="candidate_associate_pulsar",
+    ),
     path("survey_status/", views.survey_status),
     path("voevent_view/<int:id>/", views.voevent_view, name="voevent_view"),
-    path("session_settings/", views.session_settings),
+    path("session_settings/", views.session_settings, name="session_settings"),
     path("download_data/<str:table>/", views.download_data),
     path(
         "download_page/",

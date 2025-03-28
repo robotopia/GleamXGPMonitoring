@@ -1,5 +1,15 @@
 from django.contrib import admin
-from .models import Observation, Filter, Candidate, Rating, Project, Classification
+from .models import (
+    Observation,
+    Filter,
+    Candidate,
+    Rating,
+    Project,
+    Classification,
+    Metadata,
+    ATNFPulsar,
+    Association,
+)
 
 
 class CandidateAdmin(admin.ModelAdmin):
@@ -10,9 +20,17 @@ class CandidateAdmin(admin.ModelAdmin):
     model = Candidate
 
 
+class PulsarAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "raj", "decj")
+    model = ATNFPulsar
+
+
 admin.site.register(Observation)
 admin.site.register(Filter)
 admin.site.register(Candidate, CandidateAdmin)
+admin.site.register(Metadata)
 admin.site.register(Rating)
 admin.site.register(Project)
 admin.site.register(Classification)
+admin.site.register(Association)
+admin.site.register(ATNFPulsar, PulsarAdmin)

@@ -5,23 +5,22 @@ import logging
 import random
 from datetime import datetime, timedelta
 
-import psrqpy
 import voeventdb.remote.apiv1 as apiv1
 import voeventparse
 from astropy import units
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astroquery.simbad import Simbad
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Avg, Count, Q, F
+from django.db.models import Count, Q, F
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django_q3c.expressions import Q3CRadialQuery, Q3CDist
+from django_tables2 import SingleTableView
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
@@ -30,12 +29,54 @@ from .utils import download_fits
 
 # from voeventdb.remote.apiv1 import FilterKeys, OrderValues
 
-from . import forms, models, serializers
-
-# reset the cache dir
-psrqpy.CACHEDIR = "/home/app/web/psrcat/psrcat_tar/"
+from . import forms, models, serializers, tables, filters
 
 logger = logging.getLogger(__name__)
+
+
+class FilteredCandidateQuerysetMixin:
+
+    def get_filtered_queryset(self):
+        queryset = models.Candidate.objects.all()
+
+        session_settings = self.request.session.get("session_settings", None)
+        if session_settings:
+            queryset = queryset.filter(project__name=session_settings["project"])
+
+        queryset = queryset.annotate(rating_count=Count("rating"))
+
+        self.filterset = filters.CandidateFilter(self.request.GET, queryset=queryset)
+        return self.filterset.qs
+
+
+class CandidateListView(FilteredCandidateQuerysetMixin, SingleTableView):
+    model = models.Candidate
+    table_class = tables.CandidateTable
+    template_name = "candidate_app/candidate_list.html"
+    paginate_by = 15
+
+    def get_queryset(self):
+        return self.get_filtered_queryset()
+
+    def get_context_data(self, **kwargs):
+        session_settings = self.request.session.get("session_settings", 0)
+
+        context = super().get_context_data(**kwargs)
+        context["filterset"] = self.filterset
+        if session_settings:
+            context["project_name"] = session_settings["project"]
+        else:
+            context["project_name"] = "all projects"
+        return context
+
+
+class CandidateFITSExportView(FilteredCandidateQuerysetMixin, SingleTableView):
+    def get(self, request, *args, **kwargs):
+        # Get the filtered queryset
+        filtered_qs = self.get_filtered_queryset()
+        # Download fits
+        response = download_fits(request, filtered_qs, "Candidates")
+        return response
 
 
 def home_page(request):
@@ -140,6 +181,8 @@ def cone_search(request):
 
 
 def cone_search_pulsars(request):
+    table = []
+    candidate = []
     if request.method == "POST":
         data = json.loads(request.body.decode())
         #print(data)
@@ -171,14 +214,15 @@ def cone_search_pulsars(request):
             .order_by("sep")
             .values()
         )
-
-    else:
-        table = []
+        if data.get("candidate"):
+            candidate = models.Candidate.objects.filter(
+                id=int(data.get("candidate"))
+            ).first()
 
     return render(
         request,
         "candidate_app/atnf_pulsar_table.html",
-        context={"table": table},
+        context={"table": table, "candidate": candidate},
     )
 
 
@@ -201,23 +245,6 @@ def candidate_rating(request, id, arcmin=2):
     else:
         sep_arcmin = candidate.nks_sep_deg * 60
 
-    # Perform voevent database query
-    # https://voeventdbremote.readthedocs.io/en/latest/notebooks/00_quickstart.html
-    # conesearch skycoord and angle error
-    # cand_err = Angle(arcmin, unit=units.arcmin)
-    # cand_err = Angle(5,  unit=units.deg)
-    # cone = (cand_coord, cand_err)
-
-    # my_filters = {
-    #     FilterKeys.role: "observation",
-    #     FilterKeys.authored_since: time.tt.datetime - timedelta(hours=1),
-    #     FilterKeys.authored_until: time.tt.datetime + timedelta(hours=1),
-    #     # FilterKeys.authored_since: time.tt.datetime - timedelta(days=1),
-    #     # FilterKeys.authored_until: time.tt.datetime + timedelta(days=1),
-    #     FilterKeys.cone: cone,
-    # }
-    voevents = []
-
     context = {
         "candidate": candidate,
         "rating": rating,
@@ -227,7 +254,6 @@ def candidate_rating(request, id, arcmin=2):
         "cand_type_choices": tuple(
             (c.name, c.name) for c in models.Classification.objects.all()
         ),
-        "voevents": voevents,
     }
     return render(request, "candidate_app/candidate_rating_form.html", context)
 
@@ -261,46 +287,91 @@ def token_create(request):
 @api_view(["POST"])
 @transaction.atomic
 def candidate_update_rating(request, id):
-    candidate = models.Candidate.objects.filter(id=id).first()
-    if candidate is None:
+
+    candidates = []
+    if request.data.get("observation", None):
+        # Apply the rating to ALL CANDIATES with this obsid
+        candidates = models.Candidate.objects.filter(
+            obs_id=int(request.data.get("observation"))
+        )
+    else:
+        # Figure out which source id's should be rated
+        ids_to_apply = [id]
+        # Additional source id's are provided in the request.data if the user
+        # has checked the boxes in the "nearby candidates" table
+        # add them to the list if they are present
+        for src in request.data:
+            if src.startswith("src_"):
+                ids_to_apply.append(int(request.data.get(src)))
+        candidates = models.Candidate.objects.filter(id__in=ids_to_apply)
+
+    if not candidates:
         raise ValueError("Candidate not found")
 
-    rating = models.Rating.objects.filter(
-        candidate=candidate, user=request.user
-    ).first()
-    if rating is None:
-        # User hasn't made a rating of this cand so make one
-        rating = models.Rating(
-            candidate=candidate,
-            user=request.user,
-            rating=None,
-        )
+    for candidate in candidates:  # id in ids_to_apply:
 
-    classification = request.data.get("classification", None)
-    if classification:
-        rating.classification = models.Classification.objects.filter(
-            name=classification
+        rating = models.Rating.objects.filter(
+            candidate=candidate, user=request.user
         ).first()
+        if rating is None:
+            # User hasn't made a rating of this cand so make one
+            rating = models.Rating(
+                candidate=candidate,
+                user=request.user,
+                rating=None,
+            )
 
-    score = request.data.get("rating", None)
-    if score:
-        logger.debug("setting score %s=>%s", rating.rating, score)
-        rating.rating = score
+        classification = request.data.get("classification", None)
+        if classification:
+            rating.classification = models.Classification.objects.filter(
+                name=classification
+            ).first()
 
-    # Update time
-    rating.date = datetime.now(tz=timezone.utc)
+        score = request.data.get("rating", None)
+        if score:
+            logger.debug("setting score %s=>%s", rating.rating, score)
+            rating.rating = score
 
-    rating.save()
+        # Update time
+        rating.date = datetime.now(tz=timezone.utc)
 
-    # Update candidate notes
-    notes = request.data.get("notes", "")
-    if candidate.notes != notes:
-        logger.debug("setting notes %s=>%s", candidate.notes, notes)
-        candidate.notes = notes
-    candidate.save()
+        rating.save()
+
+        # Update candidate notes
+        notes = request.data.get("notes", "")
+        if candidate.notes != notes:
+            logger.debug("setting notes %s=>%s", candidate.notes, notes)
+            candidate.notes = notes
+        candidate.save()
 
     # Redirects to a random next candidate
     return redirect(reverse("candidate_random"))
+
+
+@login_required
+@api_view(["GET"])
+@transaction.atomic
+def associate_candidate_pulsar(request):
+    if not (request.GET.get("src") and request.GET.get("pulsar")):
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    candidate = models.Candidate.objects.filter(id=int(request.GET.get("src"))).first()
+    pulsar = models.ATNFPulsar.objects.filter(id=int(request.GET.get("pulsar"))).first()
+
+    if request.GET.get("delete"):
+        assoc = models.Association.objects.filter(candidate=candidate).first()
+        if assoc:
+            assoc.delete()
+    else:
+        assoc = models.Association.objects.update_or_create(
+            candidate=candidate, defaults={"pulsar": pulsar}
+        )
+    return Response(status=status.HTTP_200_OK)
+
+
+def candidate_metadata_view(request, pk):
+    item = get_object_or_404(models.Metadata, pk=pk)
+    return render(request, "candidate_app/candidate_metadata.html", {"item": item})
 
 
 @login_required
@@ -397,147 +468,6 @@ def candidate_random(request):
     return redirect(reverse("candidate_rating", args=(candidate.id,)))
 
 
-def candidate_table(request):
-
-    # Get session data to keep filters when changing page
-    session_settings = request.session.get("session_settings", 0)
-    candidate_table_session_data = request.session.get("current_filter_data", 0)
-    #print(candidate_table_session_data)
-
-    # Check filter form
-    if request.method == "POST":
-        # create a form instance and populate it with data from the request:
-        form = forms.CandidateFilterForm(request.POST)
-        # check whether it's valid:
-        if form.is_valid():
-            column_display = form.cleaned_data["column_display"]
-            if form.cleaned_data["observation_id"] is None:
-                observation_id_filter = None
-            else:
-                observation_id_filter = form.cleaned_data[
-                    "observation_id"
-                ].observation_id
-            rating_cutoff = form.cleaned_data["rating_cutoff"]
-            order_by = form.cleaned_data["order_by"]
-            asc_dec = form.cleaned_data["asc_dec"]
-            cleaned_data = {**form.cleaned_data}
-            cleaned_data["observation_id"] = observation_id_filter
-            request.session["current_filter_data"] = cleaned_data
-            ra_hms = form.cleaned_data["ra_hms"]
-            dec_dms = form.cleaned_data["dec_dms"]
-            search_radius_arcmin = form.cleaned_data["search_radius_arcmin"]
-    else:
-        if candidate_table_session_data != 0:
-            # Prefil form with previous session results
-            form = forms.CandidateFilterForm(
-                initial=candidate_table_session_data,
-            )
-            column_display = candidate_table_session_data["column_display"]
-            observation_id_filter = candidate_table_session_data["observation_id"]
-            rating_cutoff = candidate_table_session_data["rating_cutoff"]
-            order_by = candidate_table_session_data["order_by"]
-            asc_dec = candidate_table_session_data["asc_dec"]
-            ra_hms = candidate_table_session_data["ra_hms"]
-            dec_dms = candidate_table_session_data["dec_dms"]
-            search_radius_arcmin = candidate_table_session_data["search_radius_arcmin"]
-        else:
-            form = forms.CandidateFilterForm()
-            column_display = None
-            observation_id_filter = None
-            rating_cutoff = None
-            order_by = "avg_rating"
-            asc_dec = "-"
-            ra_hms = None
-            dec_dms = None
-            search_radius_arcmin = 2
-
-    '''
-    print(f"column_display: {column_display}")
-    print(f"observation_id_filter: {observation_id_filter}")
-    print(f"rating_cutoff: {rating_cutoff}")
-    print(f"order_by: {order_by}")
-    print(f"asc_dec: {asc_dec}")
-    '''
-
-    # Gather all the cand types and prepare them as kwargs
-    count_kwargs = {}
-    column_type_to_name = {}
-    for cand_type_tuple in [c.name for c in models.Classification.objects.all()]:
-        cand_type_short = cand_type_tuple
-        count_kwargs[f"{cand_type_short}_count"] = Count(
-            "rating", filter=Q(rating__classification__name=cand_type_short)
-        )
-        # Also create a column name
-        column_type_to_name[cand_type_short] = cand_type_short
-
-    candidates = models.Candidate.objects.all()
-    project = "All projects"
-    if session_settings:
-        candidates = candidates.filter(project__name=session_settings["project"])
-        project = "Project " + session_settings["project"]
-    # Annotate with counts of different candidate type counts
-    count_kwargs = {k.replace(" ", "_").replace("/", "_"): v for k, v in count_kwargs.items()} # For some reason, it now complains about spaces and slashes
-    candidates = candidates.annotate(
-        num_ratings=Count("rating"),
-        avg_rating=Avg("rating__rating"),
-        **count_kwargs,
-    )
-
-    # If user only wants to display a single column annotate it and return it's name
-    if column_display:
-        candidates = candidates.annotate(
-            selected_count=Count(
-                "rating", filter=Q(rating__classification__name=column_display)
-            ),
-        )
-        # # Filter data to only show candidates with at least one count
-        # candidates = candidates.filter(selected_count__gte=1)
-        selected_column = column_type_to_name[column_display]
-    else:
-        selected_column = None
-
-    # Ratings filter
-    if rating_cutoff is not None:
-        candidates = candidates.filter(avg_rating__gte=rating_cutoff)
-
-    # Obsid filter
-    if observation_id_filter is not None:
-        candidates = candidates.filter(obs_id__observation_id=observation_id_filter)
-
-    # Order by the column the user clicked or by avg_rating by default
-    candidates = candidates.order_by(asc_dec + order_by, "-avg_rating")
-
-    # Filter by position
-    if not (None in (ra_hms, dec_dms) or ra_hms == "" or dec_dms == ""):
-        ra_deg = Angle(ra_hms, unit=units.hour).deg
-        dec_deg = Angle(dec_dms, unit=units.deg).deg
-        candidates = candidates.filter(
-            Q(
-                Q3CRadialQuery(
-                    center_ra=ra_deg,
-                    center_dec=dec_deg,
-                    ra_col="ra_deg",
-                    dec_col="dec_deg",
-                    radius=search_radius_arcmin / 60.0,
-                )
-            )
-        )
-
-    # Paginate
-    paginator = Paginator(candidates, 25)
-    page_number = request.GET.get("page", 1)
-    page_obj = paginator.get_page(page_number)
-
-    content = {
-        "page_obj": page_obj,
-        "form": form,
-        "selected_column": selected_column,
-        "column_names": column_type_to_name,
-        "project_name": project,
-    }
-    return render(request, "candidate_app/candidate_table.html", content)
-
-
 def session_settings(request):
     # Get session data to keep filters when changing page
     session_settings = request.session.get("session_settings", 0)
@@ -592,12 +522,8 @@ def observation_create(request):
 def candidate_create(request):
     # Get or create filter
     filter_name = request.data.get("filter_id")
-    if models.Filter.objects.filter(name=filter_name).exists():
-        filter = models.Filter.objects.filter(name=filter_name).first()
-    else:
-        filter = models.Filter.objects.create(name=filter_name)
+    filter = models.Filter.objects.get_or_create(name=filter_name)[0]
     request.data["filter"] = filter.id
-
     cand = serializers.CandidateSerializer(data=request.data)
     png_file = request.data.get("png")
     gif_file = request.data.get("gif")
@@ -610,7 +536,6 @@ def candidate_create(request):
             return Response("Missing gif file", status=status.HTTP_400_BAD_REQUEST)
         cand.save(png_path=png_file, gif_path=gif_file, filter=filter)
         return Response(cand.data, status=status.HTTP_201_CREATED)
-    logger.debug(request.data)
     logger.error(cand.errors)
     return Response(cand.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -654,15 +579,20 @@ def download_data(request, table):
     if table == "user":
         from django.contrib.auth import get_user_model
 
-        this_model = get_user_model()
+        this_model = get_user_model().objects.all()
     elif table == "rating":
-        this_model = models.Rating
+        this_model = models.Rating.objects.annotate(
+            username=F("user__username"),
+            classificationname=F("classification__name"),
+        )
     elif table == "candidate":
-        this_model = models.Candidate
+        this_model = models.Candidate.objects.annotate(
+            filter_name=F("filter__name"), project_name=F("project__name")
+        )
     elif table == "observation":
-        this_model = models.Observation
+        this_model = models.Observation.objects.all()
     elif table == "filter":
-        this_model = models.Filter
-    response = download_fits(request, this_model.objects.all(), table)
+        this_model = models.Filter.objects.all()
+    response = download_fits(request, this_model, table)
     # response = download_csv(request, this_model.objects.all(), table)
     return response

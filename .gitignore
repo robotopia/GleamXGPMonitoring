@@ -4,3 +4,5 @@
 env/*
 *.json
 *.log
+gleam_webapp/media/
+gleam_webapp/static_host/

@@ -1,21 +1,25 @@
   <div class="col">
     <h4>Nearby Candidates:</h4>
-    <table class="fl-table">
-      <tr>
-        <th>ID</th>
-        <th>RA</th>
-        <th>Dec</th>
-        <th>Sep (arcmin)</th>
-      </tr>
-      {% for result in table %}
-      <tr>
-        <td><a href="/candidate_rating/{{ result.id }}/" style="text-decoration:None">{{ result.id }}</a></td>
-        <td>{{ result.ra_hms }}</td>
-        <td>{{ result.dec_dms }}</td>
-        <td>{{ result.sep|floatformat:2 }}</td>
-      </tr>
-      {% empty %}
-        <tr><td>No Sources found</td></tr>
-      {% endfor %}
-    </table>
+      <table class="fl-table">
+        <tr>
+          <th></th>
+          <th>ID</th>
+          <th>RA</th>
+          <th>Dec</th>
+          <th>Sep (arcmin)</th>
+        </tr>
+        {% for result in table %}
+        <tr>
+          <td><input type="checkbox" name="src_{{result.id}}" value="{{result.id}}"></td>
+          <td><a href="{% url 'candidate_rating' id=result.id %}" 
+                 style="text-decoration:None"
+                 target="_blank">{{ result.id }} <i class="fa-solid fa-arrow-up-right-from-square"></i></a></td>
+          <td>{{ result.ra_hms }}</td>
+          <td>{{ result.dec_dms }}</td>
+          <td>{{ result.sep|floatformat:2 }}</td>
+        </tr>
+        {% empty %}
+          <tr><td colspan="5">No Sources found</td></tr>
+        {% endfor %}
+      </table>
   </div>

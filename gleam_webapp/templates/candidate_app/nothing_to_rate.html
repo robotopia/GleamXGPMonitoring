@@ -4,10 +4,12 @@
 
 {% if project %}
 <h3>No unrated candidates for project: {{ project }}</h3>
-<p> Choose a different project in the session settings page, or go have a break!</p>
+<p> Choose a different project in the <a href="{% url 'session_settings' %}">session settings</a> page, or go have a break!</p>
 {% else %}
 <h3>No project selected for candidate rating.</h3>
-<p> Choose a different project in the session settings page.</p>
+<div>
+    <p> Choose a project in the <a href="{% url 'session_settings' %}">session settings</a> page.</p>
+</div>
 {% endif %}
 
 {% endblock content %}

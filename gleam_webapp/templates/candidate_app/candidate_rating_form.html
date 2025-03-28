@@ -77,6 +77,7 @@
             ra_deg: '{{ candidate.ra_deg }}',
             dec_deg: '{{ candidate.dec_deg }}',
             dist_arcmin: arcmin,
+            candidate: '{{ candidate.id }}',
           })
         });
         const data = await response.text();
@@ -96,7 +97,19 @@
     }
   }
   document.addEventListener('DOMContentLoaded', getAll)
+</script>
 
+<script type="text/javascript">
+  function associate(psr) {
+    console.log("associate src={{candidate.id}} psr="+psr);
+    url = "{% url 'candidate_associate_pulsar' %}?src={{candidate.id}}&pulsar="+psr;
+    fetch(url).then(window.location.reload());
+  }
+  function disassociate(psr) {
+    console.log("disassociate src={{candidate.id}} psr="+psr);
+    url = "{% url 'candidate_associate_pulsar' %}?src={{candidate.id}}&pulsar="+psr+"&delete=1";
+    fetch(url).then(window.location.reload());
+  }
 </script>
 {% endblock head  %}
 
@@ -105,6 +118,7 @@
 {% if candidate %}
 <title>Rating:{{ candidate.id }} </title>
 
+<form action="{% url 'candidate_update_rating' id=candidate.id %}" method="post">
 <div class="container-fluid">
   <div class="row">
     <div class="col-12">
@@ -112,14 +126,13 @@
         Rating candidate with ID: {{ candidate.id }} from project: {{candidate.project.name}}</h2>
     </div>
   </div>
-
   <div class="row">
     <div class="col-3">
       {% if candidate.png_path %}
           <img src="{{candidate.png_path.url}}" 
               alt="Diagnostic Plot for {{candidate.id}}" 
               onClick="window.open(this.src)"
-              class="mw-100">
+              class="img-fluid" style='cursor:zoom-in;'>
       {% endif %}
     </div>
     <div class="col-3">
@@ -127,8 +140,7 @@
         <img src="{{candidate.gif_path.url}}"
             alt="Diagnostic GIF for {{candidate.id}}"
             onClick="window.open(this.src)"
-            class="mw-100"
-            >
+            class="img-fluid" style='width:100%; cursor:zoom-in;'>
       {% endif %}
     </div>
 
@@ -142,34 +154,37 @@
               <tr><td>Location</td>            <td>{{ candidate.ra_hms }}, {{ candidate.dec_dms }}</td></tr>
               <tr><td>Radius (deg)</td>        <td>{{ candidate.rad_deg|floatformat:3 }}</td></tr>
               <tr><td>Filter name</td>         <td>{{ candidate.filter.name }}</td></tr>
+              <tr><td>Associated pulsar</td>   <td>{% if candidate.associated.pulsar.name %}{{candidate.associated.pulsar.name}}{% else %}None{% endif %}</td></tr>
             </table>
             <h3>Observation:</h3>
             <table>
-              <tr><td>Observation ID</td>  <td><a href="http://ws.mwatelescope.org/observation/obs/?obs_id={{ candidate.obs_id.observation_id }}" target="_blank">{{ candidate.obs_id.observation_id }}</a></td></tr>
+              <tr><td>Observation ID</td>  <td><a href="http://ws.mwatelescope.org/observation/obs/?obs_id={{ candidate.obs_id.observation_id }}" target="_blank">{{ candidate.obs_id.observation_id }} <i class="fa-solid fa-arrow-up-right-from-square"></i></a></td></tr>
               <tr><td>Time (UTC)</td>      <td>{{ time }}</td></tr>
               <tr><td>Frequency (MHz)</td> <td>{{ candidate.obs_id.cent_freq }}</td></tr>
+              <tr>
+                <td>Rate all of this obs</td>
+                <td>
+                  <input type="checkbox" name="observation" value="{{candidate.obs_id.observation_id}}">
+                  <abbr title="Overrides candidates selected from the 'Nearby Candidates' table"> (note)</abbr>
+              </tr>
             </table>
     </div>
 
     <div class="col-3">
-          <form action="{% url 'candidate_update_rating' id=candidate.id %}" method="post">
+          <!-- <form action="{% url 'candidate_update_rating' id=candidate.id %}" method="post"> -->
             {% csrf_token %}
             <div class="field">
               <h4>Choose classification:</h4>
-              {% for value, text in cand_type_choices %}
-                {% if value == "T" and not rating %}
-                  <input checked="checked"
-                {% elif value == rating.classification %}
-                  <input checked="checked"
-                {% else %}
-                  <input
-                {% endif %}
-                  class="form-check-input" type="radio" name="classification" id="{{ value }}" value="{{ value }}">
-                <label  class="form-check-label" for="{{ value }}">{{ text }}</label><br>
-              {% endfor %}
+              <div class="btn-group-vertical" role="group" aria-label="Choose classification">
+                {% for value, text in cand_type_choices %}
+                  <input type="radio" class="btn-check" name="classification" id="{{value}}" value="{{value}}" autocomplete="off" 
+                  {% if value == "T" and not rating %} checked {% endif %} required>
+                <label class="btn btn-outline-primary" for="{{value}}">{{value}}</label>
+                {% endfor %}
+              </div>
             </div>
             <div class="field">
-            <h4>Rating from 1(noise) to 5(clear candidate){% if rating %}(currently {{rating.rating}}){% endif %}</h4>
+            <h4>Rating confidence {% if rating %}(currently {{rating.rating}}){% endif %}</h4>
             <div>
               {% if rating.rating == 1 %}
                 <input type="submit" class="btn btn-success btn-lg" name="rating" value="1">
@@ -199,12 +214,12 @@
             </div>
             </div>
             <div class="field">
-            <h4>Notes</h4>
+            <h4>Notes for this candidate (all users)</h4>
             <textarea rows="5" id="notes" name="notes" placeholder="is it a known source?">{{candidate.notes}}</textarea>
             </div>
             <input type="hidden" name="id" value="">
             <input type="hidden" name="username" value="{{user}}">
-          </form>
+          <!-- </form> -->
           <button class="btn btn-info" onclick="window.history.go(-1)">Back to previous</button>
           <a class="btn btn-info" href="/candidate_rating/random/">Skip</a>
     </div>
@@ -223,7 +238,7 @@
 
 <div class="row">
   <div class="col"> 
-    <h4>Nearest within this project</h4>
+    <h4>Nearest known source</h4>
     <table>
       <tr><td>Source name</td>      <td>{{ candidate.nks_name }}</td></tr>
       <tr><td>Location</td>         <td>{{ candidate.nks_ra_hms }}, {{ candidate.nks_dec_dms }}</td></tr>
@@ -236,6 +251,7 @@
       <tr><td>Flux (Jy)</td>        <td>{{ candidate.nks_flux|floatformat:2 }}</td></tr>
       <tr><td>Flux ratio</td>       <td>{{ candidate.can_nks_flux_rat|floatformat:2 }}</td></tr>
     </table>
+    <a class="btn btn-info" href="{% url 'candidate_table' %}?ra_deg={{ candidate.ra_deg }}&dec_deg={{ candidate.dec_deg }}&radius={{arcmin_search}}">More within this project</a>
   </div>
 
   <div class="col">
@@ -254,66 +270,9 @@
     <div id="pulsarlocator">
       <p>Loading ... </p>
     </div>
-    <!-- <h4>ATNF pulsars:</h4>
-      <table class="fl-table">
-        <tr>
-          <th>Name</th>
-          <th>Period (s)</th>
-          <th>DM (pc / cm^3)</th>
-          <th>S400 (mJy)</th>
-          <th>Sep (arcmin)</th>
-        </tr>
-        {% for result in atnf_result_table %}
-        <tr>
-          <td><a href="https://www.atnf.csiro.au/research/pulsar/psrcat/proc_form.php?version=1.67&startUserDefined=true&c1_val=&c2_val=&c3_val=&c4_val=&sort_attr=jname&sort_order=asc&condition=&pulsar_names={{ result.name|urlize }}&ephemeris=long&submit_ephemeris=Get+Ephemeris&coords_unit=raj%2Fdecj&radius=&coords_1=&coords_2=&style=Long+with+last+digit+error&no_value=*&fsize=3&x_axis=&x_scale=linear&y_axis=&y_scale=linear&state=query" style="text-decoration:None">{{ result.name }}</a></td>
-          <td>{{ result.period }}</td>
-          <td>{{ result.dm }}</td>
-          <td>{{ result.s400 }}</td>
-          <td>{{ result.sep|floatformat:2 }}</td>
-        </tr>
-        {% empty %}
-        <tr><td>No Sources found</td></tr>
-        {% endfor %}
-      </table> -->
   </div>
-
-  <!-- <div class="col-3">
-    <div class="card">
-        <div class="card-content">
-            <h3>Transient VOEvents (within one hour):</h3>
-            <table class="fl-table">
-              <tr>
-                <th>Event type</th>
-                <th>Event source</th>
-                <th>ID</th>
-                <th>RA</th>
-                <th>Dec</th>
-                <th>Separation (arcmin)</th>
-                <th>XML file</th>
-              </tr>
-              {% for result in voevents %}
-                {% if object.ignored %}
-                  <tr class="grey-tr">
-                {% else %}
-                  <tr>
-                {% endif %}
-                <td>{% if resultsource_type is not None %} {{ result.source_type }}  {% endif %}</td>
-                <td>{{ result.telescope }} {{ result.event_type }}</td>
-                <td>{{ result.trig_id }}</td>
-                <td>{{ result.ra }}</td>
-                <td>{{ result.dec }}</td>
-                <td>{{ result.sep|floatformat:2 }}</td>
-                <td><a href="/voevent_view/{{ result.xml }}">View</a></td>
-              </tr>
-              {% empty %}
-              <tr><td>No Sources found</td></tr>
-              {% endfor %}
-            </table>
-        </div>
-      </div>
-  </div> -->
-
 </div>
+</form>
 {% else %}
 <p>Candidate not Found!</p>
 {% endif %}

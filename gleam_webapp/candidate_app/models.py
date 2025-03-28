@@ -228,8 +228,21 @@ class Candidate(models.Model):
         verbose_name="Nearest known source Declination (DD:MM:SS)",
     )
 
-    # def __str__(self):
-    #     return f"{self.id}_obs{self.obs_id.observation_id}_{self.filter.name}"
+
+class Metadata(models.Model):
+    candidate = models.OneToOneField(
+        Candidate,
+        on_delete=models.CASCADE,
+        related_name="metadata",
+        primary_key=True,
+    )
+
+    text = models.CharField(
+        max_length=500,
+        blank=True,
+        null=True,
+        verbose_name="Metadata relevant to this candidate",
+    )
 
 
 class Rating(models.Model):
@@ -277,3 +290,17 @@ class ATNFPulsar(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+
+
+class Association(models.Model):
+    candidate = models.OneToOneField(
+        Candidate,
+        on_delete=models.CASCADE,
+        related_name="associated",
+        primary_key=True,
+    )
+    pulsar = models.ForeignKey(
+        ATNFPulsar,
+        on_delete=models.CASCADE,
+        related_name="associated",
+    )
