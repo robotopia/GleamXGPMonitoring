@@ -18,7 +18,7 @@ from django.db.models import Count, Q, F
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils import timezone
+from datetime import timezone
 from django_q3c.expressions import Q3CRadialQuery, Q3CDist
 from django_tables2 import SingleTableView
 from rest_framework import status
